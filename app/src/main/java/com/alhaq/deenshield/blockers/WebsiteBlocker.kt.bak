@@ -1,0 +1,314 @@
+package com.alhaq.deenshield.blockers
+
+import android.content.Context
+import android.content.SharedPreferences
+import android.net.Uri
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+
+class WebsiteBlocker(private val context: Context) {
+
+    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val gson = Gson()
+
+    // Configuration state
+    private var isEnabled: Boolean = false
+    private var blockAdultContent: Boolean = true
+    private var blockHaramContent: Boolean = true
+    private var enableAiDetection: Boolean = false
+
+    // Blocklists
+    private var adultBlocklist = mutableSetOf<String>()
+    private var haramBlocklist = mutableSetOf<String>()
+    private var customBlocklist = mutableSetOf<String>()
+    private var customAllowlist = mutableSetOf<String>()
+
+    // Statistics
+    private var blockedDomainsCount = 0L
+    private var processedQueriesCount = 0L
+    private val topBlockedDomains = mutableMapOf<String, Long>()
+
+
+    init {
+        loadConfiguration()
+        loadBlocklists()
+    }
+
+    fun loadConfiguration() {
+        isEnabled = prefs.getBoolean(KEY_ENABLED, false)
+        blockAdultContent = prefs.getBoolean(KEY_BLOCK_ADULT, true)
+        blockHaramContent = prefs.getBoolean(KEY_BLOCK_HARAM, true)
+        enableAiDetection = prefs.getBoolean(KEY_ENABLE_AI, false)
+        blockedDomainsCount = prefs.getLong(KEY_BLOCKED_COUNT, 0L)
+        processedQueriesCount = prefs.getLong(KEY_PROCESSED_COUNT, 0L)
+
+        val customBlocklistJson = prefs.getString(KEY_CUSTOM_BLOCKLIST, null)
+        if (customBlocklistJson != null) {
+            val type = object : TypeToken<MutableSet<String>>() {}.type
+            customBlocklist = gson.fromJson(customBlocklistJson, type)
+        }
+
+        val customAllowlistJson = prefs.getString(KEY_CUSTOM_ALLOWLIST, null)
+        if (customAllowlistJson != null) {
+            val type = object : TypeToken<MutableSet<String>>() {}.type
+            customAllowlist = gson.fromJson(customAllowlistJson, type)
+        }
+        
+        val topBlockedDomainsJson = prefs.getString(KEY_TOP_BLOCKED, null)
+        if (topBlockedDomainsJson != null) {
+            val type = object : TypeToken<MutableMap<String, Long>>() {}.type
+            topBlockedDomains.clear()
+            topBlockedDomains.putAll(gson.fromJson(topBlockedDomainsJson, type))
+        }
+    }
+
+    private fun loadBlocklists() {
+        if (blockAdultContent) {
+            adultBlocklist = loadListFromAssets("blocklists/adult_domains.txt")
+        }
+        if (blockHaramContent) {
+            haramBlocklist = loadListFromAssets("blocklists/haram_domains.txt")
+        }
+    }
+
+    private fun loadListFromAssets(path: String): MutableSet<String> {
+        val set = mutableSetOf<String>()
+        try {
+            context.assets.open(path).bufferedReader().useLines { lines ->
+                lines.filter { it.isNotBlank() }.forEach { set.add(it.trim().lowercase()) }
+            }
+        } catch (e: Exception) {
+            // Log error or handle exception
+        }
+        return set
+    }
+
+    fun saveConfiguration() {
+        prefs.edit().apply {
+            putBoolean(KEY_ENABLED, isEnabled)
+            putBoolean(KEY_BLOCK_ADULT, blockAdultContent)
+            putBoolean(KEY_BLOCK_HARAM, blockHaramContent)
+            putBoolean(KEY_ENABLE_AI, enableAiDetection)
+            putLong(KEY_BLOCKED_COUNT, blockedDomainsCount)
+            putLong(KEY_PROCESSED_COUNT, processedQueriesCount)
+            putString(KEY_CUSTOM_BLOCKLIST, gson.toJson(customBlocklist))
+            putString(KEY_CUSTOM_ALLOWLIST, gson.toJson(customAllowlist))
+            putString(KEY_TOP_BLOCKED, gson.toJson(topBlockedDomains))
+            apply()
+        }
+    }
+
+    fun isBlocked(domain: String): Boolean {
+        processedQueriesCount++
+        if (!isEnabled) return false
+
+        val normalizedDomain = domain.removeSuffix(".").lowercase()
+
+        if (matches(normalizedDomain, customAllowlist)) {
+            return false
+        }
+
+        if (matches(normalizedDomain, customBlocklist) ||
+            (blockAdultContent && matches(normalizedDomain, adultBlocklist)) ||
+            (blockHaramContent && matches(normalizedDomain, haramBlocklist))) {
+            blockedDomainsCount++
+            topBlockedDomains[normalizedDomain] = (topBlockedDomains[normalizedDomain] ?: 0) + 1
+            // Note: Saving config on every block might be slow. Consider batching.
+            saveConfiguration() 
+            return true
+        }
+
+        if (enableAiDetection) {
+            // Placeholder for AI check
+        }
+
+        return false
+    }
+
+    private fun matches(domain: String, list: Set<String>): Boolean {
+        if (list.contains(domain)) return true
+        
+        var tempDomain = domain
+        while (tempDomain.indexOf('.') > -1) {
+            val wildcard = "*." + tempDomain.substring(tempDomain.indexOf('.') + 1)
+            if (list.contains(wildcard)) return true
+            tempDomain = tempDomain.substring(tempDomain.indexOf('.') + 1)
+        }
+        
+        return false
+    }
+
+    fun getActiveBlocklist(): Set<String> {
+        val activeList = mutableSetOf<String>()
+        if (isEnabled) {
+            if (blockAdultContent) activeList.addAll(adultBlocklist)
+            if (blockHaramContent) activeList.addAll(haramBlocklist)
+            activeList.addAll(customBlocklist)
+        }
+        return activeList
+    }
+
+    // --- Configuration Getters and Setters ---
+
+    fun isEnabled(): Boolean = isEnabled
+    fun setEnabled(enabled: Boolean) {
+        isEnabled = enabled
+        saveConfiguration()
+    }
+
+    fun isBlockAdultContentEnabled(): Boolean = blockAdultContent
+    fun setBlockAdultContentEnabled(enabled: Boolean) {
+        blockAdultContent = enabled
+        if (enabled) {
+            adultBlocklist = loadListFromAssets("blocklists/adult_domains.txt")
+        } else {
+            adultBlocklist.clear()
+        }
+        saveConfiguration()
+    }
+
+    fun isBlockHaramContentEnabled(): Boolean = blockHaramContent
+    fun setBlockHaramContentEnabled(enabled: Boolean) {
+        blockHaramContent = enabled
+        if (enabled) {
+            haramBlocklist = loadListFromAssets("blocklists/haram_domains.txt")
+        } else {
+            haramBlocklist.clear()
+        }
+        saveConfiguration()
+    }
+
+    fun isAiDetectionEnabled(): Boolean = enableAiDetection
+    fun setAiDetectionEnabled(enabled: Boolean) {
+        enableAiDetection = enabled
+        saveConfiguration()
+    }
+
+    // --- Custom List Management ---
+
+    fun getCustomBlocklist(): Set<String> = customBlocklist
+    fun getCustomAllowlist(): Set<String> = customAllowlist
+
+    fun addCustomBlockedUrl(url: String) {
+        customBlocklist.add(normalizeUrl(url))
+        saveConfiguration()
+    }
+
+    fun removeCustomBlockedUrl(url: String) {
+        customBlocklist.remove(normalizeUrl(url))
+        saveConfiguration()
+    }
+    
+    fun clearCustomBlockedUrls() {
+        customBlocklist.clear()
+        saveConfiguration()
+    }
+
+    fun addCustomAllowedUrl(url: String) {
+        customAllowlist.add(normalizeUrl(url))
+        saveConfiguration()
+    }
+
+    fun removeCustomAllowedUrl(url: String) {
+        customAllowlist.remove(normalizeUrl(url))
+        saveConfiguration()
+    }
+
+    private fun normalizeUrl(url: String): String {
+        return url.trim().lowercase()
+    }
+
+    // --- Import/Export ---
+
+    fun exportLists(uri: Uri): Boolean {
+        val data = mapOf(
+            "customBlocklist" to customBlocklist,
+            "customAllowlist" to customAllowlist
+        )
+        val json = gson.toJson(data)
+        try {
+            context.contentResolver.openOutputStream(uri)?.use {
+                OutputStreamWriter(it).use { writer ->
+                    writer.write(json)
+                }
+            }
+            return true
+        } catch (e: Exception) {
+            return false
+        }
+    }
+
+    fun importLists(uri: Uri): ImportResult {
+        try {
+            context.contentResolver.openInputStream(uri)?.use {
+                BufferedReader(InputStreamReader(it)).use { reader ->
+                    val json = reader.readText()
+                    val type = object : TypeToken<Map<String, Set<String>>>() {}.type
+                    val data: Map<String, Set<String>> = gson.fromJson(json, type)
+                    
+                    val blocklist = data["customBlocklist"] ?: emptySet()
+                    val allowlist = data["customAllowlist"] ?: emptySet()
+
+                    val initialBlockSize = customBlocklist.size
+                    customBlocklist.addAll(blocklist.map { normalizeUrl(it) })
+                    val addedBlockCount = customBlocklist.size - initialBlockSize
+
+                    val initialAllowSize = customAllowlist.size
+                    customAllowlist.addAll(allowlist.map { normalizeUrl(it) })
+                    val addedAllowCount = customAllowlist.size - initialAllowSize
+                    
+                    saveConfiguration()
+                    return ImportResult(true, addedBlockCount + addedAllowCount, 0, null)
+                }
+            }
+            return ImportResult(false, 0, 0, "Failed to open file.")
+        } catch (e: Exception) {
+            return ImportResult(false, 0, 0, e.message)
+        }
+    }
+
+    // --- Statistics ---
+    
+    fun getStatistics(): Statistics {
+        return Statistics(
+            totalBlocked = blockedDomainsCount,
+            adultListSize = adultBlocklist.size,
+            haramListSize = haramBlocklist.size,
+            customListSize = customBlocklist.size,
+            totalActiveRules = getTotalActiveRules(),
+            topBlockedDomains = topBlockedDomains.toList().sortedByDescending { it.second }.take(5).toMap()
+        )
+    }
+    
+    private fun getTotalActiveRules(): Int {
+        return (if (blockAdultContent) adultBlocklist.size else 0) +
+               (if (blockHaramContent) haramBlocklist.size else 0) +
+               customBlocklist.size
+    }
+
+    fun resetStatistics() {
+        blockedDomainsCount = 0L
+        processedQueriesCount = 0L
+        topBlockedDomains.clear()
+        saveConfiguration()
+    }
+    
+    data class ImportResult(val success: Boolean, val addedCount: Int, val skippedCount: Int, val error: String?)
+    data class Statistics(val totalBlocked: Long, val adultListSize: Int, val haramListSize: Int, val customListSize: Int, val totalActiveRules: Int, val topBlockedDomains: Map<String, Long>)
+
+    companion object {
+        private const val PREFS_NAME = "website_blocker_prefs"
+        private const val KEY_ENABLED = "key_enabled"
+        private const val KEY_BLOCK_ADULT = "key_block_adult"
+        private const val KEY_BLOCK_HARAM = "key_block_haram"
+        private const val KEY_ENABLE_AI = "key_enable_ai"
+        private const val KEY_CUSTOM_BLOCKLIST = "key_custom_blocklist"
+        private const val KEY_CUSTOM_ALLOWLIST = "key_custom_allowlist"
+        private const val KEY_BLOCKED_COUNT = "key_blocked_count"
+        private const val KEY_PROCESSED_COUNT = "key_processed_count"
+        private const val KEY_TOP_BLOCKED = "key_top_blocked"
+    }
+}

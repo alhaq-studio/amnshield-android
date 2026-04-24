@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/select_social_media"
+        android:title="📱 Social Media" />
+    <item
+        android:id="@+id/select_gaming_apps"
+        android:title="🎮 Games" />
+    <item
+        android:id="@+id/select_entertainment_apps"
+        android:title="🎬 Entertainment" />
+    <item
+        android:id="@+id/select_dating_apps"
+        android:title="❤️ Dating Apps" />
+    <item
+        android:id="@+id/select_shopping_apps"
+        android:title="🛒 Shopping" />
+    <item
+        android:id="@+id/select_news_apps"
+        android:title="📰 News &amp; Media" />
+    <item
+        android:id="@+id/select_productive_apps"
+        android:title="💼 Productive Apps" />
+
+    <item
+        android:id="@+id/add_a_custom_package"
+        android:title="➕ Add Custom Package" />
+</menu>

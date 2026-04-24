@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="adult_keywords">
+        <!-- Explicit NSFW content -->
+        <item>nsfw</item>
+        <item>porn</item>
+        <item>xxx</item>
+        <item>adult</item>
+        <item>nude</item>
+        <item>naked</item>
+        <item>sex</item>
+        <item>sexual</item>
+        <item>erotic</item>
+        <item>explicit</item>
+        <item>hentai</item>
+        
+        <!-- Revealing clothing/content -->
+        <item>bikini</item>
+        <item>lingerie</item>
+        <item>underwear</item>
+        <item>bra</item>
+        <item>panties</item>
+        <item>swimsuit</item>
+        <item>revealing</item>
+        <item>provocative</item>
+        <item>seductive</item>
+        <item>sensual</item>
+        
+        <!-- Body parts/exposure -->
+        <item>breasts</item>
+        <item>cleavage</item>
+        <item>thigh</item>
+        <item>exposed</item>
+        <item>topless</item>
+        <item>shirtless</item>
+        
+        <!-- Islamic haram content -->
+        <item>haram</item>
+        <item>hijabless</item>
+        <item>lewd</item>
+        
+        <!-- Dating/romance -->
+        <item>dating</item>
+        <item>hookup</item>
+        <item>tinder</item>
+        <item>romance</item>
+        <item>intimate</item>
+        <item>flirt</item>
+        
+        <!-- Alcohol -->
+        <item>alcohol</item>
+        <item>beer</item>
+        <item>wine</item>
+        <item>liquor</item>
+        <item>vodka</item>
+        <item>whiskey</item>
+        <item>drunk</item>
+        <item>drinking</item>
+        <item>bar</item>
+        <item>pub</item>
+        
+        <!-- Gambling -->
+        <item>gambling</item>
+        <item>casino</item>
+        <item>poker</item>
+        <item>betting</item>
+        <item>slots</item>
+        <item>roulette</item>
+        
+        <!-- Other -->
+        <item>onlyfans</item>
+        <item>webcam</item>
+        <item>escort</item>
+        <item>massage</item>
+    </string-array>
+</resources>

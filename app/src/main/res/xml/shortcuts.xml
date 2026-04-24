@@ -1,0 +1,18 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutDisabledMessage="@string/focus_mode"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/focus_mode"
+        android:shortcutId="deenshield_focus_mode_shortcut"
+        android:shortcutLongLabel="@string/focus_mode">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="com.alhaq.deenshield"
+            android:targetClass="com.alhaq.deenshield.ui.activity.ShortcutActivity" />
+        <categories android:name="digiipaws" />
+        <capability-binding android:key="actions.intent.CREATE_MESSAGE" />
+    </shortcut>
+    <!-- Specify more shortcuts here. -->
+</shortcuts>
+  

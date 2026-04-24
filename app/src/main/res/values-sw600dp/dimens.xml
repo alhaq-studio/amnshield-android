@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing for tablets (20-30% larger) -->
+    <dimen name="spacing_tiny">3dp</dimen>
+    <dimen name="spacing_xs">6dp</dimen>
+    <dimen name="spacing_small">12dp</dimen>
+    <dimen name="spacing_medium">16dp</dimen>
+    <dimen name="spacing_normal">20dp</dimen>
+    <dimen name="spacing_large">24dp</dimen>
+    <dimen name="spacing_xlarge">32dp</dimen>
+    <dimen name="spacing_xxlarge">40dp</dimen>
+    <dimen name="spacing_xxxlarge">52dp</dimen>
+
+    <!-- Padding for tablets -->
+    <dimen name="padding_tiny">3dp</dimen>
+    <dimen name="padding_xs">6dp</dimen>
+    <dimen name="padding_small">12dp</dimen>
+    <dimen name="padding_medium">16dp</dimen>
+    <dimen name="padding_normal">20dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+    <dimen name="padding_xlarge">32dp</dimen>
+    <dimen name="padding_xxlarge">40dp</dimen>
+
+    <!-- Card -->
+    <dimen name="card_corner_radius">16dp</dimen>
+    <dimen name="card_corner_radius_normal">16dp</dimen>
+    <dimen name="card_corner_radius_large">20dp</dimen>
+    <dimen name="card_elevation">3dp</dimen>
+    <dimen name="card_elevation_high">6dp</dimen>
+
+    <!-- Icon sizes for tablets -->
+    <dimen name="icon_size_small">24dp</dimen>
+    <dimen name="icon_size_medium">28dp</dimen>
+    <dimen name="icon_size_large">44dp</dimen>
+    <dimen name="icon_size_xlarge">56dp</dimen>
+
+    <!-- Widget dimensions for tablets -->
+    <dimen name="widget_padding">28dp</dimen>
+    <dimen name="widget_margin">8dp</dimen>
+
+    <!-- List item dimensions for tablets -->
+    <dimen name="list_item_padding">20dp</dimen>
+    <dimen name="list_item_padding_small">12dp</dimen>
+    <dimen name="list_item_height">64dp</dimen>
+    <dimen name="list_item_height_large">80dp</dimen>
+
+    <!-- Avatar/Image sizes for tablets -->
+    <dimen name="avatar_size_small">40dp</dimen>
+    <dimen name="avatar_size_medium">48dp</dimen>
+    <dimen name="avatar_size_large">64dp</dimen>
+    <dimen name="avatar_size_xlarge">88dp</dimen>
+</resources>
