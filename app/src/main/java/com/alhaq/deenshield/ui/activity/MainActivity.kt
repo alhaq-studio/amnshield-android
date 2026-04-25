@@ -263,11 +263,44 @@ class MainActivity : AppCompatActivity() {
         // or user can access them through settings if needed.
         // checkPermissions() // Removed old permission check
         maybeShowPremiumReminder()
+        // Refresh the bell badge whenever we come back from the inbox.
+        invalidateOptionsMenu()
     }
 
     override fun onCreateOptionsMenu(menu: android.view.Menu?): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
+        updateNotificationBadge()
         return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: android.view.Menu?): Boolean {
+        updateNotificationBadge()
+        return super.onPrepareOptionsMenu(menu)
+    }
+
+    /**
+     * Attach a Material BadgeDrawable to the bell icon showing the number of
+     * unread in-app notifications. Hidden when there are no unread items.
+     */
+    @SuppressLint("UnsafeOptInUsageError")
+    private fun updateNotificationBadge() {
+        try {
+            val toolbar = binding.toolbar
+            val unread = com.alhaq.deenshield.utils.NotificationInboxStore.unreadCount(this)
+            val badge = com.google.android.material.badge.BadgeDrawable.create(this).apply {
+                isVisible = unread > 0
+                if (unread > 0) {
+                    number = unread
+                    maxCharacterCount = 3
+                }
+            }
+            // Re-attaching is safe; library handles replacement.
+            com.google.android.material.badge.BadgeUtils.attachBadgeDrawable(
+                badge, toolbar, R.id.action_notifications
+            )
+        } catch (t: Throwable) {
+            android.util.Log.w("MainActivity", "Could not attach notification badge", t)
+        }
     }
 
     override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {

@@ -114,11 +114,14 @@
         <item name="colorOnSurfaceInverse">#1A0B5C</item>
         <item name="colorPrimaryInverse">@color/gradient_primaryContainer</item>
 
-        <!-- System bars: edge-to-edge, light icons over dark gradient. -->
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
+        <!--
+            Edge-to-edge: do NOT set android:statusBarColor /
+            android:navigationBarColor / android:windowLightStatusBar /
+            android:windowLightNavigationBar here. They are deprecated as of
+            Android 15 (API 35) and ignored under enableEdgeToEdge(). System
+            bar appearance is now fully driven from each activity by
+            androidx.activity.enableEdgeToEdge().
+        -->
 
         <!-- Button Styles -->
         <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>

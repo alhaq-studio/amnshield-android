@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.CountDownTimer
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.alhaq.deenshield.Constants
 import com.alhaq.deenshield.R
@@ -35,8 +36,15 @@ class AntiUninstallPasswordActivity : AppCompatActivity() {
             setTheme(R.style.Theme_DeenShield_Gradient)
         }
         super.onCreate(savedInstanceState)
+        // Edge-to-edge for Android 15+ with backward compatibility.
+        enableEdgeToEdge()
         binding = ActivityAntiUninstallPasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val bars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
 
         // Handle back button to close activity and return to Settings
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {

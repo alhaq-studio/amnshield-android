@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import com.alhaq.deenshield.R
@@ -34,8 +35,15 @@ class CrashRecoveryActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Edge-to-edge for Android 15+ with backward compatibility.
+        enableEdgeToEdge()
         binding = ActivityCrashRecoveryBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val bars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
 
         errorManager = ErrorReportManager.getInstance(this)
         

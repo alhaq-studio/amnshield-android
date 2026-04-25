@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.alhaq.deenshield.services.DeenShieldAccessibilityService
 import com.alhaq.deenshield.ui.dialogs.StartFocusMode
@@ -17,6 +18,9 @@ class ShortcutActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Edge-to-edge for Android 15+ (no UI, but required so the activity
+        // is compliant with the new platform default).
+        enableEdgeToEdge()
 
         val isFocusedModeOn = savedPreferencesLoader.getFocusModeData().isTurnedOn
         if(isFocusedModeOn){

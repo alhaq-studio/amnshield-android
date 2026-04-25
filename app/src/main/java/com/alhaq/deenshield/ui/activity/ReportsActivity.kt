@@ -3,8 +3,11 @@ package com.alhaq.deenshield.ui.activity
 import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.alhaq.deenshield.R
@@ -46,7 +49,14 @@ class ReportsActivity : AppCompatActivity() {
             setTheme(R.style.Theme_DeenShield_Gradient)
         }
         super.onCreate(savedInstanceState)
+        // Edge-to-edge for Android 15+ with backward compatibility.
+        enableEdgeToEdge()
         setContentView(R.layout.activity_reports)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
         findViewById<com.google.android.material.appbar.MaterialToolbar?>(R.id.toolbar)?.let {
             setSupportActionBar(it)
         }

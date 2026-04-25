@@ -461,6 +461,8 @@
     <string name="notifications_clear_all">Clear all</string>
     <string name="notifications_clear_all_confirm">Remove all notifications from your inbox? This won\'t change your reminder settings.</string>
     <string name="notifications_reminder_settings">Reminder settings</string>
+    <string name="notifications_item_removed">Notification removed</string>
+    <string name="notifications_undo">Undo</string>
     <string name="granted">Granted</string>
     <string name="denied">Denied</string>
     

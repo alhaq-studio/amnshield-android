@@ -1,6 +1,6 @@
 # Privacy Policy for DeenShield
 
-**Last Updated: 2025-10-29**
+**Last Updated: 2026-04-25**
 
 ## 1. Introduction
 
@@ -63,6 +63,10 @@ We require certain permissions to provide the features of DeenShield. Here is a 
 *   **VPN Service:** This permission is used for the DNS-based filtering feature. It allows us to:
     *   Filter network traffic to block ads and trackers.
     *   **We do not log or monitor your network traffic.** All filtering is done on your device.
+*   **POST_NOTIFICATIONS (Android 13+):** Used to deliver reminders, alerts, and reports that you enable.
+*   **RECEIVE_BOOT_COMPLETED:** Used to restore enabled protections and schedules after device restart.
+*   **QUERY_ALL_PACKAGES:** Used to detect installed apps for app-blocking setup, category filtering, and auto-block behavior for newly installed apps.
+*   **INTERNET:** Used for Google Sign-In, Play Billing verification, optional update checks, and user-initiated feedback/report sharing.
 
 ## 4. How We Use Your Information
 
@@ -72,6 +76,8 @@ We use the information we collect solely to provide and improve the functionalit
 *   **To Display Your Stats:** App usage data is used to generate the charts and statistics you see on the "Stats" screen.
 *   **To Authenticate and Manage Your Account:** Your Google Account information is used to sign you in and verify your premium status.
 *   **For On-Device Smart Features:** Text and image data are used locally by the on-device machine learning models to provide smart content moderation.
+*   **To Maintain Reliability:** Local diagnostics support troubleshooting when you choose to export reports.
+*   **To Run Protection Workflows:** Boot restore, install-event auto protection, widgets, and reminders use local settings stored on your device.
 *   **To Improve the App:** Anonymized crash logs, which you voluntarily share, help us diagnose and fix bugs.
 
 ## 5. How We Do NOT Use Your Information (On-Device Processing)

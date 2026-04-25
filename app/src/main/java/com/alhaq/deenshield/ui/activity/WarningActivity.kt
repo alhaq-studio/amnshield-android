@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.View
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -20,6 +21,9 @@ class WarningActivity : AppCompatActivity() {
     private var dialog: AlertDialog? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Edge-to-edge for Android 15+ (this activity hosts a dialog overlay
+        // but still needs to be compliant with the platform default).
+        enableEdgeToEdge()
         val savedPreferencesLoader = SavedPreferencesLoader(this)
 
 
