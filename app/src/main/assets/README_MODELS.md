@@ -1,4 +1,4 @@
-# TensorFlow Lite Models for DeenShield
+# TensorFlow Lite Models for AmnShield
 
 ## Current Models
 
@@ -22,7 +22,7 @@ You can use a pre-trained NSFW detection model:
    - Convert to TFLite format
    - Place in `assets/` as `smart_blur_nsfw.tflite`
 
-2. **Custom DeenShield Model** (Future):
+2. **Custom AmnShield Model** (Future):
    - Train on Islamic-specific content
    - Higher accuracy for halal/haram detection
    - Contact development team for latest version
@@ -94,7 +94,7 @@ private fun testModel() {
 | Heuristics Only | 0 KB | ~5ms | 75% |
 | MobileNet V2 | ~4 MB | ~80ms | 90% |
 | EfficientNet B0 | ~6 MB | ~120ms | 93% |
-| Custom DeenShield | ~5 MB | ~90ms | 95%* |
+| Custom AmnShield | ~5 MB | ~90ms | 95%* |
 
 *Estimated based on Islamic content dataset
 
@@ -131,4 +131,4 @@ private fun testModel() {
 - [TensorFlow Lite Guide](https://www.tensorflow.org/lite/guide)
 - [NSFW Detection Models](https://github.com/GantMan/nsfw_model)
 - [Model Conversion](https://www.tensorflow.org/lite/convert)
-- [DeenShield Docs](../AI_FEATURES.md)
+- [AmnShield Docs](../AI_FEATURES.md)

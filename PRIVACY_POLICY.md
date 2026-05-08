@@ -1,16 +1,16 @@
-# Privacy Policy for DeenShield
+# Privacy Policy for AmnShield
 
 **Last Updated: 2026-04-25**
 
 ## 1. Introduction
 
-Welcome to DeenShield ("we," "our," "us"). We are committed to protecting your privacy and providing a transparent understanding of how we handle your data. DeenShield is designed with a "privacy-first" approach. Our core mission is to help you build healthier digital habits, and that includes respecting your personal information.
+Welcome to AmnShield ("we," "our," "us"). We are committed to protecting your privacy and providing a transparent understanding of how we handle your data. AmnShield is designed with a "privacy-first" approach. Our core mission is to help you build healthier digital habits, and that includes respecting your personal information.
 
-This Privacy Policy explains what information we collect, how we use it, and your choices regarding your information. The fundamental principle of DeenShield is that **all sensitive data processing happens entirely on your device.** We do not have servers that collect your personal activity data.
+This Privacy Policy explains what information we collect, how we use it, and your choices regarding your information. The fundamental principle of AmnShield is that **all sensitive data processing happens entirely on your device.** We do not have servers that collect your personal activity data.
 
 ## 2. Information We Collect
 
-To provide our features, DeenShield collects information in the following ways:
+To provide our features, AmnShield collects information in the following ways:
 
 ### a. Information You Provide to Us
 
@@ -19,7 +19,7 @@ To provide our features, DeenShield collects information in the following ways:
 
 ### b. Information Collected Automatically Through App Usage
 
-This is the most sensitive category of data, and we want to be exceptionally clear about it. To perform its functions, DeenShield uses Android's Accessibility Services and other permissions. This data is **processed exclusively on your device** and is **never transmitted to our servers or any third party.**
+This is the most sensitive category of data, and we want to be exceptionally clear about it. To perform its functions, AmnShield uses Android's Accessibility Services and other permissions. This data is **processed exclusively on your device** and is **never transmitted to our servers or any third party.**
 
 *   **Application Usage Data:**
     *   We monitor the applications you use (`packageName`) to enforce your app blocking and focus mode rules.
@@ -44,9 +44,9 @@ This is the most sensitive category of data, and we want to be exceptionally cle
 
 ## 3. Justification for Permissions
 
-We require certain permissions to provide the features of DeenShield. Here is a detailed explanation of why we need each of the key permissions:
+We require certain permissions to provide the features of AmnShield. Here is a detailed explanation of why we need each of the key permissions:
 
-*   **Accessibility Service:** This is the core permission that allows DeenShield to function. We use it to:
+*   **Accessibility Service:** This is the core permission that allows AmnShield to function. We use it to:
     *   Detect the app you are currently using to enforce app blocking and focus mode.
     *   Read the text on your screen to identify and block keywords.
     *   Analyze on-screen content for the Smart Blur feature.
@@ -70,7 +70,7 @@ We require certain permissions to provide the features of DeenShield. Here is a 
 
 ## 4. How We Use Your Information
 
-We use the information we collect solely to provide and improve the functionality of the DeenShield app.
+We use the information we collect solely to provide and improve the functionality of the AmnShield app.
 
 *   **To Provide Core Features:** Your configuration data and the data from the Accessibility Service are used to make the app, view, and keyword blockers work as you've configured them.
 *   **To Display Your Stats:** App usage data is used to generate the charts and statistics you see on the "Stats" screen.
@@ -89,7 +89,7 @@ To reiterate and emphasize our commitment to your privacy:
 
 ## 6. Data Sharing and Third Parties
 
-DeenShield is designed to minimize data sharing. We do not share your personal information, except in the limited circumstances described below:
+AmnShield is designed to minimize data sharing. We do not share your personal information, except in the limited circumstances described below:
 
 *   **Google Sign-In:** If you sign in, you are sharing information directly with Google, subject to Google's Privacy Policy. We only receive a token to verify your identity.
 *   **Google Play Billing:** If you purchase a premium subscription, the transaction is processed by the Google Play Store. We do not collect or store your payment card information.
@@ -97,11 +97,11 @@ DeenShield is designed to minimize data sharing. We do not share your personal i
 
 ## 7. Data Retention and Deletion
 
-All your personal configuration and usage data is stored locally on your device's internal storage. This data is retained as long as you have the DeenShield app installed.
+All your personal configuration and usage data is stored locally on your device's internal storage. This data is retained as long as you have the AmnShield app installed.
 
 You have full control over your data. You can delete your data in two ways:
-1.  **Clearing App Data:** You can go to your device's Settings -> Apps -> DeenShield -> Storage and tap "Clear Data." This will permanently delete all data associated with the app.
-2.  **Uninstalling the App:** Uninstalling the DeenShield application will remove the app and all of its associated data from your device.
+1.  **Clearing App Data:** You can go to your device's Settings -> Apps -> AmnShield -> Storage and tap "Clear Data." This will permanently delete all data associated with the app.
+2.  **Uninstalling the App:** Uninstalling the AmnShield application will remove the app and all of its associated data from your device.
 
 ## 8. Error Reporting and Feedback Control
 
@@ -131,7 +131,7 @@ We give you complete control over error reporting and feedback:
 You have the following rights regarding your information:
 *   **Access and Modify:** You can access and modify your configuration data at any time within the app's settings.
 *   **Access Error Data:** View all crash logs and feedback stored on your device anytime
-*   **Disable Permissions:** You can disable the Accessibility Service or other permissions for DeenShield at any time through your device's settings. Please note that doing so will cause the core features of the app to stop working.
+*   **Disable Permissions:** You can disable the Accessibility Service or other permissions for AmnShield at any time through your device's settings. Please note that doing so will cause the core features of the app to stop working.
 *   **Opt-out of Account Sync:** You can use the app without signing into a Google account, though premium features may require it.
 
 ## 10. Security
@@ -140,7 +140,7 @@ We take reasonable measures to protect the information stored locally on your de
 
 ## 11. Children's Privacy
 
-DeenShield is not intended for use by children under the age of 13 (or the relevant age in your jurisdiction). We do not knowingly collect personal information from children.
+AmnShield is not intended for use by children under the age of 13 (or the relevant age in your jurisdiction). We do not knowingly collect personal information from children.
 
 ## 12. Changes to This Privacy Policy
 

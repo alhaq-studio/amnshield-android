@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:clipToPadding="false">
+    android:clipToPadding="false"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,13 +23,16 @@
             android:layout_marginBottom="@dimen/spacing_normal"
             app:cardBackgroundColor="?attr/colorPrimaryContainer"
             app:cardCornerRadius="@dimen/card_corner_radius_large"
-            app:cardElevation="@dimen/card_elevation">
+            app:cardElevation="@dimen/card_elevation_high"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
+                android:minHeight="132dp"
                 android:padding="@dimen/padding_large">
 
                 <LinearLayout
@@ -104,8 +108,10 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:cardCornerRadius="@dimen/card_corner_radius_normal"
-                app:cardElevation="@dimen/card_elevation"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                app:cardElevation="@dimen/card_elevation_high"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp"
                 app:rippleColor="?attr/colorPrimary">
 
                 <LinearLayout
@@ -113,6 +119,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:minHeight="148dp"
                     android:padding="@dimen/padding_normal">
 
                     <ImageView
@@ -154,8 +161,10 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:cardCornerRadius="@dimen/card_corner_radius_normal"
-                app:cardElevation="@dimen/card_elevation"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                app:cardElevation="@dimen/card_elevation_high"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp"
                 app:rippleColor="?attr/colorPrimary">
 
                 <LinearLayout
@@ -163,13 +172,14 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:minHeight="148dp"
                     android:padding="@dimen/padding_normal">
 
                     <ImageView
                         android:layout_width="@dimen/icon_size_large"
                         android:layout_height="@dimen/icon_size_large"
                         android:layout_marginBottom="@dimen/spacing_small"
-                        android:src="@drawable/baseline_remove_24"
+                        android:src="@drawable/ic_reels_blocker"
                         android:tint="?attr/colorPrimary" />
 
                     <TextView
@@ -213,8 +223,10 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:cardCornerRadius="@dimen/card_corner_radius_normal"
-                app:cardElevation="@dimen/card_elevation"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                app:cardElevation="@dimen/card_elevation_high"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp"
                 app:rippleColor="?attr/colorPrimary">
 
                 <LinearLayout
@@ -222,6 +234,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:minHeight="148dp"
                     android:padding="@dimen/padding_normal">
 
                     <com.google.android.material.imageview.ShapeableImageView
@@ -229,7 +242,7 @@
                         android:layout_height="@dimen/icon_size_large"
                         android:layout_marginBottom="@dimen/spacing_small"
                         android:contentDescription="@string/stats"
-                        android:src="@drawable/ic_deenshield_stats"
+                        android:src="@drawable/ic_focus_mode"
                         android:tint="?attr/colorPrimary"
                         app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Full" />
 
@@ -265,8 +278,10 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:cardCornerRadius="@dimen/card_corner_radius_normal"
-                app:cardElevation="@dimen/card_elevation"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                app:cardElevation="@dimen/card_elevation_high"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp"
                 app:rippleColor="?attr/colorPrimary">
 
                 <LinearLayout
@@ -274,13 +289,14 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:minHeight="148dp"
                     android:padding="@dimen/padding_normal">
 
                     <ImageView
                         android:layout_width="@dimen/icon_size_large"
                         android:layout_height="@dimen/icon_size_large"
                         android:layout_marginBottom="@dimen/spacing_small"
-                        android:src="@drawable/baseline_close_24"
+                        android:src="@drawable/ic_keyword_blocker"
                         android:tint="?attr/colorPrimary" />
 
                     <TextView
@@ -324,8 +340,10 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:cardCornerRadius="@dimen/card_corner_radius_normal"
-                app:cardElevation="@dimen/card_elevation"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                app:cardElevation="@dimen/card_elevation_high"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp"
                 app:rippleColor="?attr/colorPrimary">
 
                 <LinearLayout
@@ -333,6 +351,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:minHeight="148dp"
                     android:padding="@dimen/padding_normal">
 
                     <ImageView
@@ -374,8 +393,10 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:cardCornerRadius="@dimen/card_corner_radius_normal"
-                app:cardElevation="@dimen/card_elevation"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                app:cardElevation="@dimen/card_elevation_high"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp"
                 app:rippleColor="?attr/colorPrimary">
 
                 <LinearLayout
@@ -383,13 +404,14 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:minHeight="148dp"
                     android:padding="@dimen/padding_normal">
 
                     <ImageView
                         android:layout_width="@dimen/icon_size_large"
                         android:layout_height="@dimen/icon_size_large"
                         android:layout_marginBottom="@dimen/spacing_small"
-                        android:src="@drawable/baseline_lock_24"
+                        android:src="@drawable/ic_app_protection"
                         android:tint="?attr/colorPrimary" />
 
                     <TextView
@@ -439,8 +461,10 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:cardCornerRadius="@dimen/card_corner_radius_normal"
-                app:cardElevation="@dimen/card_elevation"
-                app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                app:cardElevation="@dimen/card_elevation_high"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp"
                 app:rippleColor="?attr/colorPrimary">
 
                 <LinearLayout
@@ -448,6 +472,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:minHeight="148dp"
                     android:padding="@dimen/padding_normal">
 
                     <com.google.android.material.imageview.ShapeableImageView

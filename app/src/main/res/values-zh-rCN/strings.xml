@@ -1,125 +1,159 @@
-<resources>
-    <string name="app_name" translatable="false">DeenShield</string>
+﻿<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name" translatable="false">AmnShield</string>
+    <string name="default_web_client_id" translatable="false">789500018505-flp9rag7c34jguaej4h2kglenc4svrie.apps.googleusercontent.com</string>
     <string name="launcher_options">Launcher Options</string>
-    <string name="focus_mode">专注模式</string>
-    <string name="app_blocker">阻止使用</string>
-    <string name="view_reel_blocker">阻止短视频</string>
-    <string name="keyword_blocker">关键词屏蔽</string>
-    <string name="anti_uninstall">阻止卸载</string>
-    <string name="usage_tracker">时间追踪</string>
-    <string name="disabled">未启用</string>
+    <string name="focus_mode">Focus Mode</string>
+    <string name="app_blocker">App Blocker</string>
+    <string name="view_reel_blocker">Reels/Shorts Blocker</string>
+    <string name="keyword_blocker">Keyword Blocker</string>
+    <string name="anti_uninstall">App Protection</string>
+    <string name="usage_tracker">Usage Tracker</string>
+    <string name="disabled">Disabled</string>
     <string name="select_pinned_apps">Select pinned apps</string>
-    <string name="warning_launcher_settings">Set DeenShield as the default launcher to access this option</string>
-    <string name="select_blocked_apps">选择阻止应用</string>
-    <string name="start_focus_mode">开启专注</string>
-    <string name="warning_general_settings">请先启用General Accessibility无障碍功能</string>
-    <string name="manage_warning_screen">警告弹窗设置</string>
-    <string name="manage_cheat_hours">设置例外时间段</string>
-    <string name="warning_app_blocker_settings">请先启用App Blocker无障碍服务</string>
-    <string name="warning_view_blocker_settings">请先启用 View Blocke无障碍服务</string>
-    <string name="add_custom_keywords">添加关键词</string>
-    <string name="manage_keyword_packs">管理默认关键词</string>
-    <string name="warning_keywords_settings">请先启用Keyword Blocker 无障碍服务</string>
-    <string name="grayscale_filter">黑白模式</string>
-    <string name="setup_filter">设置过滤器</string>
-    <string name="usage_stats">使用通知</string>
+    <string name="warning_launcher_settings">Set AmnShield as the default launcher to access this option</string>
+    <string name="select_blocked_apps">Select blocked apps</string>
+    <string name="start_focus_mode">Start focus mode</string>
+    <string name="warning_general_settings">Enable General Accessibility Service to access this option</string>
+    <string name="manage_warning_screen">Manage Warning Screen</string>
+    <string name="enable_app_blocker">Enable App Blocker</string>
+    <string name="enable_keyword_blocker">Enable Keyword Blocker</string>
+    <string name="enable_usage_tracker">Enable Usage Tracker</string>
+    <string name="manage_cheat_hours">Manage Cheat Hours</string>
+    <string name="warning_app_blocker_settings">Enable App Blocker Accessibility Service to manage app blocking</string>
+    <string name="warning_view_blocker_settings">Enable Shorts Blocker Accessibility Service to manage shorts blocking</string>
+    <string name="add_custom_keywords">Add Custom Keywords</string>
+    <string name="manage_keyword_packs">Manage Keyword Packs</string>
+    <string name="warning_keywords_settings">Enable Keyword Blocker Accessibility Service to manage blocked keywords</string>
+    <string name="grayscale_filter">Grayscale Filter</string>
+    <string name="setup_filter">Setup Filter</string>
+    <string name="usage_stats">Usage Stats</string>
     <string name="manage_overlay_trackers">Manage Real Time Overlay</string>
-    <string name="warning_usage_tracker_settings">请先启用Usage Tracker 无障碍服务</string>
-    <string name="remove_anti_uninstall">取消防卸载</string>
-    <string name="add_cheat_hours">例外时间</string>
-    <string name="add">添加</string>
-    <string name="save">保存</string>
-    <string name="todays_stats">今日用量</string>
-    <string name="you_scrolled_2_d_reels">你刷了 %2$d 视频</string>
-    <string name="your_average_attention_span_was_2_d_mins">你的平均专注时长为 %2$d 分钟</string>
-    <string name="view_more">更多</string>
-    <string name="number_of_reels_scrolled">视频数量</string>
-    <string name="average_attention_span">平均专注时长</string>
-    <string name="apps">应用:</string>
-    <string name="remove">删除</string>
-    <string name="write_down_a_keyword">输入关键词</string>
-    <string name="select_start_time">选择开始时间</string>
-    <string name="select_end_time">选择结束时间</string>
-    <string name="select_apps_to_unblock">选择禁用应用</string>
-    <string name="disable_proceed_button">关闭继续按钮</string>
-    <string name="display_time_elapsed">显示已用时长</string>
-    <string name="display_number_of_reels_scrolled">显示已刷视频数量</string>
+    <string name="warning_usage_tracker_settings">Enable Usage Tracker Accessibility Service to manage trackers</string>
+    <string name="remove_anti_uninstall">Disable App Protection</string>
+    <string name="add_cheat_hours">Add Cheat Hours</string>
+    <string name="add">Add</string>
+    <string name="save">Save</string>
+    <string name="export">Export</string>
+    <string name="import_pack">Import</string>
+    <string name="export_keywords">Export Keywords</string>
+    <string name="import_keywords">Import Keywords</string>
+    <string name="pack_name">Pack Name</string>
+    <string name="pack_description">Pack Description</string>
+    <string name="enter_pack_name">Enter pack name</string>
+    <string name="enter_pack_description">Enter description (optional)</string>
+    <string name="export_success">Keywords exported successfully</string>
+    <string name="export_failed">Failed to export keywords</string>
+    <string name="import_success">Imported %d keywords</string>
+    <string name="import_failed">Failed to import keywords</string>
+    <string name="invalid_pack">Invalid keyword pack file</string>
+    <string name="select_export_location">Select export location</string>
+    <string name="select_import_file">Select keyword pack file</string>
+    <string name="todays_stats">Today\'s Stats</string>
+    <string name="you_scrolled_2_d_reels">You scrolled %2$d reels</string>
+    <string name="your_average_attention_span_was_2_d_mins">Your average attention span was %2$d mins</string>
+    <string name="view_more">View More</string>
+    
+    <string name="number_of_reels_scrolled">Number of Reels Scrolled</string>
+    <string name="average_attention_span">Average Attention Span</string>
+    <string name="apps">Apps:</string>
+    <string name="remove">Remove</string>
+    <string name="write_down_a_keyword">Write down a keyword</string>
+    <string name="select_start_time">Select Start Time</string>
+    <string name="select_end_time">Select End Time</string>
+    <string name="select_apps_to_unblock">Select Apps to unblock</string>
+    <string name="disable_proceed_button">Disable Proceed Button </string>
+    <string name="display_time_elapsed">Display Time Elapsed</string>
+    <string name="display_number_of_reels_scrolled">Display number of reels scrolled</string>
     <string name="specify_duration_of_focus_mode_in_mins">Specify duration of focus mode in mins</string>
-    <string name="block_adult_keywords">成人关键词</string>
-    <string name="password">密码</string>
+    <string name="block_adult_keywords">Block Adult Keywords</string>
+    <string name="password">Password</string>
     <string name="specify_cooldown_interval_in_minutes">Specify cooldown interval in minutes</string>
-    <string name="warning_message">警告信息</string>
-    <string name="allow_viewing_instagram_reels_sent_in_instagram_inbox">允许查看 Instagram 收件箱发送的视频</string>
+    <string name="warning_message">Warning message</string>
+    <string name="allow_viewing_instagram_reels_sent_in_instagram_inbox">Allow viewing instagram reels sent in Instagram inbox</string>
     <string name="allow_opening_the_first_reel_in_feed">Allow opening the first reel in feed</string>
-    <string name="in_warning_changeable_cooldown">警告弹窗中可设置使用时长</string>
-    <string name="timed_mode">时间模式</string>
-    <string name="block_all_uninstall_attempts_for_a_set_amount_of_days">指定时间防卸载</string>
-    <string name="password_mode">密码模式</string>
-    <string name="block_all_uninstall_attempts_until_you_remove_anti_uninstall_with_a_password">设置防卸载密码</string>
+    <string name="in_warning_changeable_cooldown">in-warning changeable cooldown</string>
+    <string name="timed_mode">Timed Mode</string>
+    <string name="block_all_uninstall_attempts_for_a_set_amount_of_days">Block all uninstall attempts for a specified number of days.</string>
+    <string name="password_mode">Password Mode</string>
+    <string name="block_all_uninstall_attempts_until_you_remove_anti_uninstall_with_a_password">Block uninstall attempts until App Protection is removed with a password</string>
     <string name="next">Next</string>
     <string name="password_mode_desc">Make sure not to forget this password. You may not be able to exit anti-uninstall without it.</string>
-    <string name="turn_on">启用</string>
-    <string name="timed_mode_desc">设置防卸载持续时间</string>
-    <string name="turn_on_anti_uninstall">启用防卸载</string>
+    <string name="turn_on">Turn On</string>
+    <string name="timed_mode_desc">How long would you like to keep anti-uninstall enabled?</string>
+    <string name="turn_on_anti_uninstall">Turn on App Protection</string>
     <string name="minutes">minutes</string>
+    <string name="app_icon">app_icon</string>
 
-    <string name="app_icon">应用图标</string>
-    <string name="accessibility_permission_app_blocker">
-        Enabling this would unlock the following in DeenShield:\n1. App Blocking\n2, Focus Mode \n\n
-        DeenShield needs access to accessibility data to know when you open a specific feature within an app, like a social media feed or a game.
-        This lets DeenShield block those features for you based on your preferences, helping you stay focused and reduce screen distractions.\n\n
-        Rest assured, all accessibility data stays securely on your device—we never share or transmit your data, ensuring your privacy is always protected.
-        \n\n
-    </string>
-    <string name="accessibility_permission_view_blocker">
-        Enabling this would unlock the following in DeenShield:\n1. View Blocking\n2. Block Instagram reels,Tikok and Youtube shorts\n\n
-        DeenShield needs access to accessibility data to know when you open a specific feature within an app, like a social media feed or a game.
-        This lets DeenShield block those features for you based on your preferences, helping you stay focused and reduce screen distractions.\n\n
-        Rest assured, all accessibility data stays securely on your device—we never share or transmit your data, ensuring your privacy is always protected.
-        \n\n
-    </string>
-    <string name="accessibility_permission_usage_tracker">
-        THIS FEATURE REQUIRES DISPLAY OVER OTHER APPS (DRAW OVER OTHER APPS) PERMISSION TO WORK. PLEASE ENABLE IT FIRST AND THEN ENABLE THIS. RESTART IF SERVICE MALFUNCTIONS.\n\n
-
-        Enabling this would unlock the following in DeenShield:\n1. Count number of reels/tiktoks scrolled\n2. A floating overlay that shows time elapsed\n\n
-        DeenShield needs access to accessibility data to know when you open a specific feature within an app, like a social media feed or a game.
-        This lets DeenShield block those features for you based on your preferences, helping you stay focused and reduce screen distractions.\n\n
-        Rest assured, all accessibility data stays securely on your device—we never share or transmit your data, ensuring your privacy is always protected.
-        \n\n
-    </string>
-    <string name="accessibility_permission_keyword_blocker">
-        Enabling this would unlock the following in DeenShield:\n1. Block custom keywords\n2. Block content like adult material\n\n
-        DeenShield needs access to accessibility data to know when you open a specific feature within an app, like a social media feed or a game.
-        This lets DeenShield block those features for you based on your preferences, helping you stay focused and reduce screen distractions.\n\n
-        Rest assured, all accessibility data stays securely on your device—we never share or transmit your data, ensuring your privacy is always protected.
-        \n\n
+    <string name="accessibility_service_description">
+        AmnShield requires the Accessibility Service to power its core features. The service allows the app to:
+        \n\n- See which app you are using: This is necessary to enforce your App Blocker and Focus Mode rules.
+        \n- Read on-screen content: This is used by the Keyword Blocker to identify and block unwanted content in real-time.
+        \n- Perform actions: The service can perform \"back\" or \"home\" gestures to block apps and close distracting content.
+        \n\n**Your privacy is our top priority.** All data processing is done entirely on your device. Your on-screen content and app usage are never logged, stored, or shared with us or any third party.
     </string>
 
-    <string name="accessibility_permission_general_features">"         Enabling this would unlock the following in DeenShield: 1. Anti-Uninstall (Setup required to run)           DeenShield needs access to accessibility data to know when you open a specific feature within an app, like a social media feed or a game.         This lets DeenShield block those features for you based on your preferences, helendping you stay focused and reduce screen distractions.           Rest assured, all accessibility data stays securely on your device—we never share or transmit your data, ensuring your privacy is always protected.                "</string>
-    <string name="admin_permission_desc">DeenShield 防卸载l</string>
+    <string name="admin_permission_desc">AmnShield Anti-Uninstall</string>
     <string name="title">Title</string>
-    <string name="close">关闭</string>
-    <string name="proceed">继续</string>
+    <string name="close">Close</string>
+    <string name="proceed">Proceed</string>
+    <string name="warning_title_app_blocker">App Blocker Protection</string>
+    <string name="warning_title_reels_blocker">Reels/Shorts Protection</string>
+    <string name="warning_default_message_app">This app is currently blocked to help you stay focused.</string>
+    <string name="warning_default_message_reels">Reels/Shorts were blocked to protect your focus and time.</string>
+    <string name="warning_cancel_go_home">Go Home</string>
+    <string name="warning_cancel_stay_safe">Close</string>
     <string name="please_enable_device_admin">Please provide device admin permission to access this feature</string>
     <string name="setup_complete">Setup Complete</string>
     <string name="enter_setup">Enter Setup</string>
-    <string name="enabled">已启用</string>
+    <string name="enabled">Enabled</string>
     <string name="start">Start</string>
-    <string name="cancel">取消</string>
+    <string name="cancel">Cancel</string>
     <string name="manage_keyword_blockers">Manage Keyword Blockers</string>
     <string name="ok">OK</string>
     <string name="anti_uninstall_removed">Anti Uninstall removed</string>
+    <string name="anti_uninstall_is_protected_by_password">Anti-Uninstall is protected by password. Remove it from the app settings.</string>
+    <string name="anti_uninstall_is_active_cannot_remove">Anti-Uninstall is currently active and cannot be removed.</string>
+    <string name="anti_uninstall_password_mode_warning">[Warning] Anti-Uninstall is protected by password.\n\nYou must enter the correct password in the AmnShield app to disable this protection.</string>
+    <string name="anti_uninstall_timed_mode_warning">[Warning] Anti-Uninstall is active for %1$d more days.\n\nYou cannot disable this protection until the time period expires.</string>
+    <string name="anti_uninstall_timed_mode_expired">[OK] The time period has expired. You can now disable Anti-Uninstall.</string>
+    <string name="anti_uninstall_is_active">[Warning] Anti-Uninstall protection is currently active.</string>
+    
+    <!-- Anti-Uninstall UI Strings -->
+    <string name="anti_uninstall_description">Prevent unauthorized uninstalls and optionally block configuration changes using password or timed protection</string>
+    <string name="enable_anti_uninstall_protection">Enable Anti-Uninstall Protection</string>
+    <string name="anti_uninstall_disabled">Anti-uninstall protection is currently disabled</string>
+    <string name="anti_uninstall_enabled">Anti-uninstall protection is active</string>
+    <string name="anti_uninstall_mode_password_active">Password protection is active</string>
+    <string name="anti_uninstall_mode_timed_active">Time protection active until %1$s</string>
+    <string name="configure_anti_uninstall">Configure Protection</string>
+    <string name="choose_anti_uninstall_mode">Choose Protection Mode</string>
+    <string name="disable_anti_uninstall">Disable Anti-Uninstall</string>
+    <string name="are_you_sure_disable_anti_uninstall">Are you sure you want to disable anti-uninstall protection?</string>
+    <string name="disable">Disable</string>
+    <string name="enter_password">Enter Password</string>
+    <string name="enter_password_to_disable">Enter your password to disable anti-uninstall protection</string>
+    <string name="incorrect_password">Incorrect password</string>
+    <string name="anti_uninstall_disabled_successfully">Anti-uninstall protection disabled successfully</string>
+    
+    <!-- Anti-Uninstall Password Verification -->
+    <string name="anti_uninstall_password_required">App Protection Verification</string>
+    <string name="enter_password_to_proceed_settings">Enter your password to continue, or use the 5-minute recovery fallback if you forgot it</string>
+    <string name="password_verified">Password verified. Access granted.</string>
+    <string name="verify">Verify</string>
+    <string name="anti_uninstall_timed_mode_active">Timed Protection Active</string>
+    <string name="anti_uninstall_timed_mode_days_remaining">Anti-Uninstall protection is active for %1$d more days.\n\nYou cannot access this Settings screen until the time period expires.</string>
+    
     <string name="failed">Failed</string>
-    <string name="incorrect_password_please_try_again">"Incorrect password. Please try again. "</string>
+    <string name="incorrect_password_please_try_again">Incorrect password. Please try again.</string>
     <string name="retry">Retry</string>
     <string name="start_time">Start Time: %1$d:%2$d</string>
     <string name="end_time_must_be_after_start_time_has_passed">End time must be after start time has passed!</string>
     <string name="end_time">End Time: %1$02d:%2$02d</string>
     <string name="start_time_02d_02d">Start Time: %1$02d:%2$02d</string>
     <string name="specify_cheat_hours">Specify Cheat Hours</string>
-    <string name="remaining_time_anti_uninstall">%1$d 天后你才能关闭防卸载</string>
-    <string name="add_a_new_keyword">添加新关键词</string>
-    <string name="you_scrolled_reels">你刷了 %1$d 视频</string>
+    <string name="remaining_time_anti_uninstall">You still have %1$d days to go before unlocking anti-uninstall</string>
+    <string name="add_a_new_keyword">Add a new keyword</string>
+    <string name="you_scrolled_reels">You scrolled %1$d reels</string>
     <string name="you_had_an_attention_span_of_seconds_video">You had an attention span of %1$.2f seconds/video</string>
     <string name="failed_to_launch_system_digital_wellbeing">Failed to launch system digital wellbeing</string>
     <string name="reel_count">Reel count</string>
@@ -132,49 +166,341 @@
     <string name="please_select_an_end_time">Please Select an end time</string>
     <string name="please_select_a_few_apps">Please select a few apps</string>
     <string name="cheat_timings">%1$d:%2$d to %3$d:%4$d</string>
-    <string name="configure_warning_screen">警告弹窗</string>
-    <string name="proceed_in">等待 %1$d 秒 才能继续</string>
+    <string name="configure_warning_screen">Warning Screen</string>
+    <string name="proceed_in">Please wait %1$d seconds before pressing proceed</string>
     <string name="to">To</string>
     <string name="please_specify_time">Please specify time</string>
     <string name="from">From</string>
     <string name="end">End</string>
-    <string name="accept">接受</string>
-    <string name="accessibility_perm_desc">DeenShield 使用“辅助功能”权限来提供应用监控和使用情况追踪等功能，以提升您的体验。此权限允许 DeenShield 检测应用活动并帮助有效管理设备使用情况。请放心，所有数据均在您的设备本地处理，绝不会发送到任何服务器或第三方。您的隐私和数据安全是我们的首要任务。点击“接受”即表示您确认并同意上述条款。</string>
+    <string name="accept">Accept</string>
+    <string name="accessibility_perm_desc">AmnShield uses the Accessibility permission to provide features like app monitoring and usage tracking to enhance your experience. This permission allows AmnShield to detect app activities and help manage device usage effectively. Rest assured, all data is processed locally on your device and is never sent to any server or third party. Your privacy and data security are our top priorities.     By pressing Accept, you acknowledge and agree to the above .</string>
     <string name="reject">Reject</string>
     <string name="peel_the_onions">Peel the onions</string>
     <string name="fix_your_life">Fix your life</string>
     <string name="perform_actions_like_a_back_press">Perform actions like a back press</string>
     <string name="read_content_on_screen">Read content on screen</string>
-    <string name="this_will_allow_deenshield_to">This will allow deenshield to:</string>
-    <string name="enable_2">"Enable %1$s"</string>
-    <string name="device_admin_perm">DeenShield 使用设备管理员权限来增强安全性，并在特定时间段内阻止卸载 deenshield。所有数据都将安全地存储在您的设备上，绝不会与外部共享。</string>
+    <string name="this_will_allow_deenshield_to">This will allow AmnShield to:</string>
+    <string name="enable_2">Enable %1$s</string>
+    <string name="device_admin_perm">AmnShield uses Device Admin permission to enhance security and block uninstalling AmnShield until a specific period. All data remains securely stored on your device and is never shared externally.</string>
     <string name="prevent_uninstallation_attempts_until_a_set_condition_is_met">Prevent uninstallation attempts until a set condition is met</string>
 
-    <string name="device_perm_draw_over_other_apps">DeenShield 使用悬浮窗权限，在屏幕上显示一个小型叠加层。此叠加层会跟踪用户观看的短视频数量和使用时间。</string>
+    <string name="device_perm_draw_over_other_apps">AmnShield uses the \"Display over other apps\" permission to show a small floating overlay on the screen. This overlay tracks the number of reels watched and the time spent, helping users be more aware of their usage in real time.</string>
     <string name="show_time_elapsed_on_phone">Show time elapsed on phone</string>
-    <string name="calculate_how_many_reels_tiktok_short_videos_you_scroll_per_day">计算每日平均短视频数量</string>
+    <string name="calculate_how_many_reels_tiktok_short_videos_you_scroll_per_day">Calculate how many reels/ tiktok/ short videos you scroll per day</string>
     <string name="plan_a_robbery">Plan a robbery</string>
     <string name="please_provide_display_over_other_apps_permission_to_access_this_feature">Please provide display over other apps permission to access this feature</string>
-    <string name="find_deenshield_and_press_enable">找到 DeenShield 并启用</string>
+    <string name="find_deenshield_and_press_enable">Find AmnShield and press enable</string>
     <string name="discard_changes">Discard Changes?</string>
-    <string name="are_you_sure_you_want_to_discard_all_changes_and_exit">不保存并返回?</string>
-    <string name="yes">是</string>
+    <string name="are_you_sure_you_want_to_discard_all_changes_and_exit">Are you sure you want to discard all changes and exit?</string>
+    <string name="yes">Yes</string>
     <string name="join_discord">Join Discord</string>
     <string name="follow_us_on_instagram">Follow us on Instagram</string>
-    <string name="support">支持</string>
-    <string name="if_you_enable_this_you_won_t_be_able_to_change_configurations_such_as_adding_blocked_apps_keywords_and_more">如果启用此功能，则在移除防卸载功能之前，您将无法更改配置，例如添加阻止应用、关键字等。更改将立即生效。</string>
-    <string name="alert">注意!!</string>
-    <string name="i_understand">我明白</string>
-    <string name="are_you_sure_you_want_to_turn_on_anti_uninstall_there_is_no_turning_back">你确定要开启防卸载? There is no turning back...</string>
-    <string name="about_view_blocker">About View Blocker</string>
-    <string name="this_option_has_the_ability_to_block_youtube_shorts_and_instagram_reels_while_allowing_access_to_other_app_features">此选项可以阻止 YouTube Shorts 和 Instagram Reels，同时允许访问其他应用功能。</string>
+    <string name="support">Support</string>
+    <string name="if_you_enable_this_you_won_t_be_able_to_change_configurations_such_as_adding_blocked_apps_keywords_and_more">If you enable this, you won\'t be able to change configurations such as adding blocked apps, keywords, and more until you remove anti-uninstall. Your existing changes will be used for the entire period.</string>
+    <string name="alert">Alert!!</string>
+    <string name="i_understand">I Understand</string>
+    <string name="are_you_sure_you_want_to_turn_on_anti_uninstall_there_is_no_turning_back">ARE YOU SURE YOU WANT TO TURN ON ANTI UNINSTALL? There is no turning back...</string>
+    <string name="about_view_blocker">About Shorts Blocker</string>
+    <string name="this_option_has_the_ability_to_block_youtube_shorts_and_instagram_reels_while_allowing_access_to_other_app_features">This option has the ability to block YouTube Shorts and Instagram Reels while allowing access to other app features.</string>
     <string name="configure_blocker">Configure Blocker</string>
-    <string name="select_apps">选择应用</string>
-    <string name="setup_auto_focus">计划专注</string>
-    <string name="select_all">全选</string>
-    <string name="clear_all">清空</string>
-    <string name="app_usage_others_label">其他</string>
+    <string name="select_apps">Select Apps</string>
+    <string name="setup_auto_focus">Setup Auto-Focus</string>
+    <string name="select_all">Select all</string>
+    <string name="clear_all"> Clear all</string>
+    <string name="manage">Manage</string>
+    <string name="configure">Configure</string>
+    <string name="import_packs">Import Packs</string>
+    <string name="view_stats">View Stats</string>
+    <string name="learn_more">Learn More</string>
+    <string name="block_distracting_apps_desc">Block access to distracting apps</string>
     <string name="join_telegram">Join Telegram</string>
-    <string name="guide">指南</string>
-    <string name="go_back">返回</string>
+    <string name="guide">Guide</string>
+    <string name="go_back">Go back</string>
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+    <string name="theme_settings">Theme Settings</string>
+    <string name="choose_theme_color">Choose Theme Color</string>
+    <string name="primary_color">Primary Color</string>
+    <string name="reset_to_default">Reset to Default</string>
+    
+    <!-- Navigation -->
+    <string name="home">Home</string>
+    <string name="stats">Stats</string>
+    
+    <!-- Home Screen -->
+    <string name="welcome_to_deenshield">Welcome to AmnShield</string>
+    <string name="protect_your_digital_wellbeing">Protect your digital wellbeing with powerful tools</string>
+    <string name="quick_actions">Quick Actions</string>
+    <string name="hide_welcome_card">Hide welcome card</string>
+    <string name="welcome_card_hidden">Welcome card hidden</string>
+    <string name="undo">Undo</string>
+    <string name="block_distracting_apps">Block distracting apps temporarily</string>
+    <string name="permanently_block_apps">Permanently block specific apps</string>
+    <string name="block_shorts_and_reels">Block YouTube Shorts &amp; Instagram Reels</string>
+    <string name="monitor_app_usage">Monitor your app usage and screen time</string>
+    <string name="prevent_app_removal">Prevent uninstallation of AmnShield</string>
+    <string name="off">OFF</string>
+    <string name="on">ON</string>
+    
+    <!-- Stats Screen -->
+    <string name="today_screen_time">Today\'s Screen Time</string>
+    <string name="total_time_today">Total time spent today</string>
+    <string name="view_detailed_stats">View Detailed Statistics</string>
+    <string name="reels_today">Reels Watched Today</string>
+    <string name="vs_yesterday">vs yesterday</string>
+    <string name="view_reels_metrics">View Reels Metrics</string>
+    <string name="most_used_apps">Most Used Apps</string>
+    
+    <!-- Settings Screen -->
+    <string name="appearance">Appearance</string>
+    <string name="theme">Theme</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="system_default">System Default</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="accent_color">Accent Color</string>
+    <string name="features">Features</string>
+    <string name="default_green">Default Green</string>
+    <string name="general">General</string>
+    <string name="backup_restore">Backup &amp; Restore</string>
+    <string name="share_crash_logs">Share Crash Logs</string>
+    <string name="help_and_faq">Help &amp; FAQ</string>
+    <string name="help_and_faq_description">Common questions and troubleshooting</string>
+    <string name="about_deenshield">About AmnShield</string>
+    <string name="app_version">Version 0.25.4.2026</string>
+    <string name="github">GitHub</string>
+    <string name="telegram">Telegram</string>
+    <string name="view_blocker">Reels/Shorts Blocker</string>
+    <string name="continue_anyway">Continue Anyway</string>
+    <string name="manage_view_blocker">Configure Shorts Blocker</string>
+    <string name="open_accessibility_settings">Open Accessibility Settings</string>
+    <string name="welcome_message">Welcome to AmnShield! We\'re here to help you build healthier digital habits. This quick setup guide will walk you through the key features and permissions needed to get the most out of the app. Updates are delivered automatically through the Play Store.</string>
+    <string name="terms_and_conditions">Terms &amp; Conditions</string>
+    <string name="agree_to_terms">I have read and agree to the Terms and Privacy Policy</string>
+    <string name="privacy_policy">Privacy Policy</string>
+
+    <!-- Navigation Drawer -->
+    <string name="profile">Profile</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="faq">FAQ</string>
+    <string name="feedback">Feedback</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="guest_user">Guest User</string>
+    <string name="not_signed_in">Not signed in</string>
+    <string name="profile_image">Profile Image</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_out_confirmation">Are you sure you want to sign out?</string>
+    <string name="signed_in_as">Signed in as %1$s</string>
+    <string name="send_feedback">Send Feedback</string>
+    <string name="feedback_subject">AmnShield Feedback</string>
+    <string name="feedback_hint">Share your thoughts, suggestions, or report issues...</string>
+    <string name="feedback_sent">Thank you for your feedback!</string>
+    <string name="feedback_error">Could not send feedback. Please try again.</string>
+    <string name="notification_permission_title">Enable notifications</string>
+    <string name="notification_permission_rationale">Focus Mode uses notifications to show the countdown timer. Please enable them to continue.</string>
+    <string name="notification_permission_required">Notifications are required to show the Focus Mode timer.</string>
+    <string name="open_settings">Open settings</string>
+    <string name="app_usage_others_label">Others</string>
+    <string name="premium_required_title">Premium Required</string>
+    <string name="premium_required_message">Premium is required to unlock App Blocker, Focus Mode, Shorts Blocker, Reel Blocker, and Anti-Uninstall Protection.</string>
+    <string name="premium_required_message_short">Premium is required to use this feature.</string>
+    <string name="premium_view_plans">View Premium Plans</string>
+    <string name="premium_nav_upgrade">Premium Features</string>
+    <string name="premium_nav_manage">Premium (Active)</string>
+    <string name="premium_locked">Premium</string>
+    <string name="premium_unlock_chip">Unlock</string>
+    <string name="premium_reminder_title">Unlock Premium Features</string>
+    <string name="premium_reminder_message">Upgrade to AmnShield Premium to unlock App Blocker, Focus Mode, Reel Blocker, Anti-Uninstall Protection, and more. Support the project while protecting your digital wellbeing.</string>
+    <string name="premium_features_title">Unlock AmnShield Premium</string>
+    <string name="premium_features_subtitle">Unlock App Blocker, Focus Mode, Reel Blocker, Anti-Uninstall protection, and advanced digital wellbeing tools.</string>
+    <string name="premium_features_includes">Premium includes:</string>
+    <string name="premium_benefit_app_blocker">- App Blocker - Block distracting apps by category with auto-block, cheat hours, and custom warnings</string>
+    <string name="premium_benefit_anti_uninstall">- Anti-Uninstall Protection - Password or time-based protection against uninstalling protected apps</string>
+    <string name="premium_benefit_priority_support">- App Governance - Better control over protected apps and access integrity</string>
+    <string name="premium_benefit_app_guard">- Smart App Guard - Detects common bypass behavior and helps keep protection active</string>
+    <string name="premium_benefit_view_blocker">- Reel Blocker - Limit endless scrolling on Instagram Reels, YouTube Shorts, and TikTok videos</string>
+    <string name="premium_benefit_focus_mode">- Focus Mode - Time-boxed app blocking with productivity tracking and session history</string>
+    <string name="premium_benefit_reports">- Enhanced Statistics - Comprehensive blocking reports, trends, and productivity insights</string>
+    <string name="premium_benefit_privacy">- Privacy First - Local processing, no tracking, and no external analytics</string>
+    <string name="premium_benefit_future">- Future Features - Priority access to upcoming wellbeing automations</string>
+    <string name="premium_price_lifetime">Lifetime access</string>
+    <string name="premium_price_lifetime_value">GBP 13.5 one-time</string>
+    <string name="premium_cta_lifetime">Buy lifetime access</string>
+    <string name="premium_price_monthly">Monthly plan</string>
+    <string name="premium_price_monthly_value">GBP 3.5 per month</string>
+    <string name="premium_cta_monthly">Start monthly plan</string>
+    <string name="premium_price_yearly">Annual plan</string>
+    <string name="premium_price_yearly_value" tools:ignore="MissingTranslation">GBP 2.5 per month (billed yearly)</string>
+    <string name="premium_cta_yearly">Start annual plan</string>
+    <string name="premium_restore">Restore purchases</string>
+    <string name="premium_disclaimer">Prices shown are indicative. Final pricing, taxes, and billing are handled securely by Google Play. Subscriptions auto-renew unless canceled. Cancel anytime from Google Play.</string>
+    <string name="premium_active_message">Premium protection is active on this device.</string>
+    <string name="premium_restore_in_progress">Checking your premium status...</string>
+    <string name="premium_already_active">Premium is already active.</string>
+    <string name="premium_purchase_success">Premium unlocked! Additional protection features are now enabled.</string>
+    <string name="premium_no_previous_purchases">No previous purchases found.</string>
+    <string name="premium_card_title">Premium Access</string>
+    <string name="premium_card_status_premium">Premium</string>
+    <string name="premium_card_status_compassionate">Free Access</string>
+    <string name="premium_card_status_special">Special</string>
+    <string name="reel_blocker">Reels/Shorts Blocker</string>
+    <string name="block_changes_during_protection">Block changes to blockers while protection is active</string>
+    <string name="enable_block_changes_guard">Enable Block Changes Guard</string>
+    <string name="forgot_password_recovery">Forgot password? Start 5-minute recovery</string>
+    <string name="recovery_countdown_message">Recovery unlock in %1$02d:%2$02d</string>
+    <string name="recovery_started">Recovery started. Wait 5 minutes to unlock settings.</string>
+    <string name="recovery_ready">Recovery complete. Settings are unlocked for 5 minutes.</string>
+    <string name="start_recovery">Start Recovery</string>
+    <string name="enable_reel_blocker">Enable Reel Blocker</string>
+    <string name="reel_blocker_toggle_description">Toggle dedicated reel blocking behavior independently of general view blocking.</string>
+    <string name="reel_blocker_full_description">Block Instagram Reels, YouTube Shorts reels feed, and TikTok with dedicated reel controls.</string>
+    <string name="reel_blocker_platforms_title">Platforms to block</string>
+    <string name="reel_blocker_platforms_description">Choose where Reel Blocker should actively block short-form feeds.</string>
+    <string name="reel_blocker_platform_youtube">YouTube Shorts</string>
+    <string name="reel_blocker_platform_instagram">Instagram Reels</string>
+    <string name="reel_blocker_platform_tiktok">TikTok</string>
+    <string name="reel_blocker_platform_browser">Browser shorts/reels pages</string>
+    <string name="reel_blocker_platform_browser_hint">Helps block web-based shorts and reels pages inside supported browsers.</string>
+    <string name="reel_blocker_mode">Blocking Mode</string>
+    <string name="reel_block_after_count">Block only after daily reel limit</string>
+    <string name="reel_daily_limit_hint">Daily reel limit</string>
+    <string name="reel_daily_limit_validation">Enter a daily limit of at least 1 reel.</string>
+    <string name="shorts_blocker_description">Blocks YouTube Shorts and Instagram Reels surfaces in the Shorts Blocker flow.</string>
+    <string name="compassionate_access_title">I Can\'t Afford to Pay</string>
+    <string name="compassionate_access_description">Islamic Rahmah (Mercy): digital protection should be available to everyone. We trust you to be honest about your situation (amanah).</string>
+    <string name="compassionate_access_button">Request Free Access</string>
+    <string name="compassionate_access_intro_message">This program is for people who are genuinely in financial need. We ask you to be truthful about your situation. If you proceed, AmnShield will grant 1 year of free premium access on this device.</string>
+    <string name="compassionate_access_intro_positive">I\'m in financial need</string>
+    <string name="compassionate_access_form_title">Free Premium Access Request</string>
+    <string name="compassionate_access_form_message">Enter your details below. Name is required, email is optional for account recovery, and an App ID will be generated automatically.</string>
+    <string name="compassionate_access_name_hint">Your name</string>
+    <string name="compassionate_access_email_hint">Email address (optional)</string>
+    <string name="compassionate_access_proceed">Proceed</string>
+    <string name="compassionate_access_name_required">Please enter your name to continue.</string>
+    <string name="compassionate_access_email_invalid">Enter a valid email address or leave it blank.</string>
+    <string name="compassionate_access_success_title">Free access activated</string>
+    <string name="compassionate_access_success_message">Your 1-year AmnShield premium access is now active.\n\nApp ID: %1$s\nEmail: %2$s\n\nIf you need further help, visit amn.alhaq-initiative.org/premium, visit amn.alhaq-initiative.org/pay if your situation changes, or email support@alhaq-initiative.org with your App ID.</string>
+    <string name="compassionate_access_no_email_value">Not provided</string>
+    <string name="compassionate_access_error">Could not activate free access. Please contact support@alhaq-initiative.org.</string>
+    <string name="compassionate_access_active">Free access active</string>
+    <string name="compassionate_access_active_description">You currently have a compassionate-access premium grant on this device.</string>
+    <string name="compassionate_access_active_until">Compassionate access is active until %1$s.</string>
+    <string name="compassionate_access_account_type">Compassionate Access</string>
+    <string name="profile_compassionate_access_option">I can\'t afford to pay</string>
+    <string name="profile_premium_access_title">Premium Access</string>
+    <string name="profile_special_access_option">I have a Special Access ID</string>
+    <string name="special_access_active">Special Access Active</string>
+    <string name="special_access_active_description">You have special access granted by Al-Haq Initiative.</string>
+    <string name="special_user">Special User</string>
+    <string name="special_access_hint">Enter Special Access ID</string>
+    <string name="special_access_title">Special Access</string>
+    <string name="special_access_message">If you\'ve contacted contact@alhaq-initiative.org and received a special access ID, enter it below. This grants one year of premium access.</string>
+    <string name="special_access_activate">Activate</string>
+    <string name="premium_special_access_button">Use Special Access ID</string>
+    <string name="special_access_success">Special access activated.</string>
+    <string name="special_access_invalid">Invalid access ID. Please check it and try again, or contact contact@alhaq-initiative.org.</string>
+    
+    <!-- Profile Screen -->
+    <string name="account">Account</string>
+    <string name="premium">Premium</string>
+    <string name="statistics">Statistics</string>
+    <string name="sign_in_description">Sign in with your Google account</string>
+    <string name="sign_out_description">Log out of your Google account</string>
+    <string name="premium_active">Premium Active</string>
+    <string name="premium_active_description">Access all premium features</string>
+    <string name="upgrade_to_premium">Upgrade to Premium</string>
+    <string name="premium_upgrade_description">Unlock all premium protection features</string>
+    <string name="free">Free</string>
+    <string name="member_since">Member Since</string>
+    <string name="account_type">Account Type</string>
+    <string name="unknown">Unknown</string>
+    <string name="signed_out_successfully">Signed out successfully</string>
+    
+    <!-- Language Settings -->
+    <string name="language">Language</string>
+    <string name="choose_language">Choose Language</string>
+    <string name="language_system">System Default</string>
+    <string name="language_english">English</string>
+    <string name="language_german">Deutsch (German)</string>
+    <string name="language_persian">Persian</string>
+    <string name="language_french">French</string>
+    <string name="language_hindi">Hindi</string>
+    <string name="language_portuguese">Portuguese</string>
+    <string name="language_turkish">Turkish</string>
+    <string name="language_chinese">Chinese</string>
+    <string name="restart_required">Restart required to apply language changes</string>
+    <string name="reports">Reports</string>
+    <string name="daily_report_title">Daily Report</string>
+    <string name="daily_report_summary">A brief summary of today\'s activity.</string>
+    <string name="view_full_report">View Full Report</string>
+    <string name="export_report">Export Report</string>
+    <string name="reminders">Reminders</string>
+    <string name="donate">Donate</string>
+    <string name="daily_report_reminder">Daily report reminder</string>
+    <string name="block_issues_reminder">Block issues reminder</string>
+    <string name="subscription_reminder">Subscription reminder</string>
+    <string name="custom_reminder_time">Custom reminder time</string>
+    <string name="accessibility_permission_app_blocker">App Blocker</string>
+    <string name="accessibility_permission_view_blocker">Shorts Blocker</string>
+    <string name="accessibility_permission_usage_tracker">Usage Tracker</string>
+    <string name="accessibility_permission_keyword_blocker">Keyword Blocker</string>
+    <string name="accessibility_permission_general_features">General Features</string>
+    <string name="permissions_required">Permissions Required</string>
+    <string name="permissions_disclosure">To provide you with the best experience, we need you to grant the following permissions. Your privacy is our top priority, and we will never use your data for any other purpose.</string>
+    <string name="accessibility_service">Accessibility Service</string>
+    <string name="display_over_other_apps">Display Over Other Apps</string>
+    <string name="device_admin">Device Admin</string>
+    <string name="permission_status">Permission status</string>
+    <string name="notifications">Notifications</string>
+    <string name="notifications_empty_title">You\'re all caught up</string>
+    <string name="notifications_empty_subtitle">In-app alerts from AmnShield will appear here.</string>
+    <string name="notifications_open_settings">Notification settings</string>
+    <string name="notifications_mark_all_read">Mark all as read</string>
+    <string name="notifications_clear_all">Clear all</string>
+    <string name="notifications_clear_all_confirm">Remove all notifications from your inbox? This won\'t change your reminder settings.</string>
+    <string name="notifications_reminder_settings">Reminder settings</string>
+    <string name="notifications_item_removed">Notification removed</string>
+    <string name="notifications_undo">Undo</string>
+    <string name="granted">Granted</string>
+    <string name="denied">Denied</string>
+    
+    <!-- Anti-Uninstall -->
+    <string name="anti_uninstall_protection_service">Anti-Uninstall Protection Service</string>
+    <string name="anti_uninstall_service_description">Monitors and prevents unauthorized uninstallation attempts when Anti-Uninstall protection is enabled. This service only activates when you have configured password or time-based protection.</string>
+    <string name="device_admin_required">Device Admin permission is required for Anti-Uninstall protection</string>
+    <string name="please_enter_a_password">Please enter a password</string>
+    <string name="password_must_be_at_least_4_characters">Password must be at least 4 characters</string>
+    <string name="please_select_a_date">Please select a date</string>
+    
+    <!-- Welcome Screen -->
+    <string name="app_theme">App Theme</string>
+    <string name="modern_gradient">Modern Gradient (Beta)</string>
+    <string name="light_mode">Light Mode</string>
+    <string name="select_theme">Select Theme</string>
+    <string name="search_apps">Search apps</string>
+
+    <!-- Error Reporting &amp; Feedback -->
+    <string name="error_reporting">Error Reporting &amp; Feedback</string>
+    <string name="crash_logs">Crash Logs</string>
+    <string name="enable_crash_reporting">Enable Crash Reporting</string>
+    <string name="enable_feedback_collection">Enable Feedback Collection</string>
+    <string name="view_crash_logs">View Crash Logs</string>
+    <string name="view_feedback_submitted">View Feedback Submitted</string>
+    <string name="export_all_logs">Export All Data (Email/Share)</string>
+    <string name="clear_all_error_data">Clear All Error Data (Permanent)</string>
+    <string name="crash_reporting_description">Save diagnostic information when app crashes</string>
+    <string name="feedback_collection_description">Allow feedback submission after crashes</string>
+    <string name="data_collection_notice">All error data is stored locally on your device. We never collect or send any data without your explicit permission.</string>
+    <string name="crash_recovery_title">Oops! We encountered an issue</string>
+    <string name="crash_recovery_description">AmnShield crashed unexpectedly. We\'ve saved diagnostic information.</string>
+    <string name="crash_help_us_improve">Help us improve</string>
+    <string name="crash_what_were_you_doing">Tell us what you were doing when this happened (optional)</string>
+    <string name="crash_feedback_category">Bug Report</string>
+    <string name="crash_user_email_hint">Your email (optional, for follow-up)</string>
+    <string name="crash_privacy_notice">Your crash data is stored locally. We never send it without your permission.</string>
+    <string name="continue_without_sending">Continue without sending</string>
 </resources>
+
+

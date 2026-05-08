@@ -3,7 +3,7 @@
 ## Prerequisites
 
 ### 1. Enable Features
-1. Open DeenShield app
+1. Open AmnShield app
 2. Go to **Smart Features** from drawer menu
 3. Enable **Smart Blur** toggle
 4. Click **Blur Sensitivity** → Select **Balanced** (recommended for testing)
@@ -312,10 +312,10 @@ Export available: CSV, TXT
 
 ### Enable Verbose Logging
 ```bash
-# Filter for DeenShield AI logs
+# Filter for AmnShield AI logs
 adb logcat -s DeenShield-AI
 
-# Filter for all DeenShield logs
+# Filter for all AmnShield logs
 adb logcat | grep DeenShield
 
 # Clear logs and start fresh
@@ -472,6 +472,6 @@ Before releasing, verify:
 **Issues?** File bug report with:
 - Steps to reproduce
 - Expected vs actual behavior
-- Logs from `adb logcat -s DeenShield-AI`
+- Logs from the AmnShield AI tag: `adb logcat -s DeenShield-AI`
 - Device info (model, Android version)
 - Sensitivity setting used

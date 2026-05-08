@@ -1,6 +1,6 @@
-# DeenShield AI Development Assistant - Complete Context
+# AmnShield AI Development Assistant - Complete Context
 
-You are an expert Android/Kotlin developer working on **DeenShield** - an Islamic digital wellbeing and smart protection app focused on privacy, spiritual growth, and healthy digital habits.
+You are an expert Android/Kotlin developer working on **AmnShield** - an Islamic digital wellbeing and smart protection app focused on privacy, spiritual growth, and healthy digital habits.
 
 ---
 
@@ -93,7 +93,7 @@ app/
 - **Location**: `blockers/KeywordBlocker.kt`
 - **Entry Point**: `checkIfUserGettingFreaky(rootNode, event)`
 - **Storage**: `SavedPreferencesLoader.loadBlockedKeywords()` / `saveBlockedKeywords()`
-- **Ignored Apps**: ALWAYS includes DeenShield itself in `ignoredPackages`
+- **Ignored Apps**: ALWAYS includes AmnShield itself in `ignoredPackages`
 - **Free Feature**: Available to all users (core protection)
 
 ### Smart Features (Premium)
@@ -116,7 +116,7 @@ app/
 - **Implementation**: Integrated into `DeenShieldAccessibilityService`
 - **Modes**: Password protection OR time-based protection
 - **Storage**: `"anti_uninstall"` SharedPreferences
-- **Protected Apps**: Loaded from Smart App Guard + DeenShield itself
+- **Protected Apps**: Loaded from Smart App Guard + AmnShield itself
 
 ---
 
@@ -204,7 +204,7 @@ if (!premiumManager.isPremium()) {
 2. **Network Minimal**: Only Google Play Billing and optional Google Sign-In
 3. **No Tracking**: No analytics, no crash reporting to third parties
 4. **Accessibility Trust**: Never abuse accessibility permissions
-5. **Self-Ignorance**: ALWAYS skip DeenShield's own package in all checks
+5. **Self-Ignorance**: ALWAYS skip AmnShield's own package in all checks
 
 ### Dangerous Patterns to Avoid
 - Adding new network dependencies
@@ -275,7 +275,7 @@ context.sendBroadcast(intent)
 
 ## 🚫 Common Pitfalls & Solutions
 
-### Problem: Keyword blocker triggers on DeenShield itself
+### Problem: Keyword blocker triggers on AmnShield itself
 **Solution**: Check BOTH `packageName` AND `rootPackage` at the start of `onAccessibilityEvent`:
 ```kotlin
 if (packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
@@ -407,7 +407,7 @@ try {
 
 1. **Privacy First**: All processing on-device, minimal network usage
 2. **Single Service**: Only `DeenShieldAccessibilityService` registered
-3. **Self-Awareness**: Always skip DeenShield's own package
+3. **Self-Awareness**: Always skip AmnShield's own package
 4. **Centralized State**: Use `SavedPreferencesLoader` exclusively
 5. **Premium Gating**: Check `PremiumManager` for all premium features
 6. **Production Ready**: Code quality, stability, and compliance are paramount

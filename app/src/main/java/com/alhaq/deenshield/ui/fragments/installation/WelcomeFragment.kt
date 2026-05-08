@@ -38,11 +38,11 @@ class WelcomeFragment : Fragment() {
         }
 
         binding.openTos.setOnClickListener {
-            openUrl("https://alhaq-initiative.org/legal/deenshield_docs/terms/en/index.html")
+            openUrl("https://amn.alhaq-initiative.org/legal/terms/")
         }
 
         binding.openPrivacyPolicy.setOnClickListener {
-            openUrl("https://alhaq-initiative.org/legal/deenshield_docs/privacy-policies/en/main-privacy.html")
+            openUrl("https://amn.alhaq-initiative.org/legal/privacy/")
         }
 
         binding.btnNext.setOnClickListener {

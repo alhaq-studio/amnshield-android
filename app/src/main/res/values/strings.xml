@@ -1,5 +1,5 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name" translatable="false">DeenShield</string>
+﻿<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name" translatable="false">AmnShield</string>
     <string name="default_web_client_id" translatable="false">789500018505-flp9rag7c34jguaej4h2kglenc4svrie.apps.googleusercontent.com</string>
     <string name="launcher_options">Launcher Options</string>
     <string name="focus_mode">Focus Mode</string>
@@ -10,7 +10,7 @@
     <string name="usage_tracker">Usage Tracker</string>
     <string name="disabled">Disabled</string>
     <string name="select_pinned_apps">Select pinned apps</string>
-    <string name="warning_launcher_settings">Set DeenShield as the default launcher to access this option</string>
+    <string name="warning_launcher_settings">Set AmnShield as the default launcher to access this option</string>
     <string name="select_blocked_apps">Select blocked apps</string>
     <string name="start_focus_mode">Start focus mode</string>
     <string name="warning_general_settings">Enable General Accessibility Service to access this option</string>
@@ -85,14 +85,14 @@
     <string name="app_icon">app_icon</string>
 
     <string name="accessibility_service_description">
-        DeenShield requires the Accessibility Service to power its core features. The service allows the app to:
-        \n\n• **See which app you are using:** This is necessary to enforce your App Blocker and Focus Mode rules.
-        \n• **Read on-screen content:** This is used by the Keyword Blocker to identify and block unwanted content in real-time.
-        \n• **Perform actions:** The service can perform \"back\" or \"home\" gestures to block apps and close distracting content.
+        AmnShield requires the Accessibility Service to power its core features. The service allows the app to:
+        \n\n- See which app you are using: This is necessary to enforce your App Blocker and Focus Mode rules.
+        \n- Read on-screen content: This is used by the Keyword Blocker to identify and block unwanted content in real-time.
+        \n- Perform actions: The service can perform \"back\" or \"home\" gestures to block apps and close distracting content.
         \n\n**Your privacy is our top priority.** All data processing is done entirely on your device. Your on-screen content and app usage are never logged, stored, or shared with us or any third party.
     </string>
 
-    <string name="admin_permission_desc">DeenShield Anti-Uninstall</string>
+    <string name="admin_permission_desc">AmnShield Anti-Uninstall</string>
     <string name="title">Title</string>
     <string name="close">Close</string>
     <string name="proceed">Proceed</string>
@@ -113,10 +113,10 @@
     <string name="anti_uninstall_removed">Anti Uninstall removed</string>
     <string name="anti_uninstall_is_protected_by_password">Anti-Uninstall is protected by password. Remove it from the app settings.</string>
     <string name="anti_uninstall_is_active_cannot_remove">Anti-Uninstall is currently active and cannot be removed.</string>
-    <string name="anti_uninstall_password_mode_warning">⚠️ Anti-Uninstall is protected by password.\n\nYou must enter the correct password in the DeenShield app to disable this protection.</string>
-    <string name="anti_uninstall_timed_mode_warning">⚠️ Anti-Uninstall is active for %1$d more days.\n\nYou cannot disable this protection until the time period expires.</string>
-    <string name="anti_uninstall_timed_mode_expired">✓ The time period has expired. You can now disable Anti-Uninstall.</string>
-    <string name="anti_uninstall_is_active">⚠️ Anti-Uninstall protection is currently active.</string>
+    <string name="anti_uninstall_password_mode_warning">[Warning] Anti-Uninstall is protected by password.\n\nYou must enter the correct password in the AmnShield app to disable this protection.</string>
+    <string name="anti_uninstall_timed_mode_warning">[Warning] Anti-Uninstall is active for %1$d more days.\n\nYou cannot disable this protection until the time period expires.</string>
+    <string name="anti_uninstall_timed_mode_expired">[OK] The time period has expired. You can now disable Anti-Uninstall.</string>
+    <string name="anti_uninstall_is_active">[Warning] Anti-Uninstall protection is currently active.</string>
     
     <!-- Anti-Uninstall UI Strings -->
     <string name="anti_uninstall_description">Prevent unauthorized uninstalls and optionally block configuration changes using password or timed protection</string>
@@ -173,23 +173,23 @@
     <string name="from">From</string>
     <string name="end">End</string>
     <string name="accept">Accept</string>
-    <string name="accessibility_perm_desc">DeenShield uses the Accessibility permission to provide features like app monitoring and usage tracking to enhance your experience. This permission allows DeenShield to detect app activities and help manage device usage effectively. Rest assured, all data is processed locally on your device and is never sent to any server or third party. Your privacy and data security are our top priorities.     By pressing Accept, you acknowledge and agree to the above .</string>
+    <string name="accessibility_perm_desc">AmnShield uses the Accessibility permission to provide features like app monitoring and usage tracking to enhance your experience. This permission allows AmnShield to detect app activities and help manage device usage effectively. Rest assured, all data is processed locally on your device and is never sent to any server or third party. Your privacy and data security are our top priorities.     By pressing Accept, you acknowledge and agree to the above .</string>
     <string name="reject">Reject</string>
     <string name="peel_the_onions">Peel the onions</string>
     <string name="fix_your_life">Fix your life</string>
     <string name="perform_actions_like_a_back_press">Perform actions like a back press</string>
     <string name="read_content_on_screen">Read content on screen</string>
-    <string name="this_will_allow_deenshield_to">This will allow deenshield to:</string>
+    <string name="this_will_allow_deenshield_to">This will allow AmnShield to:</string>
     <string name="enable_2">Enable %1$s</string>
-    <string name="device_admin_perm">DeenShield uses Device Admin permission to enhance security and block uninstalling deenshield until a specific period. All data remains securely stored on your device and is never shared externally.</string>
+    <string name="device_admin_perm">AmnShield uses Device Admin permission to enhance security and block uninstalling AmnShield until a specific period. All data remains securely stored on your device and is never shared externally.</string>
     <string name="prevent_uninstallation_attempts_until_a_set_condition_is_met">Prevent uninstallation attempts until a set condition is met</string>
 
-    <string name="device_perm_draw_over_other_apps">DeenShield uses the \"Display over other apps\" permission to show a small floating overlay on the screen. This overlay tracks the number of reels watched and the time spent, helping users be more aware of their usage in real time.</string>
+    <string name="device_perm_draw_over_other_apps">AmnShield uses the \"Display over other apps\" permission to show a small floating overlay on the screen. This overlay tracks the number of reels watched and the time spent, helping users be more aware of their usage in real time.</string>
     <string name="show_time_elapsed_on_phone">Show time elapsed on phone</string>
     <string name="calculate_how_many_reels_tiktok_short_videos_you_scroll_per_day">Calculate how many reels/ tiktok/ short videos you scroll per day</string>
     <string name="plan_a_robbery">Plan a robbery</string>
     <string name="please_provide_display_over_other_apps_permission_to_access_this_feature">Please provide display over other apps permission to access this feature</string>
-    <string name="find_deenshield_and_press_enable">Find DeenShield and press enable</string>
+    <string name="find_deenshield_and_press_enable">Find AmnShield and press enable</string>
     <string name="discard_changes">Discard Changes?</string>
     <string name="are_you_sure_you_want_to_discard_all_changes_and_exit">Are you sure you want to discard all changes and exit?</string>
     <string name="yes">Yes</string>
@@ -228,7 +228,7 @@
     <string name="stats">Stats</string>
     
     <!-- Home Screen -->
-    <string name="welcome_to_deenshield">Welcome to DeenShield</string>
+    <string name="welcome_to_deenshield">Welcome to AmnShield</string>
     <string name="protect_your_digital_wellbeing">Protect your digital wellbeing with powerful tools</string>
     <string name="quick_actions">Quick Actions</string>
     <string name="hide_welcome_card">Hide welcome card</string>
@@ -238,7 +238,7 @@
     <string name="permanently_block_apps">Permanently block specific apps</string>
     <string name="block_shorts_and_reels">Block YouTube Shorts &amp; Instagram Reels</string>
     <string name="monitor_app_usage">Monitor your app usage and screen time</string>
-    <string name="prevent_app_removal">Prevent uninstallation of DeenShield</string>
+    <string name="prevent_app_removal">Prevent uninstallation of AmnShield</string>
     <string name="off">OFF</string>
     <string name="on">ON</string>
     
@@ -266,15 +266,15 @@
     <string name="share_crash_logs">Share Crash Logs</string>
     <string name="help_and_faq">Help &amp; FAQ</string>
     <string name="help_and_faq_description">Common questions and troubleshooting</string>
-    <string name="about_deenshield">About DeenShield</string>
-    <string name="app_version">Version 0.25.4.2026</string>
+    <string name="about_deenshield">About AmnShield</string>
+    <string name="app_version">Version 0.26.4.2026</string>
     <string name="github">GitHub</string>
     <string name="telegram">Telegram</string>
     <string name="view_blocker">Reels/Shorts Blocker</string>
     <string name="continue_anyway">Continue Anyway</string>
     <string name="manage_view_blocker">Configure Shorts Blocker</string>
     <string name="open_accessibility_settings">Open Accessibility Settings</string>
-    <string name="welcome_message">Welcome to DeenShield! We\'re here to help you build healthier digital habits. This quick setup guide will walk you through the key features and permissions needed to get the most out of the app. Updates are delivered automatically through the Play Store.</string>
+    <string name="welcome_message">Welcome to AmnShield! We\'re here to help you build healthier digital habits. This quick setup guide will walk you through the key features and permissions needed to get the most out of the app. Updates are delivered automatically through the Play Store.</string>
     <string name="terms_and_conditions">Terms &amp; Conditions</string>
     <string name="agree_to_terms">I have read and agree to the Terms and Privacy Policy</string>
     <string name="privacy_policy">Privacy Policy</string>
@@ -294,7 +294,7 @@
     <string name="sign_out_confirmation">Are you sure you want to sign out?</string>
     <string name="signed_in_as">Signed in as %1$s</string>
     <string name="send_feedback">Send Feedback</string>
-    <string name="feedback_subject">DeenShield Feedback</string>
+    <string name="feedback_subject">AmnShield Feedback</string>
     <string name="feedback_hint">Share your thoughts, suggestions, or report issues...</string>
     <string name="feedback_sent">Thank you for your feedback!</string>
     <string name="feedback_error">Could not send feedback. Please try again.</string>
@@ -312,19 +312,19 @@
     <string name="premium_locked">Premium</string>
     <string name="premium_unlock_chip">Unlock</string>
     <string name="premium_reminder_title">Unlock Premium Features</string>
-    <string name="premium_reminder_message">Upgrade to DeenShield Premium to unlock App Blocker, Focus Mode, Reel Blocker, Anti-Uninstall Protection, and more. Support the project while protecting your digital wellbeing.</string>
-    <string name="premium_features_title">Unlock DeenShield Premium</string>
+    <string name="premium_reminder_message">Upgrade to AmnShield Premium to unlock App Blocker, Focus Mode, Reel Blocker, Anti-Uninstall Protection, and more. Support the project while protecting your digital wellbeing.</string>
+    <string name="premium_features_title">Unlock AmnShield Premium</string>
     <string name="premium_features_subtitle">Unlock App Blocker, Focus Mode, Reel Blocker, Anti-Uninstall protection, and advanced digital wellbeing tools.</string>
     <string name="premium_features_includes">Premium includes:</string>
-    <string name="premium_benefit_app_blocker">• App Blocker - Block distracting apps by category with auto-block, cheat hours, and custom warnings</string>
-    <string name="premium_benefit_anti_uninstall">• Anti-Uninstall Protection - Password or time-based protection against uninstalling protected apps</string>
-    <string name="premium_benefit_priority_support">• App Governance - Better control over protected apps and access integrity</string>
-    <string name="premium_benefit_app_guard">• Smart App Guard - Detects common bypass behavior and helps keep protection active</string>
-    <string name="premium_benefit_view_blocker">• Reel Blocker - Limit endless scrolling on Instagram Reels, YouTube Shorts, and TikTok videos</string>
-    <string name="premium_benefit_focus_mode">• Focus Mode - Time-boxed app blocking with productivity tracking and session history</string>
-    <string name="premium_benefit_reports">• Enhanced Statistics - Comprehensive blocking reports, trends, and productivity insights</string>
-    <string name="premium_benefit_privacy">• Privacy First - Local processing, no tracking, and no external analytics</string>
-    <string name="premium_benefit_future">• Future Features - Priority access to upcoming wellbeing automations</string>
+    <string name="premium_benefit_app_blocker">- App Blocker - Block distracting apps by category with auto-block, cheat hours, and custom warnings</string>
+    <string name="premium_benefit_anti_uninstall">- Anti-Uninstall Protection - Password or time-based protection against uninstalling protected apps</string>
+    <string name="premium_benefit_priority_support">- App Governance - Better control over protected apps and access integrity</string>
+    <string name="premium_benefit_app_guard">- Smart App Guard - Detects common bypass behavior and helps keep protection active</string>
+    <string name="premium_benefit_view_blocker">- Reel Blocker - Limit endless scrolling on Instagram Reels, YouTube Shorts, and TikTok videos</string>
+    <string name="premium_benefit_focus_mode">- Focus Mode - Time-boxed app blocking with productivity tracking and session history</string>
+    <string name="premium_benefit_reports">- Enhanced Statistics - Comprehensive blocking reports, trends, and productivity insights</string>
+    <string name="premium_benefit_privacy">- Privacy First - Local processing, no tracking, and no external analytics</string>
+    <string name="premium_benefit_future">- Future Features - Priority access to upcoming wellbeing automations</string>
     <string name="premium_price_lifetime">Lifetime access</string>
     <string name="premium_price_lifetime_value">GBP 13.5 one-time</string>
     <string name="premium_cta_lifetime">Buy lifetime access</string>
@@ -371,7 +371,7 @@
     <string name="compassionate_access_title">I Can\'t Afford to Pay</string>
     <string name="compassionate_access_description">Islamic Rahmah (Mercy): digital protection should be available to everyone. We trust you to be honest about your situation (amanah).</string>
     <string name="compassionate_access_button">Request Free Access</string>
-    <string name="compassionate_access_intro_message">This program is for people who are genuinely in financial need. We ask you to be truthful about your situation. If you proceed, DeenShield will grant 1 year of free premium access on this device.</string>
+    <string name="compassionate_access_intro_message">This program is for people who are genuinely in financial need. We ask you to be truthful about your situation. If you proceed, AmnShield will grant 1 year of free premium access on this device.</string>
     <string name="compassionate_access_intro_positive">I\'m in financial need</string>
     <string name="compassionate_access_form_title">Free Premium Access Request</string>
     <string name="compassionate_access_form_message">Enter your details below. Name is required, email is optional for account recovery, and an App ID will be generated automatically.</string>
@@ -381,7 +381,7 @@
     <string name="compassionate_access_name_required">Please enter your name to continue.</string>
     <string name="compassionate_access_email_invalid">Enter a valid email address or leave it blank.</string>
     <string name="compassionate_access_success_title">Free access activated</string>
-    <string name="compassionate_access_success_message">Your 1-year DeenShield premium access is now active.\n\nApp ID: %1$s\nEmail: %2$s\n\nIf you need further help, visit alhaq-initiative.org/DeenShield/premium, visit alhaq-initiative.org/DeenShield/pay if your situation changes, or email support@alhaq-initiative.org with your App ID.</string>
+    <string name="compassionate_access_success_message">Your 1-year AmnShield premium access is now active.\n\nApp ID: %1$s\nEmail: %2$s\n\nIf you need further help, visit amn.alhaq-initiative.org/premium, visit amn.alhaq-initiative.org/pay if your situation changes, or email support@alhaq-initiative.org with your App ID.</string>
     <string name="compassionate_access_no_email_value">Not provided</string>
     <string name="compassionate_access_error">Could not activate free access. Please contact support@alhaq-initiative.org.</string>
     <string name="compassionate_access_active">Free access active</string>
@@ -424,12 +424,12 @@
     <string name="language_system">System Default</string>
     <string name="language_english">English</string>
     <string name="language_german">Deutsch (German)</string>
-    <string name="language_persian">فارسی (Persian)</string>
-    <string name="language_french">Français (French)</string>
-    <string name="language_hindi">हिन्दी (Hindi)</string>
-    <string name="language_portuguese">Português (Portuguese)</string>
-    <string name="language_turkish">Türkçe (Turkish)</string>
-    <string name="language_chinese">中文 (Chinese)</string>
+    <string name="language_persian">Persian</string>
+    <string name="language_french">French</string>
+    <string name="language_hindi">Hindi</string>
+    <string name="language_portuguese">Portuguese</string>
+    <string name="language_turkish">Turkish</string>
+    <string name="language_chinese">Chinese</string>
     <string name="restart_required">Restart required to apply language changes</string>
     <string name="reports">Reports</string>
     <string name="daily_report_title">Daily Report</string>
@@ -455,7 +455,7 @@
     <string name="permission_status">Permission status</string>
     <string name="notifications">Notifications</string>
     <string name="notifications_empty_title">You\'re all caught up</string>
-    <string name="notifications_empty_subtitle">In-app alerts from DeenShield will appear here.</string>
+    <string name="notifications_empty_subtitle">In-app alerts from AmnShield will appear here.</string>
     <string name="notifications_open_settings">Notification settings</string>
     <string name="notifications_mark_all_read">Mark all as read</string>
     <string name="notifications_clear_all">Clear all</string>
@@ -494,7 +494,7 @@
     <string name="feedback_collection_description">Allow feedback submission after crashes</string>
     <string name="data_collection_notice">All error data is stored locally on your device. We never collect or send any data without your explicit permission.</string>
     <string name="crash_recovery_title">Oops! We encountered an issue</string>
-    <string name="crash_recovery_description">DeenShield crashed unexpectedly. We\'ve saved diagnostic information.</string>
+    <string name="crash_recovery_description">AmnShield crashed unexpectedly. We\'ve saved diagnostic information.</string>
     <string name="crash_help_us_improve">Help us improve</string>
     <string name="crash_what_were_you_doing">Tell us what you were doing when this happened (optional)</string>
     <string name="crash_feedback_category">Bug Report</string>
@@ -502,3 +502,5 @@
     <string name="crash_privacy_notice">Your crash data is stored locally. We never send it without your permission.</string>
     <string name="continue_without_sending">Continue without sending</string>
 </resources>
+
+

@@ -1,7 +1,7 @@
 # Error Reporting & Feedback System Implementation Guide
 
 ## Overview
-A comprehensive error/crash logging and user feedback collection system for DeenShield that respects user privacy by storing all data locally by default.
+A comprehensive error/crash logging and user feedback collection system for AmnShield that respects user privacy by storing all data locally by default.
 
 ---
 
@@ -235,8 +235,8 @@ Enable auto-sending via email:
 private fun sendViaEmail(logs: String) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_EMAIL, arrayOf("support@deenshield.dev"))
-        putExtra(Intent.EXTRA_SUBJECT, "DeenShield Error Report")
+        putExtra(Intent.EXTRA_EMAIL, arrayOf("support@alhaq-initiative.org"))
+        putExtra(Intent.EXTRA_SUBJECT, "AmnShield Error Report")
         putExtra(Intent.EXTRA_TEXT, logs)
     }
     startActivity(intent)

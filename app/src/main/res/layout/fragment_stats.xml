@@ -3,27 +3,34 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:clipToPadding="false"
+    android:background="?attr/colorSurface">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/padding_normal">
+        android:padding="@dimen/padding_normal"
+        android:paddingBottom="@dimen/padding_xlarge">
 
         <!-- Screen Time Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp">
+            android:layout_marginBottom="@dimen/spacing_normal"
+            app:cardBackgroundColor="?attr/colorPrimaryContainer"
+            app:cardCornerRadius="@dimen/card_corner_radius_large"
+            app:cardElevation="@dimen/card_elevation_high"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:minHeight="188dp"
+                android:padding="@dimen/padding_large">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -36,6 +43,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/today_screen_time"
+                        android:textColor="?attr/colorOnPrimaryContainer"
                         android:textStyle="bold" />
 
                     <ImageView
@@ -45,7 +53,7 @@
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="4dp"
                         android:src="@drawable/baseline_refresh_24"
-                        android:tint="?attr/colorPrimary" />
+                        android:tint="?attr/colorOnPrimaryContainer" />
                 </LinearLayout>
 
                 <TextView
@@ -53,26 +61,30 @@
                     style="@style/TextAppearance.Material3.DisplayLarge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/spacing_normal"
                     android:text="0h 0m"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="?attr/colorOnPrimaryContainer"
                     android:textStyle="bold" />
 
                 <TextView
                     style="@style/TextAppearance.Material3.BodyMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/spacing_small"
                     android:text="@string/total_time_today"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    android:textColor="?attr/colorOnPrimaryContainer" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_view_details"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/view_detailed_stats" />
+                    android:layout_marginTop="@dimen/spacing_normal"
+                    android:text="@string/view_detailed_stats"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    app:icon="@drawable/baseline_query_stats_24"
+                    app:iconTint="?attr/colorOnPrimaryContainer"
+                    app:strokeColor="?attr/colorOnPrimaryContainer" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -80,15 +92,18 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp">
+            android:layout_marginBottom="@dimen/spacing_normal"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+            app:cardCornerRadius="@dimen/card_corner_radius_large"
+            app:cardElevation="@dimen/card_elevation_high"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/padding_large">
 
                 <TextView
                     style="@style/TextAppearance.Material3.TitleLarge"
@@ -102,7 +117,7 @@
                     style="@style/TextAppearance.Material3.DisplayMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/spacing_normal"
                     android:text="0"
                     android:textColor="?attr/colorSecondary"
                     android:textStyle="bold" />
@@ -110,7 +125,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/spacing_small"
                     android:orientation="horizontal">
 
                     <TextView
@@ -125,18 +140,19 @@
                         style="@style/TextAppearance.Material3.BodyMedium"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
+                        android:layout_marginStart="@dimen/spacing_small"
                         android:text="@string/vs_yesterday"
                         android:textColor="?attr/colorOnSurfaceVariant" />
                 </LinearLayout>
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_view_reels_stats"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/view_reels_metrics" />
+                    android:layout_marginTop="@dimen/spacing_normal"
+                    android:text="@string/view_reels_metrics"
+                    app:icon="@drawable/baseline_read_more_24" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -145,15 +161,18 @@
             android:id="@+id/daily_report_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp">
+            android:layout_marginBottom="@dimen/spacing_normal"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+            app:cardCornerRadius="@dimen/card_corner_radius_large"
+            app:cardElevation="@dimen/card_elevation_high"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/padding_large">
 
                 <TextView
                     style="@style/TextAppearance.Material3.TitleLarge"
@@ -167,17 +186,18 @@
                     style="@style/TextAppearance.Material3.BodyMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/spacing_small"
                     android:text="@string/daily_report_summary"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_view_reports"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/view_full_report" />
+                    android:layout_marginTop="@dimen/spacing_normal"
+                    android:text="@string/view_full_report"
+                    app:icon="@drawable/ic_deenshield_reports" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -186,15 +206,18 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp">
+            android:layout_marginBottom="@dimen/spacing_normal"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
+            app:cardCornerRadius="@dimen/card_corner_radius_large"
+            app:cardElevation="@dimen/card_elevation_high"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="@dimen/padding_large">
 
                 <TextView
                     style="@style/TextAppearance.Material3.TitleLarge"
@@ -208,7 +231,7 @@
                     style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/spacing_normal"
                     android:text="1. Loading..."
                     android:textColor="?attr/colorOnSurface" />
 
@@ -217,7 +240,7 @@
                     style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/spacing_small"
                     android:text="2. Loading..."
                     android:textColor="?attr/colorOnSurface" />
 
@@ -226,7 +249,7 @@
                     style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/spacing_small"
                     android:text="3. Loading..."
                     android:textColor="?attr/colorOnSurface" />
             </LinearLayout>
