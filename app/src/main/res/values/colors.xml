@@ -187,6 +187,8 @@
     <color name="emerald_onPrimaryContainer">#032117</color>
     <color name="emerald_secondary">#3F6F63</color>
     <color name="emerald_onSecondary">#FFFFFF</color>
+    <color name="emerald_secondaryContainer">#C1F3E5</color>
+    <color name="emerald_onSecondaryContainer">#031F1B</color>
     <color name="emerald_background">#F4FBF7</color>
     <color name="emerald_onBackground">#151D19</color>
     <color name="emerald_surface">#F4FBF7</color>
@@ -200,6 +202,8 @@
     <color name="sunset_onPrimaryContainer">#3C1200</color>
     <color name="sunset_secondary">#8B5A35</color>
     <color name="sunset_onSecondary">#FFFFFF</color>
+    <color name="sunset_secondaryContainer">#FFDCCF</color>
+    <color name="sunset_onSecondaryContainer">#3C1200</color>
     <color name="sunset_background">#FFF7F2</color>
     <color name="sunset_onBackground">#251914</color>
     <color name="sunset_surface">#FFF7F2</color>

@@ -129,34 +129,6 @@
         <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
     </style>
 
-    <style name="Theme.DeenShield.Emerald" parent="Base.Theme.DeenShield">
-        <item name="colorPrimary">@color/emerald_primary</item>
-        <item name="colorOnPrimary">@color/emerald_onPrimary</item>
-        <item name="colorPrimaryContainer">@color/emerald_primaryContainer</item>
-        <item name="colorOnPrimaryContainer">@color/emerald_onPrimaryContainer</item>
-        <item name="colorSecondary">@color/emerald_secondary</item>
-        <item name="colorOnSecondary">@color/emerald_onSecondary</item>
-        <item name="android:colorBackground">@color/emerald_background</item>
-        <item name="colorOnBackground">@color/emerald_onBackground</item>
-        <item name="colorSurface">@color/emerald_surface</item>
-        <item name="colorOnSurface">@color/emerald_onSurface</item>
-        <item name="colorOutline">@color/emerald_outline</item>
-    </style>
-
-    <style name="Theme.DeenShield.Sunset" parent="Base.Theme.DeenShield">
-        <item name="colorPrimary">@color/sunset_primary</item>
-        <item name="colorOnPrimary">@color/sunset_onPrimary</item>
-        <item name="colorPrimaryContainer">@color/sunset_primaryContainer</item>
-        <item name="colorOnPrimaryContainer">@color/sunset_onPrimaryContainer</item>
-        <item name="colorSecondary">@color/sunset_secondary</item>
-        <item name="colorOnSecondary">@color/sunset_onSecondary</item>
-        <item name="android:colorBackground">@color/sunset_background</item>
-        <item name="colorOnBackground">@color/sunset_onBackground</item>
-        <item name="colorSurface">@color/sunset_surface</item>
-        <item name="colorOnSurface">@color/sunset_onSurface</item>
-        <item name="colorOutline">@color/sunset_outline</item>
-    </style>
-
     <style name="Theme.DeenShield.TransparentDialog" parent="Theme.Material3.DayNight">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsTranslucent">true</item>
@@ -234,6 +206,46 @@
         <item name="cardCornerRadius">16dp</item>
         <item name="cardElevation">4dp</item>
         <item name="contentPadding">16dp</item>
+    </style>
+
+    <!-- Emerald Dusk Theme -->
+    <style name="Theme.DeenShield.Emerald" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/emerald_primary</item>
+        <item name="colorOnPrimary">@color/emerald_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/emerald_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/emerald_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/emerald_secondary</item>
+        <item name="colorOnSecondary">@color/emerald_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/emerald_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/emerald_onSecondaryContainer</item>
+        <item name="android:colorBackground">@color/emerald_background</item>
+        <item name="colorOnBackground">@color/emerald_onBackground</item>
+        <item name="colorSurface">@color/emerald_surface</item>
+        <item name="colorOnSurface">@color/emerald_onSurface</item>
+        <item name="colorOutline">@color/emerald_outline</item>
+        <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
+        <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
+    </style>
+
+    <!-- Sunset Glow Theme -->
+    <style name="Theme.DeenShield.Sunset" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/sunset_primary</item>
+        <item name="colorOnPrimary">@color/sunset_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/sunset_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/sunset_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/sunset_secondary</item>
+        <item name="colorOnSecondary">@color/sunset_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/sunset_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/sunset_onSecondaryContainer</item>
+        <item name="android:colorBackground">@color/sunset_background</item>
+        <item name="colorOnBackground">@color/sunset_onBackground</item>
+        <item name="colorSurface">@color/sunset_surface</item>
+        <item name="colorOnSurface">@color/sunset_onSurface</item>
+        <item name="colorOutline">@color/sunset_outline</item>
+        <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
+        <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
     </style>
 
 </resources>
