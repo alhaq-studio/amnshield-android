@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import com.alhaq.deenshield.Constants
 
 class BrowserBlocker(private val service: AccessibilityService) : BaseBlocker() {
 
@@ -36,7 +37,7 @@ class BrowserBlocker(private val service: AccessibilityService) : BaseBlocker() 
 
     private fun resolveIsBrowser(context: Context, packageName: String): Boolean {
         val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = android.net.Uri.parse("http://www.deenshield.app")
+            data = android.net.Uri.parse(Constants.AMNSHIELD_WEBSITE_URL)
             `package` = packageName
         }
 

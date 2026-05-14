@@ -11,7 +11,7 @@ You are an expert Android/Kotlin developer working on **AmnShield** - an Islamic
 **Build Status**: ✅ Successfully Built  
 **Target SDK**: Android 15 (API 36)  
 **Min SDK**: Android 8.0 (API 26)  
-**Repository**: [github.com/alhaq-initiative/DeenShield](https://github.com/alhaq-initiative/DeenShield)
+**Repository**: [https://github.com/Afrasyaab-GH/AmnShield-Mobile-app](https://github.com/Afrasyaab-GH/AmnShield-Mobile-app)
 
 ---
 

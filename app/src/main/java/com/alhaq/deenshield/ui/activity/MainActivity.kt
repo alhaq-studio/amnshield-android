@@ -551,17 +551,17 @@ class MainActivity : AppCompatActivity() {
             openUrl("https://t.me/deenshield")
         }
         binding.btnGithub.setOnClickListener {
-            openUrl("https://alhaq-initiative.org")
+            openUrl(Constants.AMNSHIELD_WEBSITE_URL)
         }
         binding.btnInstagram.setOnClickListener {
             openUrl("https://www.instagram.com/alhaqinitiative")
         }
         binding.btnDonate.setOnClickListener {
-            openUrl("https://alhaq-initiative.org/donate.html")
+            openUrl(Constants.AMNSHIELD_SUPPORT_URL)
         }
 
         binding.btnCredits.setOnClickListener {
-            openUrl("https://alhaq-initiative.org/credits.html")
+            openUrl(Constants.AMNSHIELD_DOCS_URL)
         }
         binding.btnBackup.setOnClickListener {
             ZipUtils.showDirectoryPicker(directoryPicker)
