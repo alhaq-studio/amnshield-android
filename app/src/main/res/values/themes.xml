@@ -92,7 +92,7 @@
              dialogs, and bottom sheets need a contrast cushion to stay readable
              on top of the gradient. Components that should reveal the gradient
              explicitly use windowBackground or null background. -->
-        <item name="colorSurface">#CC1A1233</item>
+        <item name="colorSurface">@color/gradient_surfaceContainer</item>
         <item name="colorOnSurface">@color/gradient_onSurface</item>
         <item name="colorSurfaceVariant">@color/gradient_surfaceVariant</item>
         <item name="colorOnSurfaceVariant">@color/gradient_onSurfaceVariant</item>
@@ -110,8 +110,8 @@
              any component that flips contrast against a dark surface. Without
              these, Snackbars fall back to the default light theme and become
              unreadable on top of our gradient. -->
-        <item name="colorSurfaceInverse">#F2EEFF</item>
-        <item name="colorOnSurfaceInverse">#1A0B5C</item>
+        <item name="colorSurfaceInverse">#F1DFD9</item>
+        <item name="colorOnSurfaceInverse">#331A12</item>
         <item name="colorPrimaryInverse">@color/gradient_primaryContainer</item>
 
         <!--
@@ -127,6 +127,34 @@
         <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
         <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
         <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
+    </style>
+
+    <style name="Theme.DeenShield.Emerald" parent="Base.Theme.DeenShield">
+        <item name="colorPrimary">@color/emerald_primary</item>
+        <item name="colorOnPrimary">@color/emerald_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/emerald_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/emerald_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/emerald_secondary</item>
+        <item name="colorOnSecondary">@color/emerald_onSecondary</item>
+        <item name="android:colorBackground">@color/emerald_background</item>
+        <item name="colorOnBackground">@color/emerald_onBackground</item>
+        <item name="colorSurface">@color/emerald_surface</item>
+        <item name="colorOnSurface">@color/emerald_onSurface</item>
+        <item name="colorOutline">@color/emerald_outline</item>
+    </style>
+
+    <style name="Theme.DeenShield.Sunset" parent="Base.Theme.DeenShield">
+        <item name="colorPrimary">@color/sunset_primary</item>
+        <item name="colorOnPrimary">@color/sunset_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/sunset_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/sunset_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/sunset_secondary</item>
+        <item name="colorOnSecondary">@color/sunset_onSecondary</item>
+        <item name="android:colorBackground">@color/sunset_background</item>
+        <item name="colorOnBackground">@color/sunset_onBackground</item>
+        <item name="colorSurface">@color/sunset_surface</item>
+        <item name="colorOnSurface">@color/sunset_onSurface</item>
+        <item name="colorOutline">@color/sunset_outline</item>
     </style>
 
     <style name="Theme.DeenShield.TransparentDialog" parent="Theme.Material3.DayNight">

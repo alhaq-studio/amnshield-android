@@ -1,5 +1,5 @@
 [versions]
-agp = "9.1.1"
+agp = "9.2.1"
 anychartAndroid = "1.1.5"
 api = "13.1.5"
 gson = "2.11.0"

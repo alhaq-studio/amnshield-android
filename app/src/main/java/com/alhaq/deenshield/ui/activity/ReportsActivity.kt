@@ -37,14 +37,7 @@ class ReportsActivity : AppCompatActivity() {
     private val dateFormatter = DateTimeFormatter.ofPattern("EEE, MMM d")
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Use the same prefs file the Settings screen writes to ("theme_prefs").
-        // Previously this read "com.alhaq.deenshield_preferences" which never
-        // contained theme_style, so the gradient theme was silently ignored.
-        val sharedPreferences = getSharedPreferences("theme_prefs", MODE_PRIVATE)
-        val themeStyle = sharedPreferences.getString("theme_style", "default")
-        if (themeStyle == "gradient") {
-            setTheme(R.style.Theme_DeenShield_Gradient)
-        }
+        com.alhaq.deenshield.utils.ThemeUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reports)
         findViewById<com.google.android.material.appbar.MaterialToolbar?>(R.id.toolbar)?.let {

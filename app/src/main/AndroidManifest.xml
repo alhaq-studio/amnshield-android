@@ -60,6 +60,7 @@
             android:exported="false" />
         <activity
             android:name=".ui.activity.ReportsActivity"
+            android:launchMode="singleTop"
             android:exported="false" />
         <activity
             android:name=".ui.activity.RemindersActivity"

@@ -24,16 +24,14 @@ class AntiUninstallPasswordActivity : AppCompatActivity() {
     companion object {
         private const val RECOVERY_WAIT_MILLIS = 5 * 60 * 1000L
         private const val KEY_RECOVERY_UNLOCK_AT = "recovery_unlock_at"
+        private const val KEY_FAILED_ATTEMPTS = "failed_attempts"
+        private const val KEY_LOCKOUT_UNTIL = "lockout_until"
+        private const val MAX_FAILED_ATTEMPTS = 5
+        private const val LOCKOUT_MILLIS = 2 * 60 * 1000L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply theme before super.onCreate. Read from the shared "theme_prefs"
-        // file (the one Settings writes to) so the gradient theme is honored.
-        val sharedPreferences = getSharedPreferences("theme_prefs", MODE_PRIVATE)
-        val themeStyle = sharedPreferences.getString("theme_style", "default")
-        if (themeStyle == "gradient") {
-            setTheme(R.style.Theme_DeenShield_Gradient)
-        }
+        com.alhaq.deenshield.utils.ThemeUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         binding = ActivityAntiUninstallPasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -77,6 +75,17 @@ class AntiUninstallPasswordActivity : AppCompatActivity() {
         binding.btnForgotPassword.visibility = android.view.View.VISIBLE
 
         binding.btnVerify.setOnClickListener {
+            val lockoutRemaining = getLockoutRemainingMillis()
+            if (lockoutRemaining > 0L) {
+                val remainingSeconds = (lockoutRemaining / 1000L).toInt().coerceAtLeast(1)
+                Toast.makeText(
+                    this,
+                    getString(R.string.anti_uninstall_too_many_attempts, remainingSeconds),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
             val enteredPassword = binding.passwordInput.text.toString()
 
             if (com.alhaq.deenshield.utils.PasswordHasher.verify(enteredPassword, savedPassword)) {
@@ -95,13 +104,19 @@ class AntiUninstallPasswordActivity : AppCompatActivity() {
                 // Scope the broadcast to our own package to prevent third-party apps from
                 // sending the same action to bypass anti-uninstall.
                 clearRecoveryTimerState()
+                clearAttemptState()
                 sendPasswordVerifiedBroadcast()
 
                 // Close activity to allow Settings access - user can continue where they were
                 finish()
             } else {
-                // Password incorrect - show error
-                binding.passwordInputLayout.error = getString(R.string.incorrect_password)
+                // Password incorrect - count attempt and apply lockout if threshold reached.
+                val attemptsLeft = registerFailedAttempt()
+                binding.passwordInputLayout.error = if (attemptsLeft > 0) {
+                    getString(R.string.anti_uninstall_attempts_remaining, attemptsLeft)
+                } else {
+                    getString(R.string.incorrect_password)
+                }
                 binding.passwordInput.text?.clear()
             }
         }
@@ -112,6 +127,17 @@ class AntiUninstallPasswordActivity : AppCompatActivity() {
         }
 
         binding.btnForgotPassword.setOnClickListener {
+            val lockoutRemaining = getLockoutRemainingMillis()
+            if (lockoutRemaining > 0L) {
+                val remainingSeconds = (lockoutRemaining / 1000L).toInt().coerceAtLeast(1)
+                Toast.makeText(
+                    this,
+                    getString(R.string.anti_uninstall_too_many_attempts, remainingSeconds),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
             MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.start_recovery)
                 .setMessage(R.string.recovery_started)
@@ -127,33 +153,22 @@ class AntiUninstallPasswordActivity : AppCompatActivity() {
                 .show()
         }
 
+            updateLockoutUiState()
         maybeResumeRecoveryCountdown()
     }
 
     private fun setupTimedMode() {
         binding.txtTitle.text = getString(R.string.anti_uninstall_timed_mode_active)
         
-        // Calculate remaining days
-        val savedDate = getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
-            .getString("date", null)
-        
-        val message = if (savedDate != null) {
-            try {
-                val parts = savedDate.split("/")
-                val selectedDate = java.util.Calendar.getInstance()
-                selectedDate.set(
-                    parts[2].toInt(),
-                    parts[0].toInt() - 1,
-                    parts[1].toInt()
-                )
-                
-                val today = java.util.Calendar.getInstance()
-                val daysDiff = ((selectedDate.timeInMillis - today.timeInMillis) / (1000 * 60 * 60 * 24)).toInt()
-                
-                getString(R.string.anti_uninstall_timed_mode_days_remaining, daysDiff)
-            } catch (e: Exception) {
-                getString(R.string.anti_uninstall_is_active_cannot_remove)
-            }
+        val antiPrefs = getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
+        val unlockAtMillis = antiPrefs.getLong("unlock_at_millis", 0L)
+
+        val message = if (unlockAtMillis > 0L) {
+            val remainingMillis = (unlockAtMillis - System.currentTimeMillis()).coerceAtLeast(0L)
+            val daysDiff = kotlin.math.ceil(
+                remainingMillis / (1000.0 * 60.0 * 60.0 * 24.0)
+            ).toInt().coerceAtLeast(0)
+            getString(R.string.anti_uninstall_timed_mode_days_remaining, daysDiff)
         } else {
             getString(R.string.anti_uninstall_is_active_cannot_remove)
         }
@@ -220,6 +235,7 @@ class AntiUninstallPasswordActivity : AppCompatActivity() {
 
     private fun onRecoveryReady() {
         clearRecoveryTimerState()
+        clearAttemptState()
         Toast.makeText(this, getString(R.string.recovery_ready), Toast.LENGTH_LONG).show()
         sendPasswordVerifiedBroadcast()
         finish()
@@ -239,5 +255,43 @@ class AntiUninstallPasswordActivity : AppCompatActivity() {
             com.alhaq.deenshield.services.DeenShieldAccessibilityService.INTENT_ACTION_PASSWORD_VERIFIED
         ).setPackage(packageName)
         sendBroadcast(intent)
+    }
+
+    private fun getLockoutRemainingMillis(): Long {
+        val lockoutUntil = getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
+            .getLong(KEY_LOCKOUT_UNTIL, 0L)
+        return (lockoutUntil - System.currentTimeMillis()).coerceAtLeast(0L)
+    }
+
+    private fun registerFailedAttempt(): Int {
+        val prefs = getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
+        val failed = prefs.getInt(KEY_FAILED_ATTEMPTS, 0) + 1
+
+        if (failed >= MAX_FAILED_ATTEMPTS) {
+            prefs.edit()
+                .putInt(KEY_FAILED_ATTEMPTS, 0)
+                .putLong(KEY_LOCKOUT_UNTIL, System.currentTimeMillis() + LOCKOUT_MILLIS)
+                .apply()
+            updateLockoutUiState()
+            return 0
+        }
+
+        prefs.edit().putInt(KEY_FAILED_ATTEMPTS, failed).apply()
+        return (MAX_FAILED_ATTEMPTS - failed).coerceAtLeast(0)
+    }
+
+    private fun clearAttemptState() {
+        getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
+            .edit()
+            .remove(KEY_FAILED_ATTEMPTS)
+            .remove(KEY_LOCKOUT_UNTIL)
+            .apply()
+        updateLockoutUiState()
+    }
+
+    private fun updateLockoutUiState() {
+        val isLocked = getLockoutRemainingMillis() > 0L
+        binding.btnVerify.isEnabled = !isLocked
+        binding.btnForgotPassword.isEnabled = !isLocked
     }
 }

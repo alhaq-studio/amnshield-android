@@ -30,13 +30,7 @@ class NotificationsActivity : AppCompatActivity() {
     private lateinit var adapter: NotificationsAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply theme before super.onCreate, using the same prefs the rest of
-        // the app reads ("theme_prefs").
-        val themeStyle = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
-            .getString("theme_style", "default")
-        if (themeStyle == "gradient") {
-            setTheme(R.style.Theme_DeenShield_Gradient)
-        }
+        com.alhaq.deenshield.utils.ThemeUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notifications)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)

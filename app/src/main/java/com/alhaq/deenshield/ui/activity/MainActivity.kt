@@ -64,6 +64,7 @@ import com.alhaq.deenshield.utils.ErrorReportManager
 import com.alhaq.deenshield.utils.SavedPreferencesLoader
 import com.alhaq.deenshield.utils.PermissionGuideHelper
 import com.alhaq.deenshield.utils.GoogleSignInHelper
+import com.alhaq.deenshield.utils.ThemeUtils
 import com.alhaq.deenshield.utils.UserFeedback
 import com.alhaq.deenshield.utils.ZipUtils
 import com.alhaq.deenshield.utils.BillingClientWrapper
@@ -133,14 +134,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply theme before super.onCreate
-        val prefs = getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
-        val themeStyle = prefs.getString("theme_style", "default")
-        if (themeStyle == "gradient") {
-            setTheme(R.style.Theme_DeenShield_Gradient)
-        } else {
-            setTheme(R.style.Theme_DeenShield)
-        }
+        ThemeUtils.applyTheme(this)
 
         super.onCreate(savedInstanceState)
         

@@ -477,9 +477,14 @@
     <!-- Welcome Screen -->
     <string name="app_theme">App Theme</string>
     <string name="modern_gradient">Modern Gradient (Beta)</string>
+    <string name="emerald_dusk">Emerald Dusk</string>
+    <string name="sunset_glow">Sunset Glow</string>
     <string name="light_mode">Light Mode</string>
     <string name="select_theme">Select Theme</string>
     <string name="search_apps">Search apps</string>
+
+    <string name="anti_uninstall_too_many_attempts">Too many incorrect attempts. Please wait %1$d seconds.</string>
+    <string name="anti_uninstall_attempts_remaining">Incorrect password. %1$d attempts remaining.</string>
 
     <!-- Error Reporting &amp; Feedback -->
     <string name="error_reporting">Error Reporting &amp; Feedback</string>

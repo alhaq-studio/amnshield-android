@@ -17,14 +17,7 @@ import com.alhaq.deenshield.ui.fragments.ProfileFragment
 class FragmentActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply theme before super.onCreate
-        val prefs = getSharedPreferences("theme_prefs", android.content.Context.MODE_PRIVATE)
-        val themeStyle = prefs.getString("theme_style", "default")
-        if (themeStyle == "gradient") {
-            setTheme(R.style.Theme_DeenShield_Gradient)
-        } else {
-            setTheme(R.style.Theme_DeenShield)
-        }
+        com.alhaq.deenshield.utils.ThemeUtils.applyTheme(this)
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

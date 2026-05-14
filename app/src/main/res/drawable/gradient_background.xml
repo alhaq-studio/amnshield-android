@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Modern Gradient theme background.
+    Modern Gradient theme background (Warmer Earth Tones).
 
-    Tuned for readability: deep indigo -> royal purple -> magenta-violet, with a
-    centered dim midpoint so cards/dialogs (which use translucent dark surfaces)
+    Tuned for readability: deep warm brown -> earthy orange-brown -> warm terracotta,
+    with a centered dim midpoint so cards/dialogs (which use translucent dark surfaces)
     keep enough contrast in the middle of the screen. Angle 135 (top-left to
     bottom-right) keeps the brightest patch out of the status bar area where
     most app content sits.
@@ -11,8 +11,8 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <gradient
         android:angle="135"
-        android:startColor="#16183A"
-        android:centerColor="#241848"
-        android:endColor="#3A1352"
+        android:startColor="@color/gradient_start"
+        android:centerColor="@color/gradient_center"
+        android:endColor="@color/gradient_end"
         android:type="linear" />
 </shape>

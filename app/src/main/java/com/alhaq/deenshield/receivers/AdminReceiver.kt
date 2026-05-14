@@ -22,8 +22,21 @@ class AdminReceiver : DeviceAdminReceiver() {
                     context.getString(R.string.anti_uninstall_password_mode_warning)
                 }
                 Constants.ANTI_UNINSTALL_TIMED_MODE -> {
-                    val dateString = antiUninstallInfo.getString("date", null)
-                    if (dateString != null) {
+                    val unlockAtMillis = antiUninstallInfo.getLong("unlock_at_millis", 0L)
+                    if (unlockAtMillis > 0L) {
+                        val remainingMillis = unlockAtMillis - System.currentTimeMillis()
+                        if (remainingMillis > 0L) {
+                            val daysDiff = kotlin.math.ceil(
+                                remainingMillis / (1000.0 * 60.0 * 60.0 * 24.0)
+                            ).toInt().coerceAtLeast(1)
+                            context.getString(R.string.anti_uninstall_timed_mode_warning, daysDiff)
+                        } else {
+                            antiUninstallInfo.edit().putBoolean("is_anti_uninstall_on", false).apply()
+                            context.getString(R.string.anti_uninstall_timed_mode_expired)
+                        }
+                    } else {
+                        val dateString = antiUninstallInfo.getString("date", null)
+                        if (dateString != null) {
                         try {
                             val parts = dateString.split("/")
                             val selectedDate = Calendar.getInstance()
@@ -53,8 +66,9 @@ class AdminReceiver : DeviceAdminReceiver() {
                         } catch (e: Exception) {
                             context.getString(R.string.anti_uninstall_is_active)
                         }
-                    } else {
-                        context.getString(R.string.anti_uninstall_is_active)
+                        } else {
+                            context.getString(R.string.anti_uninstall_is_active)
+                        }
                     }
                 }
                 else -> {

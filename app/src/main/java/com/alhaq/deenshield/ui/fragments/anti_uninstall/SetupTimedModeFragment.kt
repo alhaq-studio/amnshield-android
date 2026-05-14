@@ -24,6 +24,7 @@ class SetupTimedModeFragment : Fragment() {
     private var _binding: FragmentSetupTimedModeBinding? = null
     private val binding get() = _binding!!  // Safe getter for binding
     private var selectedDate: String? = null
+    private var selectedUnlockAtMillis: Long? = null
     
     private val devicePolicyManager by lazy {
         requireContext().getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
@@ -38,7 +39,11 @@ class SetupTimedModeFragment : Fragment() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (isDeviceAdminActive()) {
-            selectedDate?.let { proceedWithSetup(it) }
+            selectedDate?.let { date ->
+                selectedUnlockAtMillis?.let { unlockAt ->
+                    proceedWithSetup(date, unlockAt)
+                }
+            }
         } else {
             Toast.makeText(
                 requireContext(),
@@ -70,11 +75,16 @@ class SetupTimedModeFragment : Fragment() {
         
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             selectedDate = "${month + 1}/$dayOfMonth/$year"
+            val lockUntil = java.util.Calendar.getInstance().apply {
+                set(year, month, dayOfMonth, 23, 59, 59)
+                set(java.util.Calendar.MILLISECOND, 999)
+            }
+            selectedUnlockAtMillis = lockUntil.timeInMillis
         }
         
         binding.turnOnTimed.setOnClickListener {
             // Validate date selection
-            if (selectedDate == null) {
+            if (selectedDate == null || selectedUnlockAtMillis == null) {
                 Toast.makeText(requireContext(), getString(R.string.please_select_a_date), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -85,7 +95,11 @@ class SetupTimedModeFragment : Fragment() {
                 .setPositiveButton(getString(R.string.i_understand)) { _, _ ->
                     // Check if device admin is already active
                     if (isDeviceAdminActive()) {
-                        selectedDate?.let { proceedWithSetup(it) }
+                        selectedDate?.let { date ->
+                            selectedUnlockAtMillis?.let { unlockAt ->
+                                proceedWithSetup(date, unlockAt)
+                            }
+                        }
                     } else {
                         // Show device admin request dialog
                         showDeviceAdminDialog()
@@ -147,17 +161,18 @@ class SetupTimedModeFragment : Fragment() {
         deviceAdminLauncher.launch(intent)
     }
     
-    private fun proceedWithSetup(date: String) {
-        turnOnTimedMode(date)
+    private fun proceedWithSetup(date: String, unlockAtMillis: Long) {
+        turnOnTimedMode(date, unlockAtMillis)
     }
 
-    private fun turnOnTimedMode(selectedDate: String) {
+    private fun turnOnTimedMode(selectedDate: String, unlockAtMillis: Long) {
 
         val editor =
             activity?.getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)?.edit()
         editor?.apply() {
             putBoolean("is_anti_uninstall_on", true)
             putString("date", selectedDate)
+            putLong("unlock_at_millis", unlockAtMillis)
             putBoolean("is_configuring_blocked", binding.blockChanges.isChecked)
             putInt("mode", Constants.ANTI_UNINSTALL_TIMED_MODE)
             commit()

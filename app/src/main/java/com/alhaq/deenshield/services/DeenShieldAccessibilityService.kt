@@ -67,6 +67,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
     private var antiUninstallMode = -1
     private var savedPassword: String? = null
     private var savedDate: String? = null
+    private var savedUnlockAtMillis: Long = 0L
     private var isConfiguringBlocked = false
     private var lastBlockTime = 0L
     private val blockCooldown = 2000L
@@ -483,6 +484,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         antiUninstallMode = info.getInt("mode", -1)
         savedPassword = info.getString("password", null)
         savedDate = info.getString("date", null)
+        savedUnlockAtMillis = info.getLong("unlock_at_millis", 0L)
         isConfiguringBlocked = info.getBoolean("is_configuring_blocked", false)
 
         protectedApps = if (isAntiUninstallOn) setOf("com.alhaq.deenshield") else emptySet()
@@ -727,6 +729,28 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
     }
 
     private fun checkIfDateNotReached(): Boolean {
+        if (savedUnlockAtMillis > 0L) {
+            val now = System.currentTimeMillis()
+            if (now > savedUnlockAtMillis) {
+                val info = getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
+                info.edit {
+                    putBoolean("is_anti_uninstall_on", false)
+                    remove("unlock_at_millis")
+                }
+                isAntiUninstallOn = false
+
+                Handler(Looper.getMainLooper()).post {
+                    android.widget.Toast.makeText(
+                        this,
+                        getString(R.string.anti_uninstall_timed_mode_expired),
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+                return false
+            }
+            return true
+        }
+
         if (savedDate == null) return false
 
         return try {

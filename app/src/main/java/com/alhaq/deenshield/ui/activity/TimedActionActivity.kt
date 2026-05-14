@@ -43,12 +43,7 @@ class TimedActionActivity : AppCompatActivity() {
 
     private var selectedMode = MODE_APP_BLOCKER_CHEAT_HOURS
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply theme before super.onCreate
-        val sharedPreferences = getSharedPreferences("theme_prefs", MODE_PRIVATE)
-        val themeStyle = sharedPreferences.getString("theme_style", "default")
-        if (themeStyle == "gradient") {
-            setTheme(R.style.Theme_DeenShield_Gradient)
-        }
+        com.alhaq.deenshield.utils.ThemeUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -189,8 +184,8 @@ class TimedActionActivity : AppCompatActivity() {
                     timedActionList.add(
                         AutoTimedActionItem(
                             dialogAddToTimedActionBinding.cheatHourTitle.text.toString(),
-                            startTimeInMins!!,
-                            endTimeInMins!!,
+                            startTimeInMins,
+                            endTimeInMins,
                             selectedUnblockedApps!!
                         )
                     )

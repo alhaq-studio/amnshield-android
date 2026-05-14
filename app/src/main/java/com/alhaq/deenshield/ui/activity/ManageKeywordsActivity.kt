@@ -47,12 +47,7 @@ class ManageKeywordsActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Apply theme before super.onCreate
-        val sharedPreferences = getSharedPreferences("theme_prefs", MODE_PRIVATE)
-        val themeStyle = sharedPreferences.getString("theme_style", "default")
-        if (themeStyle == "gradient") {
-            setTheme(R.style.Theme_DeenShield_Gradient)
-        }
+        com.alhaq.deenshield.utils.ThemeUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

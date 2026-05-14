@@ -107,7 +107,7 @@ class NotificationHelper(private val context: Context) {
         val shortDate = date.format(DateTimeFormatter.ofPattern("MMM d"))
         
         val intent = Intent(context, ReportsActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         
         val pendingIntent = PendingIntent.getActivity(
@@ -196,7 +196,7 @@ class NotificationHelper(private val context: Context) {
         if (achievementPrefs.getBoolean(notificationKey, false)) return
 
         val intent = Intent(context, ReportsActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         
         val pendingIntent = PendingIntent.getActivity(

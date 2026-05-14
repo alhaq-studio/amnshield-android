@@ -220,7 +220,7 @@ class KeywordBlocker(val service: AccessibilityService) : BaseBlocker() {
         }
 
         if (detectedAdultKeyword == null) {
-            event.text?.forEach { entry ->
+            event.text.forEach { entry ->
                 containsBlockedKeyword(entry)?.let {
                     detectedAdultKeyword = it
                     return@forEach

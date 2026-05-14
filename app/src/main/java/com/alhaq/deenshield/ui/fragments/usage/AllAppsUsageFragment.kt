@@ -292,7 +292,7 @@ class AllAppsUsageFragment : Fragment() {
     }
 
     private fun calculateTotalScreenTimeInHours(stats: List<Stat>): Long {
-        val totalTimeInMillis = stats.sumBy { it.totalTime.toInt() }.toLong()
+        val totalTimeInMillis = stats.sumOf { it.totalTime }
 
         return totalTimeInMillis
     }
@@ -327,14 +327,14 @@ class AllAppsUsageFragment : Fragment() {
     private fun updatePieChart(statsList: List<Stat>) {
         val sortedStats = statsList.sortedByDescending { it.totalTime }
         val topApps = sortedStats.take(3)
-        val othersTime = sortedStats.drop(3).sumBy { it.totalTime.toInt() }.toLong()
+        val othersTime = sortedStats.drop(3).sumOf { it.totalTime }
 
         val entries = mutableListOf<PieEntry>()
         val pm = requireContext().packageManager
         topApps.forEach { stats ->
             val appInfo = pm.getApplicationInfo(stats.packageName, 0)
             val usageTime = stats.totalTime
-            val label = appInfo.loadLabel(pm)?.toString().orEmpty()
+            val label = appInfo.loadLabel(pm).toString()
             entries.add(PieEntry(usageTime.toFloat(), label))
         }
 
