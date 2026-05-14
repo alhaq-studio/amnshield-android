@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import com.alhaq.deenshield.R
@@ -47,15 +46,8 @@ class RemindersActivity : AppCompatActivity() {
         }
 
         super.onCreate(savedInstanceState)
-        // Edge-to-edge for Android 15+ with backward compatibility.
-        enableEdgeToEdge()
         binding = ActivityRemindersBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
-            val bars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-            insets
-        }
         
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         title = "Notifications & Reminders"
