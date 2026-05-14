@@ -32,7 +32,7 @@ android {
         applicationId = "com.alhaq.deenshield"
         minSdk = 26
         targetSdk = 36
-        versionCode = 123
+        versionCode = 124
         versionName = "0.14.5.2026"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
