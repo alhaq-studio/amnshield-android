@@ -557,11 +557,11 @@ class MainActivity : AppCompatActivity() {
             openUrl("https://www.instagram.com/alhaqinitiative")
         }
         binding.btnDonate.setOnClickListener {
-            openUrl(Constants.AMNSHIELD_SUPPORT_URL)
+            openUrl("https://alhaq-initiative.org/donate.html")
         }
 
         binding.btnCredits.setOnClickListener {
-            openUrl(Constants.AMNSHIELD_DOCS_URL)
+            openUrl("https://alhaq-initiative.org/credits.html")
         }
         binding.btnBackup.setOnClickListener {
             ZipUtils.showDirectoryPicker(directoryPicker)

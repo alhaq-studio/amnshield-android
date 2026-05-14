@@ -15,6 +15,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.alhaq.deenshield.Constants
 import com.alhaq.deenshield.R
 import com.alhaq.deenshield.databinding.FragmentSettingsBinding
 import com.alhaq.deenshield.ui.activity.MainActivity
@@ -402,10 +403,10 @@ class SettingsFragment : Fragment() {
                 ═══════════════════════════
                 
                 Q: How do I report bugs or request features?
-                A: Use the in-app feedback option, email contact@alhaq-initiative.org, or contact us through our official website.
+                A: Use the in-app feedback option, email support@alhaq-initiative.org, or contact us through the AmnShield support hub.
                 
                 Q: Is there a user guide?
-                A: Yes. Check our official website for documentation, policies, and updates.
+                A: Yes. Check the official AmnShield docs for documentation, policies, and updates.
                 
                 ═══════════════════════════
             """.trimIndent()
@@ -414,10 +415,10 @@ class SettingsFragment : Fragment() {
                 .setTitle("Help & FAQ")
                 .setMessage(faqs)
                 .setPositiveButton("Email Support") { _, _ ->
-                    openUrl("mailto:contact@alhaq-initiative.org")
+                    openUrl("mailto:support@alhaq-initiative.org")
                 }
-                .setNeutralButton("Website") { _, _ ->
-                    openUrl("https://alhaq-initiative.org")
+                .setNeutralButton("Docs") { _, _ ->
+                    openUrl(Constants.AMNSHIELD_DOCS_URL)
                 }
                 .setNegativeButton("Close", null)
                 .show()
@@ -456,18 +457,18 @@ class SettingsFragment : Fragment() {
                 • Clear privacy documentation
                 
                 Developer: Al-Haq Initiative
-                Contact: contact@alhaq-initiative.org
-                Website: alhaq-initiative.org
+                Contact: support@alhaq-initiative.org
+                Website: amn.alhaq-initiative.org
             """.trimIndent()
 
             MaterialAlertDialogBuilder(ctx)
                 .setTitle(getString(R.string.about_deenshield))
                 .setMessage(message)
                 .setPositiveButton("Website") { _, _ ->
-                    openUrl("https://alhaq-initiative.org")
+                    openUrl(Constants.AMNSHIELD_WEBSITE_URL)
                 }
                 .setNeutralButton("Email") { _, _ ->
-                    openUrl("mailto:contact@alhaq-initiative.org")
+                    openUrl("mailto:support@alhaq-initiative.org")
                 }
                 .setNegativeButton("Close", null)
                 .show()

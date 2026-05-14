@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.alhaq.deenshield.Constants
 import com.alhaq.deenshield.R
 import com.alhaq.deenshield.databinding.FragmentWelcomeBinding
 
@@ -38,11 +39,11 @@ class WelcomeFragment : Fragment() {
         }
 
         binding.openTos.setOnClickListener {
-            openUrl("https://alhaq-initiative.org/legal/deenshield_docs/terms/en/index.html")
+            openUrl(Constants.AMNSHIELD_TERMS_URL)
         }
 
         binding.openPrivacyPolicy.setOnClickListener {
-            openUrl("https://alhaq-initiative.org/legal/deenshield_docs/privacy-policies/en/main-privacy.html")
+            openUrl(Constants.AMNSHIELD_MOBILE_PRIVACY_URL)
         }
 
         binding.btnNext.setOnClickListener {
