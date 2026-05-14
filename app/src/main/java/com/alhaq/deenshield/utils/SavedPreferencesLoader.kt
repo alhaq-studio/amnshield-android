@@ -1,6 +1,7 @@
 package com.alhaq.deenshield.utils
 
 import android.content.Context
+import android.util.Log
 import com.alhaq.deenshield.blockers.ReelBlocker
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -319,7 +320,13 @@ class SavedPreferencesLoader(private val context: Context) {
 
         val type =
             object : TypeToken<MutableMap<String, MutableList<AttentionSpanVideoItem>>>() {}.type
-        return gson.fromJson(json, type)
+        return runCatching {
+            gson.fromJson<MutableMap<String, MutableList<AttentionSpanVideoItem>>>(json, type)
+                ?: mutableMapOf()
+        }.getOrElse {
+            Log.e("SavedPreferencesLoader", "Failed to load attention span data", it)
+            mutableMapOf()
+        }
     }
 
     fun saveReelsScrolled(reelsData: MutableMap<String, Int>) {
@@ -345,7 +352,12 @@ class SavedPreferencesLoader(private val context: Context) {
 
         val type =
             object : TypeToken<MutableMap<String, Int>>() {}.type
-        return gson.fromJson(json, type)
+        return runCatching {
+            gson.fromJson<MutableMap<String, Int>>(json, type) ?: mutableMapOf()
+        }.getOrElse {
+            Log.e("SavedPreferencesLoader", "Failed to load reels scrolled data", it)
+            mutableMapOf()
+        }
     }
 
     fun saveFocusModeData(focusModeData: FocusModeBlocker.FocusModeData) {

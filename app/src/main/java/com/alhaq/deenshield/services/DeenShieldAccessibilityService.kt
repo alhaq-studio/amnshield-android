@@ -47,6 +47,10 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         const val INTENT_ACTION_REFRESH_REEL_BLOCKER_COOLDOWN = "deenshield.refresh.reelblocker.cooldown"
         const val INTENT_ACTION_REFRESH_ANTI_UNINSTALL = ".deenshield.refresh.anti_uninstall"
         const val INTENT_ACTION_PASSWORD_VERIFIED = "deenshield.password.verified"
+
+        private const val REEL_TRACKER_SCROLL_DEBOUNCE_MS = 800L
+        private const val REEL_TRACKER_DUPLICATE_WINDOW_MS = 2_500L
+        private const val REEL_TRACKER_SURFACE_REENTRY_MS = 10 * 60 * 1000L
     }
 
     private lateinit var appBlocker: AppBlocker
@@ -82,6 +86,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
     private var cachedReelsScrolledToday = 0
     private var reelTrackerDate = TimeTools.getCurrentDate()
     private val lastReelTrackerHitTimes = mutableMapOf<String, Long>()
+    private val lastReelTrackerSignatures = mutableMapOf<String, String>()
 
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val eventChannel = Channel<AccessibilityEvent>(Channel.CONFLATED) { droppedEvent ->
@@ -253,7 +258,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
 
                 val detectedReelSurface = reelBlocker.detectReelSurfaceId(rootNode, packageName)
                 if (detectedReelSurface != null) {
-                    trackReelExposure(packageName, detectedReelSurface)
+                    trackReelExposure(packageName, detectedReelSurface, event)
                 }
 
                 val reelBlockerResult = reelBlocker.doesReelNeedToBeBlocked(rootNode, packageName)
@@ -436,7 +441,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         lastReelCountRefreshTime = now
     }
 
-    private fun trackReelExposure(packageName: String, surfaceId: String) {
+    private fun trackReelExposure(packageName: String, surfaceId: String, event: AccessibilityEvent) {
         if (!savedPreferencesLoader.isUsageTrackerFeatureEnabled()) {
             return
         }
@@ -450,12 +455,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         if (reelTrackerDate != today) {
             reelTrackerDate = today
             lastReelTrackerHitTimes.clear()
+            lastReelTrackerSignatures.clear()
         }
 
         val key = "$packageName|$surfaceId"
         val now = System.currentTimeMillis()
-        val lastSeen = lastReelTrackerHitTimes[key]
-        if (lastSeen != null && (now - lastSeen) < 2500L) {
+        if (!shouldTrackReelExposure(event, key, now)) {
             return
         }
         lastReelTrackerHitTimes[key] = now
@@ -471,6 +476,40 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
 
         val legacyMetricsPrefs = getSharedPreferences("usage_metrics", Context.MODE_PRIVATE)
         legacyMetricsPrefs.edit { putInt("total_reels", updatedCount) }
+    }
+
+    private fun shouldTrackReelExposure(event: AccessibilityEvent, key: String, now: Long): Boolean {
+        val lastSeen = lastReelTrackerHitTimes[key]
+        if (lastSeen == null) {
+            lastReelTrackerSignatures[key] = buildReelTrackerSignature(event)
+            return true
+        }
+
+        return when (event.eventType) {
+            AccessibilityEvent.TYPE_VIEW_SCROLLED -> {
+                val elapsed = now - lastSeen
+                if (elapsed < REEL_TRACKER_SCROLL_DEBOUNCE_MS) return false
+
+                val signature = buildReelTrackerSignature(event)
+                val lastSignature = lastReelTrackerSignatures[key]
+                if (signature == lastSignature && elapsed < REEL_TRACKER_DUPLICATE_WINDOW_MS) {
+                    return false
+                }
+
+                lastReelTrackerSignatures[key] = signature
+                true
+            }
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
+            AccessibilityEvent.TYPE_WINDOWS_CHANGED -> {
+                (now - lastSeen) >= REEL_TRACKER_SURFACE_REENTRY_MS
+            }
+            else -> false
+        }
+    }
+
+    private fun buildReelTrackerSignature(event: AccessibilityEvent): String {
+        return "${event.eventType}|${event.fromIndex}|${event.toIndex}|${event.itemCount}|" +
+            "${event.scrollX}|${event.scrollY}|${event.maxScrollX}|${event.maxScrollY}|${event.contentChangeTypes}"
     }
 
     private fun setupFocusMode() {
