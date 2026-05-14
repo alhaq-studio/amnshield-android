@@ -67,7 +67,7 @@ class UsageMetricsActivity : AppCompatActivity() {
             com.alhaq.deenshield.R.color.md_theme_primary
         )
 
-        totalReels = savedPreferencesLoader.getReelsScrolled()
+        totalReels = savedPreferencesLoader.getReelsScrolled().toSortedMap()
         reelsAttentionSpanData = savedPreferencesLoader.loadUsageHoursAttentionSpanData()
 
         if (reelsAttentionSpanData.isEmpty() && totalReels.isEmpty()) {
@@ -134,7 +134,7 @@ class UsageMetricsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             // Get the current date and update UI elements
 
-            totalReels = savedPreferencesLoader.getReelsScrolled()
+            totalReels = savedPreferencesLoader.getReelsScrolled().toSortedMap()
             reelsAttentionSpanData = savedPreferencesLoader.loadUsageHoursAttentionSpanData()
             makeReelCountStatsChart()
             makeAverageReelAttentionSpanChart()
@@ -223,7 +223,7 @@ class UsageMetricsActivity : AppCompatActivity() {
             val labels = mutableListOf<String>() // Store labels for X-axis
 
             var index = 0f // Keep track of index for the x-axis
-            for ((date, value) in totalReels) {
+            for ((date, value) in totalReels.toSortedMap()) {
                 entries.add(Entry(index, value.toFloat()))
                 labels.add(TimeTools.shortenDate(date))
                 index += 1f
@@ -246,7 +246,7 @@ class UsageMetricsActivity : AppCompatActivity() {
             val labels = mutableListOf<String>() // Store labels for X-axis
             var index = 0f // Keep track of index for the x-axis
 
-            for ((date, value) in reelsAttentionSpanData) {
+            for ((date, value) in reelsAttentionSpanData.toSortedMap()) {
                 val average = calculateAverageAttentionSpan(value, date)
                 entries.add(Entry(index, average.toFloat()))
                 labels.add(TimeTools.shortenDate(date))
@@ -274,6 +274,10 @@ class UsageMetricsActivity : AppCompatActivity() {
     }
 
     private fun captureScreenshot(rootView: View): File? {
+        if (rootView.width <= 0 || rootView.height <= 0) {
+            return null
+        }
+
         // Create a Bitmap of the root layout based on its actual size
         val bitmap = Bitmap.createBitmap(rootView.width, rootView.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -311,7 +315,9 @@ class UsageMetricsActivity : AppCompatActivity() {
         date: String
     ): Double {
         val totalElapsedTime = value.sumOf { item -> item.elapsedTime.toDouble() }
-        val reelsCount = totalReels[date]?.toDouble() ?: 0.0
+        val reelsCount = value.size.takeIf { it > 0 }?.toDouble()
+            ?: totalReels[date]?.toDouble()
+            ?: 0.0
         return if (reelsCount > 0) {
             totalElapsedTime / reelsCount
         } else {

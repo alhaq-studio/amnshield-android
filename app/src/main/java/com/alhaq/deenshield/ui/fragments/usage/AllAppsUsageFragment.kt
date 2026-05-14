@@ -78,7 +78,13 @@ class AllAppsUsageFragment : Fragment() {
             val selectedApps = result.data?.getStringArrayListExtra("SELECTED_APPS")
             selectedApps?.let {
                 savedPreferencesLoader.saveIgnoredAppUsageTracker(it.toSet())
-                ignoredPackages.addAll(it)
+                reloadIgnoredPackages()
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val localDate = Instant.ofEpochMilli(selectedDate)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                    setUsageStats(localDate)
+                }
             }
         }
     }
@@ -104,12 +110,7 @@ class AllAppsUsageFragment : Fragment() {
 
         lifecycleScope.launch(Dispatchers.IO) {
 
-            getDefaultLauncherPackageName(requireContext().packageManager)?.let {
-                ignoredPackages.add(
-                    it
-                )
-            }
-            ignoredPackages.addAll(savedPreferencesLoader.loadIgnoredAppUsageTracker())
+            reloadIgnoredPackages()
 
             setUsageStats()
 
@@ -228,6 +229,15 @@ class AllAppsUsageFragment : Fragment() {
         selectedDate = currentDate.coerceAtLeast(earliestDate) // Ensure valid range
 
     }
+
+    private fun reloadIgnoredPackages() {
+        ignoredPackages.clear()
+        getDefaultLauncherPackageName(requireContext().packageManager)?.let {
+            ignoredPackages.add(it)
+        }
+        ignoredPackages.addAll(savedPreferencesLoader.loadIgnoredAppUsageTracker())
+    }
+
     override fun onResume() {
         super.onResume()
 
@@ -332,9 +342,13 @@ class AllAppsUsageFragment : Fragment() {
         val entries = mutableListOf<PieEntry>()
         val pm = requireContext().packageManager
         topApps.forEach { stats ->
-            val appInfo = pm.getApplicationInfo(stats.packageName, 0)
             val usageTime = stats.totalTime
-            val label = appInfo.loadLabel(pm).toString()
+            val label = try {
+                val appInfo = pm.getApplicationInfo(stats.packageName, 0)
+                appInfo.loadLabel(pm).toString()
+            } catch (e: Exception) {
+                stats.packageName.substringAfterLast('.')
+            }
             entries.add(PieEntry(usageTime.toFloat(), label))
         }
 
@@ -422,7 +436,6 @@ class AllAppsUsageFragment : Fragment() {
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(stats: Stat, packageManager: PackageManager) {
-            val appInfo = packageManager.getApplicationInfo(stats.packageName, 0)
             binding.root.setOnClickListener{
                 activity?.supportFragmentManager?.beginTransaction()
                     ?.setCustomAnimations(R.anim.fade_in,R.anim.fade_out)
@@ -458,8 +471,14 @@ class AllAppsUsageFragment : Fragment() {
             }
 
             // Load app icon and label on the main thread
-            binding.appIcon.setImageDrawable(appInfo.loadIcon(packageManager))
-            binding.appName.text = appInfo.loadLabel(packageManager)
+            val appInfo = try {
+                packageManager.getApplicationInfo(stats.packageName, 0)
+            } catch (e: Exception) {
+                null
+            }
+            binding.appIcon.setImageDrawable(appInfo?.loadIcon(packageManager))
+            binding.appName.text = appInfo?.loadLabel(packageManager)
+                ?: stats.packageName.substringAfterLast('.')
             binding.appUsage.text = TimeTools.formatTime(stats.totalTime)
         }
     }
@@ -512,10 +531,18 @@ class AllAppsUsageFragment : Fragment() {
         context.startActivity(intent)
     }
 
+    data class UsageSession(
+        val startTime: ZonedDateTime,
+        val durationMillis: Long
+    )
+
     class Stat(
         val packageName: String,
         val totalTime: Long,
+        val sessions: List<UsageSession>
+    ) {
         val startTimes: List<ZonedDateTime>
-    )
+            get() = sessions.map { it.startTime }
+    }
 
 }

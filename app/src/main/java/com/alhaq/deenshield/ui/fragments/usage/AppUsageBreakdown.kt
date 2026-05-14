@@ -18,18 +18,21 @@ import com.google.android.material.color.MaterialColors
 
 import com.alhaq.deenshield.databinding.FragmentAppUsageBreakdownBinding
 import com.alhaq.deenshield.utils.TimeTools
+import java.time.Duration
 
 class AppUsageBreakdown(private val stat: AllAppsUsageFragment.Stat) : Fragment() {
 
 
-    private lateinit var binding: FragmentAppUsageBreakdownBinding
+    private var _binding: FragmentAppUsageBreakdownBinding? = null
+    private val binding get() = _binding!!
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
-        binding = FragmentAppUsageBreakdownBinding.inflate(inflater, container, false)
+        _binding = FragmentAppUsageBreakdownBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -46,7 +49,12 @@ class AppUsageBreakdown(private val stat: AllAppsUsageFragment.Stat) : Fragment(
         } catch (_: Exception) {
         }
         binding.screentime.text = TimeTools.formatTime(stat.totalTime, false)
-        binding.sessions.text = stat.startTimes.size.toString()
+        binding.sessions.text = stat.sessions.size.toString()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     private fun setupLineChart(lineChart: LineChart) {
@@ -79,19 +87,30 @@ class AppUsageBreakdown(private val stat: AllAppsUsageFragment.Stat) : Fragment(
     }
 
     private fun plotUsageData() {
-        // Initialize 24-hour time slots with zero usage
         val hourlyUsage = MutableList(24) { 0L }
 
-        // Process each start time
-        stat.startTimes.forEach { startTime ->
-            val hour = startTime.hour
-            // Convert milliseconds to minutes and add to the appropriate hour slot
-            hourlyUsage[hour] = hourlyUsage[hour] + (stat.totalTime / (1000 * 60))
+        stat.sessions.forEach { session ->
+            var cursor = session.startTime
+            var remainingMillis = session.durationMillis.coerceAtLeast(0L)
+
+            while (remainingMillis > 0) {
+                val nextHour = cursor
+                    .withMinute(0)
+                    .withSecond(0)
+                    .withNano(0)
+                    .plusHours(1)
+                val millisUntilNextHour = Duration.between(cursor, nextHour)
+                    .toMillis()
+                    .coerceAtLeast(1L)
+                val chunkMillis = minOf(remainingMillis, millisUntilNextHour)
+                hourlyUsage[cursor.hour] = hourlyUsage[cursor.hour] + chunkMillis
+                cursor = cursor.plusNanos(chunkMillis * 1_000_000)
+                remainingMillis -= chunkMillis
+            }
         }
 
-        // Create entries from hourly usage data
-        val entries = hourlyUsage.mapIndexed { hour, minutes ->
-            Entry(hour.toFloat(), minutes.toFloat())
+        val entries = hourlyUsage.mapIndexed { hour, millis ->
+            Entry(hour.toFloat(), millis / (1000f * 60f))
         }
 
         // Create and configure the dataset

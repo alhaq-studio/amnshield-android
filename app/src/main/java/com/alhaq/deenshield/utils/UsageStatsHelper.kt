@@ -1,6 +1,5 @@
 package com.alhaq.deenshield.utils
 
-import android.app.ActivityManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
@@ -19,20 +18,6 @@ class UsageStatsHelper(private val context: Context) {
 
     private val guardian = UnmatchedCloseEventGuardian()
     fun getForegroundStatsByTimestamps(start: Long, end: Long): List<AllAppsUsageFragment.Stat> {
-        // List to store currently running foreground processes
-        val foregroundProcesses = mutableListOf<String>()
-        if (end >= System.currentTimeMillis() - 1500) {
-            // Get currently running foreground processes
-            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            val appProcesses = activityManager.runningAppProcesses
-            for (appProcess in appProcesses) {
-                if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND ||
-                    appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE) {
-                    foregroundProcesses.add(appProcess.processName)
-                }
-            }
-        }
-
         // Query usage events from the UsageStatsManager
         val events = usageStatsManager.queryEvents(start, end)
         // Map to track when apps move to the foreground (nullable Long to handle null values)
@@ -77,7 +62,7 @@ class UsageStatsHelper(private val context: Context) {
                         .minOrNull() ?: event.timeStamp
 
                     // Add the foreground stat
-                    componentForegroundStats.add(ComponentForegroundStat(eventBeginTime, endTime, event.packageName))
+                    addComponentForegroundStat(componentForegroundStats, eventBeginTime, endTime, event.packageName, start, end)
                 }
                 UsageEvents.Event.DEVICE_SHUTDOWN -> {
                     // Handle device shutdown: treat all open events as closed
@@ -85,8 +70,7 @@ class UsageStatsHelper(private val context: Context) {
                         val startTime = moveToForegroundMap[key]
                         if (startTime == null) continue // Skip if no start time exists
 
-                        // Add the foreground stat for the shutdown event
-                        componentForegroundStats.add(ComponentForegroundStat(startTime, event.timeStamp, key.packageName))
+                        addComponentForegroundStat(componentForegroundStats, startTime, event.timeStamp, key.packageName, start, end)
 
                         // Set all components of the app to null (no longer in the foreground)
                         moveToForegroundMap.keys.filter { key.packageName == it.packageName }.forEach { moveToForegroundMap[it] = null }
@@ -108,24 +92,10 @@ class UsageStatsHelper(private val context: Context) {
             val startTime = moveToForegroundMap[key]
             if (startTime == null) continue // Skip if no start time exists
 
-            // Check if the app is still in the foreground
-            for (foregroundProcess in foregroundProcesses) {
-                if (foregroundProcess.contains(key.packageName)) {
-                    // Add the foreground stat for the remaining open event
-                    componentForegroundStats.add(ComponentForegroundStat(startTime, minOf(System.currentTimeMillis(), end), key.packageName))
-                    break
-                }
-            }
-        }
-
-        // If no events were found but there are foreground processes, assume they were used the entire period
-        if (moveToForegroundMap.isEmpty()) {
-            val packageManager = context.packageManager
-            for (foregroundProcess in foregroundProcesses) {
-                if (packageManager.getLaunchIntentForPackage(foregroundProcess) != null) {
-                    componentForegroundStats.add(ComponentForegroundStat(start, minOf(System.currentTimeMillis(), end), foregroundProcess))
-                }
-            }
+            // UsageEvents does not always emit a matching pause/stop for the
+            // currently visible activity before the query end. Close open
+            // sessions at the query boundary so "today" stats stay live.
+            addComponentForegroundStat(componentForegroundStats, startTime, minOf(System.currentTimeMillis(), end), key.packageName, start, end)
         }
 
         // Aggregate the foreground stats into usage stats
@@ -144,33 +114,56 @@ class UsageStatsHelper(private val context: Context) {
         return getForegroundStatsByTimestamps(start, end)
     }
 
+    private fun addComponentForegroundStat(
+        foregroundStats: MutableList<ComponentForegroundStat>,
+        beginTime: Long,
+        endTime: Long,
+        packageName: String,
+        queryStart: Long,
+        queryEnd: Long
+    ) {
+        val clampedBegin = beginTime.coerceIn(queryStart, queryEnd)
+        val clampedEnd = endTime.coerceIn(queryStart, queryEnd)
+        if (clampedEnd <= clampedBegin) return
+        foregroundStats.add(ComponentForegroundStat(clampedBegin, clampedEnd, packageName))
+    }
+
     private fun aggregateForegroundStats(foregroundStats: List<ComponentForegroundStat>): List<AllAppsUsageFragment.Stat> {
         val usageStats = mutableListOf<AllAppsUsageFragment.Stat>()
         if (foregroundStats.isEmpty()) return usageStats
 
         // Map to store total foreground time for each app
         val applicationTotalForegroundTime = mutableMapOf<String, Long>()
-        // Map to store start times for each app
-        val applicationStartTimes = mutableMapOf<String, MutableList<ZonedDateTime>>()
+        val applicationSessions = mutableMapOf<String, MutableList<AllAppsUsageFragment.UsageSession>>()
 
         for (foregroundStat in foregroundStats) {
-            // Calculate total foreground time for each app
+            val durationMillis = foregroundStat.endTime - foregroundStat.beginTime
+            if (durationMillis <= 0) continue
+
             applicationTotalForegroundTime[foregroundStat.packageName] =
                 applicationTotalForegroundTime.getOrDefault(foregroundStat.packageName, 0) +
-                        (foregroundStat.endTime - foregroundStat.beginTime)
+                        durationMillis
 
-            // Collect start times for each app
             val startTime = ZonedDateTime.ofInstant(
                 Instant.ofEpochMilli(foregroundStat.beginTime),
                 ZoneId.systemDefault()
             )
-            applicationStartTimes.getOrPut(foregroundStat.packageName) { mutableListOf() }.add(startTime)
+            applicationSessions.getOrPut(foregroundStat.packageName) { mutableListOf() }.add(
+                AllAppsUsageFragment.UsageSession(startTime, durationMillis)
+            )
         }
 
         // Create Stat objects with total time and start times
         for ((packageName, totalTime) in applicationTotalForegroundTime) {
-            val startTimes = applicationStartTimes[packageName] ?: listOf()
-            usageStats.add(AllAppsUsageFragment.Stat(packageName, totalTime, startTimes))
+            val sessions = applicationSessions[packageName].orEmpty()
+            val sortedSessions = sessions.sortedBy { it.startTime.toInstant() }
+            usageStats.add(
+                AllAppsUsageFragment.Stat(
+                    packageName = packageName,
+                    totalTime = totalTime,
+                    sessions = sortedSessions
+                )
+            )
         }
 
         // Sort by total time in descending order
