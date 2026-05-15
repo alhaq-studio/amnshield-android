@@ -476,7 +476,7 @@
     
     <!-- Welcome Screen -->
     <string name="app_theme">Thème de l\'appli</string>
-    <string name="modern_gradient">Dégradé moderne (bêta)</string>
+    <string name="modern_gradient">Dégradé chaleureux</string>
     <string name="emerald_dusk">Crépuscule émeraude</string>
     <string name="sunset_glow">Lueur de coucher</string>
     <string name="light_mode">Mode clair</string>

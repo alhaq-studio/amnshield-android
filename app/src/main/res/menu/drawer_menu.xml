@@ -34,11 +34,6 @@
             android:id="@+id/nav_reports"
             android:icon="@drawable/ic_deenshield_reports"
             android:title="@string/reports" />
-
-        <item
-            android:id="@+id/nav_about"
-            android:icon="@drawable/baseline_info_24"
-            android:title="@string/about_deenshield" />
             
         <item
             android:id="@+id/nav_faq"

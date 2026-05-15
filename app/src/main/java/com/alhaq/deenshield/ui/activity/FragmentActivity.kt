@@ -12,6 +12,8 @@ import com.alhaq.deenshield.ui.fragments.installation.AccessibilityGuide
 import com.alhaq.deenshield.ui.fragments.installation.WelcomeFragment
 import com.alhaq.deenshield.ui.fragments.features.PremiumFeaturesFragment
 import com.alhaq.deenshield.ui.fragments.usage.AllAppsUsageFragment
+import com.alhaq.deenshield.ui.fragments.ManageBlockSchedulesFragment
+import com.alhaq.deenshield.ui.fragments.ManageLaunchLimitsFragment
 import com.alhaq.deenshield.ui.fragments.ProfileFragment
 
 class FragmentActivity : AppCompatActivity() {
@@ -58,6 +60,12 @@ class FragmentActivity : AppCompatActivity() {
                 }
                 AllAppsUsageFragment.FRAGMENT_ID -> {
                     fragment = AllAppsUsageFragment()
+                }
+                ManageBlockSchedulesFragment.FRAGMENT_ID -> {
+                    fragment = ManageBlockSchedulesFragment()
+                }
+                ManageLaunchLimitsFragment.FRAGMENT_ID -> {
+                    fragment = ManageLaunchLimitsFragment()
                 }
                 WelcomeFragment.FRAGMENT_ID -> {
                     fragment = WelcomeFragment()

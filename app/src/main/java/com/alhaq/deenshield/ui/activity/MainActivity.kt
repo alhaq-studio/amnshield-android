@@ -55,6 +55,7 @@ import com.alhaq.deenshield.databinding.DialogRemoveAntiUninstallBinding
 import com.alhaq.deenshield.receivers.AdminReceiver
 import com.alhaq.deenshield.services.DeenShieldAccessibilityService
 import com.alhaq.deenshield.ui.fragments.HomeFragment
+import com.alhaq.deenshield.ui.fragments.BlocksFragment
 import com.alhaq.deenshield.ui.fragments.StatsFragment
 import com.alhaq.deenshield.ui.fragments.SettingsFragment
 import com.alhaq.deenshield.ui.activity.FragmentActivity
@@ -236,9 +237,9 @@ class MainActivity : AppCompatActivity() {
                     startActivity(intent)
                     true
                 }
-                R.id.navigation_settings -> {
+                R.id.navigation_blocks -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.nav_host_fragment, SettingsFragment())
+                        .replace(R.id.nav_host_fragment, BlocksFragment())
                         .commit()
                     true
                 }
@@ -285,7 +286,7 @@ class MainActivity : AppCompatActivity() {
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.nav_host_fragment, SettingsFragment())
                     .commit()
-                binding.bottomNavigation.selectedItemId = R.id.navigation_settings
+                binding.bottomNavigation.selectedItemId = R.id.navigation_blocks
                 true
             }
             R.id.action_about -> {
@@ -1158,9 +1159,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_reports -> {
                     val intent = Intent(this, ReportsActivity::class.java)
                     startActivity(intent)
-                }
-                R.id.nav_about -> {
-                    showAboutDialog()
                 }
                 R.id.nav_faq -> {
                     showFAQDialog()

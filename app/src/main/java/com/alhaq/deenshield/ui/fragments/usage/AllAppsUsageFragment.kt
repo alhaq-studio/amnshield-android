@@ -18,6 +18,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity.RESULT_OK
@@ -138,6 +140,11 @@ class AllAppsUsageFragment : Fragment() {
                                 R.anim.fade_out
                             )
                         )
+                        true
+                    }
+
+                    R.id.view_recommendations -> {
+                        binding.main.smoothScrollTo(0, binding.recommendationCard.top)
                         true
                     }
 
@@ -292,6 +299,7 @@ class AllAppsUsageFragment : Fragment() {
                     Toast.makeText(requireContext(),"No data available",Toast.LENGTH_SHORT).show()
                 }
                 updatePieChart(list)
+                updateRecommendations(list)
                 binding.totalUsage.text = totalTime
 
                 adapter.updateData(list)
@@ -305,6 +313,68 @@ class AllAppsUsageFragment : Fragment() {
         val totalTimeInMillis = stats.sumOf { it.totalTime }
 
         return totalTimeInMillis
+    }
+
+    private fun updateRecommendations(statsList: List<Stat>) {
+        val topApps = statsList
+            .sortedByDescending { it.totalTime }
+            .take(3)
+
+        if (topApps.isEmpty()) {
+            binding.recommendationSubtitle.text = "No usage data available for recommendations on this date."
+            setRecommendationRow(0, null)
+            setRecommendationRow(1, null)
+            setRecommendationRow(2, null)
+            return
+        }
+
+        binding.recommendationSubtitle.text = "Based on your highest usage apps for this day"
+        setRecommendationRow(0, topApps.getOrNull(0))
+        setRecommendationRow(1, topApps.getOrNull(1))
+        setRecommendationRow(2, topApps.getOrNull(2))
+    }
+
+    private fun setRecommendationRow(index: Int, stat: Stat?) {
+        val row = when (index) {
+            0 -> binding.recommendationItem1
+            1 -> binding.recommendationItem2
+            else -> binding.recommendationItem3
+        }
+        val iconView: ImageView = when (index) {
+            0 -> binding.recommendationIcon1
+            1 -> binding.recommendationIcon2
+            else -> binding.recommendationIcon3
+        }
+        val textView: TextView = when (index) {
+            0 -> binding.recommendationText1
+            1 -> binding.recommendationText2
+            else -> binding.recommendationText3
+        }
+
+        if (stat == null) {
+            row.visibility = View.GONE
+            return
+        }
+
+        val pm = requireContext().packageManager
+        val appName = try {
+            val appInfo = pm.getApplicationInfo(stat.packageName, 0)
+            iconView.setImageDrawable(pm.getApplicationIcon(appInfo))
+            pm.getApplicationLabel(appInfo).toString()
+        } catch (_: Exception) {
+            iconView.setImageResource(R.drawable.baseline_android_24)
+            stat.packageName.substringAfterLast('.')
+        }
+
+        val minutes = (stat.totalTime / 60000L).toInt()
+        val riskText = when {
+            minutes >= 240 || stat.sessions.size >= 35 -> "High"
+            minutes >= 120 || stat.sessions.size >= 20 -> "Moderate"
+            else -> "Elevated"
+        }
+
+        textView.text = "$appName • ${TimeTools.formatTime(stat.totalTime, false)} • $riskText risk"
+        row.visibility = View.VISIBLE
     }
 
     private fun showDatePickerDialog(

@@ -1,5 +1,33 @@
 # AI Image Blocking - Testing Guide
 
+## Latest UI and Navigation Updates (May 2026)
+
+### Navigation Sanity Check
+1. Open app and verify bottom navigation shows: **Home, Stats, Reports, Blocks**
+2. Confirm **Settings** is available from top-right overflow menu (not bottom nav)
+3. Open left drawer and confirm **About** is not present there
+4. Open top-right overflow and confirm **About** exists there
+
+### Blocks Dashboard Sanity Check
+1. Open **Blocks** from bottom navigation
+2. Verify all management cards are visible:
+  - App Blocker
+  - Keyword Blocker
+  - Focus Mode
+  - Cheat Hours
+  - Schedules
+  - Launch Limits
+3. Tap the floating **+** button and verify one all-in-one setup menu appears with those same options
+4. Verify each option opens the expected screen/dialog without crash
+
+### Launch Limits Flow Check
+1. Go to Reports → app usage breakdown for any app
+2. Tap **App Opens** and create a launch limit
+3. Return to Blocks dashboard and verify launch limit count updates
+4. Open **Manage Launch Limits** and verify edit/delete works
+
+---
+
 ## Prerequisites
 
 ### 1. Enable Features

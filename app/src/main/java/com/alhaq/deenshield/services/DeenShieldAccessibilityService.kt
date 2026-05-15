@@ -149,6 +149,11 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 return
             }
 
+            // Track app launches for launch limit feature
+            if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                trackAppLaunch(packageName)
+            }
+
             val rootNode = rootInActiveWindow
             val rootPackage = rootNode?.packageName?.toString() ?: packageName
 
@@ -168,8 +173,9 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
 
             val isPremiumUser = premiumManager.isPremium()
 
-            if (isPremiumUser && savedPreferencesLoader.isAppBlockerFeatureEnabled() && appBlocker.blockedApps.isNotEmpty()) {
-                val appBlockerResult = appBlocker.doesAppNeedToBeBlocked(packageName)
+            if (isPremiumUser && savedPreferencesLoader.isAppBlockerFeatureEnabled() && 
+                (appBlocker.blockedApps.isNotEmpty() || savedPreferencesLoader.loadAppLaunchLimitRules().isNotEmpty())) {
+                val appBlockerResult = appBlocker.doesAppNeedToBeBlocked(packageName, savedPreferencesLoader)
                 if (appBlockerResult.isBlocked) {
                     blockingStatsManager.recordAppBlock(packageName, "Blocked by App Blocker")
                     val intent = Intent(this, WarningActivity::class.java).apply {
@@ -355,6 +361,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         appBlocker.blockedApps = savedPreferencesLoader.loadBlockedApps().toHashSet()
         appBlocker.restoreCooldowns(savedPreferencesLoader.loadAppBlockerCooldownData())
         appBlocker.refreshCheatHoursData(savedPreferencesLoader.loadAppBlockerCheatHoursList())
+        appBlocker.refreshScheduleRules(savedPreferencesLoader.loadAppBlockerScheduleRules())
         savedPreferencesLoader.saveAppBlockerCooldownData(appBlocker.getCooldownSnapshot())
 
         val cheatHours = getSharedPreferences("cheat_hours", Context.MODE_PRIVATE)
@@ -476,6 +483,14 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
 
         val legacyMetricsPrefs = getSharedPreferences("usage_metrics", Context.MODE_PRIVATE)
         legacyMetricsPrefs.edit { putInt("total_reels", updatedCount) }
+    }
+
+    private fun trackAppLaunch(packageName: String) {
+        try {
+            savedPreferencesLoader.trackAppLaunch(packageName)
+        } catch (e: Exception) {
+            android.util.Log.e("DeenShield", "Error tracking app launch", e)
+        }
     }
 
     private fun shouldTrackReelExposure(event: AccessibilityEvent, key: String, now: Long): Boolean {

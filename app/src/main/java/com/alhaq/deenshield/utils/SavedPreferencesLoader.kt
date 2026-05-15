@@ -6,6 +6,7 @@ import com.alhaq.deenshield.blockers.ReelBlocker
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.alhaq.deenshield.blockers.FocusModeBlocker
+import com.alhaq.deenshield.data.blockers.AppBlockScheduleRule
 import com.alhaq.deenshield.data.AttentionSpanVideoItem
 import com.alhaq.deenshield.ui.activity.MainActivity
 import com.alhaq.deenshield.ui.activity.TimedActionActivity
@@ -511,6 +512,74 @@ class SavedPreferencesLoader(private val context: Context) {
         sharedPreferences.edit().putBoolean("auto_block_enabled", enabled).commit()
     }
 
+    fun loadAppBlockLists(): MutableMap<String, MutableSet<String>> {
+        val sharedPreferences = context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
+        val json = sharedPreferences.getString("named_block_lists", null)
+        if (json.isNullOrEmpty()) return mutableMapOf()
+
+        val type = object : TypeToken<MutableMap<String, MutableSet<String>>>() {}.type
+        return runCatching {
+            Gson().fromJson<MutableMap<String, MutableSet<String>>>(json, type) ?: mutableMapOf()
+        }.getOrElse {
+            Log.e("SavedPreferencesLoader", "Failed to load named block lists", it)
+            mutableMapOf()
+        }
+    }
+
+    fun saveAppBlockLists(lists: MutableMap<String, MutableSet<String>>) {
+        val sharedPreferences = context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
+        val json = Gson().toJson(lists)
+        sharedPreferences.edit().putString("named_block_lists", json).commit()
+
+        // Keep legacy blocked_apps in sync as a union for compatibility.
+        val merged = lists.values.flatten().toSet()
+        saveBlockedApps(merged)
+    }
+
+    fun addPackageToBlockList(listName: String, packageName: String) {
+        val lists = loadAppBlockLists()
+        val selectedList = lists.getOrPut(listName) { mutableSetOf() }
+        selectedList.add(packageName)
+        saveAppBlockLists(lists)
+    }
+
+    fun loadAppBlockerScheduleRules(): MutableList<AppBlockScheduleRule> {
+        val sharedPreferences = context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
+        val json = sharedPreferences.getString("schedule_rules", null)
+        if (json.isNullOrEmpty()) return mutableListOf()
+
+        val type = object : TypeToken<MutableList<AppBlockScheduleRule>>() {}.type
+        return runCatching {
+            Gson().fromJson<MutableList<AppBlockScheduleRule>>(json, type) ?: mutableListOf()
+        }.getOrElse {
+            Log.e("SavedPreferencesLoader", "Failed to load app blocker schedule rules", it)
+            mutableListOf()
+        }
+    }
+
+    fun saveAppBlockerScheduleRules(rules: MutableList<AppBlockScheduleRule>) {
+        val sharedPreferences = context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
+        val json = Gson().toJson(rules)
+        sharedPreferences.edit().putString("schedule_rules", json).commit()
+    }
+
+    fun upsertAppBlockerScheduleRule(rule: AppBlockScheduleRule) {
+        val rules = loadAppBlockerScheduleRules()
+        val existing = rules.indexOfFirst { it.id == rule.id }
+        if (existing >= 0) {
+            rules[existing] = rule
+        } else {
+            rules.add(rule)
+        }
+        saveAppBlockerScheduleRules(rules)
+    }
+
+    fun removeAppBlockerScheduleRule(ruleId: String) {
+        val rules = loadAppBlockerScheduleRules()
+        rules.removeAll { it.id == ruleId }
+        saveAppBlockerScheduleRules(rules)
+    }
+
     private fun getPremiumPrefs(): android.content.SharedPreferences {
         return context.getSharedPreferences("premium_state", Context.MODE_PRIVATE)
     }
@@ -610,5 +679,116 @@ class SavedPreferencesLoader(private val context: Context) {
     fun setUsageTrackerFeatureEnabled(enabled: Boolean) {
         getFeatureTogglesPrefs().edit().putBoolean("usage_tracker_enabled", enabled).apply()
     }
+
+    // ==================== App Launch Limit Rules ====================
+
+    fun loadAppLaunchLimitRules(): List<com.alhaq.deenshield.data.blockers.AppLaunchLimitRule> {
+        val sharedPreferences =
+            context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
+        val json = sharedPreferences.getString("launch_limit_rules", null)
+        if (json.isNullOrEmpty()) return emptyList()
+
+        return try {
+            val type = object : TypeToken<List<com.alhaq.deenshield.data.blockers.AppLaunchLimitRule>>() {}.type
+            Gson().fromJson(json, type) ?: emptyList()
+        } catch (e: Exception) {
+            Log.e("SavedPreferencesLoader", "Error loading launch limit rules", e)
+            emptyList()
+        }
+    }
+
+    fun saveAppLaunchLimitRules(rules: List<com.alhaq.deenshield.data.blockers.AppLaunchLimitRule>) {
+        val sharedPreferences =
+            context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
+        val json = Gson().toJson(rules)
+        sharedPreferences.edit().putString("launch_limit_rules", json).commit()
+    }
+
+    fun addAppLaunchLimitRule(rule: com.alhaq.deenshield.data.blockers.AppLaunchLimitRule) {
+        val rules = loadAppLaunchLimitRules().toMutableList()
+        rules.removeAll { it.packageName == rule.packageName }
+        rules.add(rule)
+        saveAppLaunchLimitRules(rules)
+    }
+
+    fun removeAppLaunchLimitRule(packageName: String) {
+        val rules = loadAppLaunchLimitRules().toMutableList()
+        rules.removeAll { it.packageName == packageName }
+        saveAppLaunchLimitRules(rules)
+    }
+
+    fun getAppLaunchLimitRule(packageName: String): com.alhaq.deenshield.data.blockers.AppLaunchLimitRule? {
+        return loadAppLaunchLimitRules().firstOrNull { it.packageName == packageName }
+    }
+
+    // ==================== Launch Count Tracking (Per Period) ====================
+    // Tracks current launch counts with period information to reset when period changes
+
+    fun trackAppLaunch(packageName: String) {
+        val sharedPreferences =
+            context.getSharedPreferences("app_launch_tracking", Context.MODE_PRIVATE)
+        val json = sharedPreferences.getString("launch_counts", null)
+
+        val launchData = if (!json.isNullOrEmpty()) {
+            try {
+                val type = object : TypeToken<MutableMap<String, LaunchCountData>>() {}.type
+                Gson().fromJson(json, type) as? MutableMap<String, LaunchCountData> ?: mutableMapOf()
+            } catch (e: Exception) {
+                Log.e("SavedPreferencesLoader", "Error loading launch data", e)
+                mutableMapOf()
+            }
+        } else {
+            mutableMapOf()
+        }
+
+        val current = launchData[packageName] ?: LaunchCountData(0, System.currentTimeMillis(), "DAILY")
+        launchData[packageName] = current.copy(count = current.count + 1)
+
+        val newJson = Gson().toJson(launchData)
+        sharedPreferences.edit().putString("launch_counts", newJson).apply()
+    }
+
+    fun getCurrentLaunchCount(packageName: String): Int {
+        val sharedPreferences =
+            context.getSharedPreferences("app_launch_tracking", Context.MODE_PRIVATE)
+        val json = sharedPreferences.getString("launch_counts", null)
+        if (json.isNullOrEmpty()) return 0
+
+        return try {
+            val type = object : TypeToken<Map<String, LaunchCountData>>() {}.type
+            val data: Map<String, LaunchCountData> = Gson().fromJson(json, type) ?: emptyMap()
+            data[packageName]?.count ?: 0
+        } catch (e: Exception) {
+            Log.e("SavedPreferencesLoader", "Error getting launch count", e)
+            0
+        }
+    }
+
+    fun resetLaunchCount(packageName: String) {
+        val sharedPreferences =
+            context.getSharedPreferences("app_launch_tracking", Context.MODE_PRIVATE)
+        val json = sharedPreferences.getString("launch_counts", null)
+
+        if (!json.isNullOrEmpty()) {
+            try {
+                val type = object : TypeToken<MutableMap<String, LaunchCountData>>() {}.type
+                val launchData = Gson().fromJson(json, type) as? MutableMap<String, LaunchCountData> ?: mutableMapOf()
+                launchData.remove(packageName)
+                val newJson = Gson().toJson(launchData)
+                sharedPreferences.edit().putString("launch_counts", newJson).apply()
+            } catch (e: Exception) {
+                Log.e("SavedPreferencesLoader", "Error resetting launch count", e)
+            }
+        }
+    }
+
+    /**
+     * Data class to track launch count with timestamp for period-based reset logic
+     */
+    data class LaunchCountData(
+        val count: Int,
+        val firstLaunchTime: Long,
+        val period: String // "HOURLY", "DAILY", "WEEKLY"
+    )
 
 }

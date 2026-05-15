@@ -4,6 +4,12 @@
     <string name="launcher_options">Launcher Options</string>
     <string name="focus_mode">Focus Mode</string>
     <string name="app_blocker">App Blocker</string>
+    <string name="blocks">Blocks</string>
+    <string name="active_blocks">Active Blocks</string>
+    <string name="block_setup">Block Setup</string>
+    <string name="manage_all_blocks">Manage all blocks</string>
+    <string name="manage_block_schedules">Manage Schedules</string>
+    <string name="manage_launch_limits">Manage Launch Limits</string>
     <string name="view_reel_blocker">Reels/Shorts Blocker</string>
     <string name="keyword_blocker">Keyword Blocker</string>
     <string name="anti_uninstall">App Protection</string>
@@ -476,7 +482,8 @@
     
     <!-- Welcome Screen -->
     <string name="app_theme">App Theme</string>
-    <string name="modern_gradient">Modern Gradient (Beta)</string>
+    <string name="modern_gradient">Warm Gradient</string>
+    <string name="purple_gradient">Purple Gradient</string>
     <string name="emerald_dusk">Emerald Dusk</string>
     <string name="sunset_glow">Sunset Glow</string>
     <string name="light_mode">Light Mode</string>

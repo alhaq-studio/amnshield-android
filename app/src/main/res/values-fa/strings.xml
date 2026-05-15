@@ -476,7 +476,7 @@
     
     <!-- Welcome Screen -->
     <string name="app_theme">قالب برنامه</string>
-    <string name="modern_gradient">گرادیان مدرن (بتا)</string>
+    <string name="modern_gradient">گرادیان گرم</string>
     <string name="emerald_dusk">شفق زمردی</string>
     <string name="sunset_glow">درخشش غروب</string>
     <string name="light_mode">حالت روشن</string>

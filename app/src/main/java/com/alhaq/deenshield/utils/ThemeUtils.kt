@@ -19,6 +19,7 @@ object ThemeUtils {
 
         return when (themeStyle) {
             "gradient" -> R.style.Theme_DeenShield_Gradient
+            "purple" -> R.style.Theme_DeenShield_Purple
             "emerald" -> R.style.Theme_DeenShield_Emerald
             "sunset" -> R.style.Theme_DeenShield_Sunset
             else -> R.style.Theme_DeenShield

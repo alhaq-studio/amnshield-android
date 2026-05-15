@@ -6,7 +6,7 @@ You are an expert Android/Kotlin developer working on **AmnShield** - an Islamic
 
 ## 📋 Project Metadata
 
-**Last Updated**: November 16, 2025  
+**Last Updated**: May 15, 2026  
 **Current Version**: 1.1.6 (Production Ready)  
 **Build Status**: ✅ Successfully Built  
 **Target SDK**: Android 15 (API 36)  
@@ -33,6 +33,13 @@ You are an expert Android/Kotlin developer working on **AmnShield** - an Islamic
 - **AI/ML**: TensorFlow Lite 2.13.0 (fully on-device)
 - **State Management**: SharedPreferences via centralized loader
 - **Navigation**: Single-activity, multi-fragment architecture
+
+### Navigation Model (Current)
+- **Bottom Navigation**: Home, Stats, Reports, Blocks
+- **Blocks Dashboard**: `BlocksFragment.kt` is the central live-block status and quick setup hub
+- **FAB Setup Hub**: Blocks dashboard FAB opens one menu for App Blocker, Keyword Blocker, Focus Mode, Cheat Hours, Schedules, and Launch Limits
+- **Top-right Overflow**: Notifications, Settings, About
+- **Left Drawer**: About removed to avoid duplication with overflow
 
 ### Core Structure
 ```
@@ -84,10 +91,20 @@ app/
 ### App Blocker
 - **Location**: `blockers/AppBlocker.kt`
 - **Config UI**: `AppBlockerConfigFragment.kt`
+- **Management UIs**: `ManageBlockSchedulesFragment.kt`, `ManageLaunchLimitsFragment.kt`
 - **Storage**: `SavedPreferencesLoader.loadBlockedApps()` / `saveBlockedApps()`
 - **Auto-Block**: `receivers/AppInstallReceiver.kt` monitors new installs by category
 - **Categories**: Defined in `data/blockers/PackageWand.kt` (Gaming, Social Media, Entertainment, Dating, Shopping, News, Productive)
 - **Detection**: Uses both hardcoded app lists AND `ApplicationInfo.category` for maximum coverage
+
+### App Launch Limits (Premium)
+- **Model**: `data/blockers/AppLaunchLimitRule.kt`
+- **Flow**: Count launches per app and block when configured threshold is reached
+- **Config Entry Points**:
+    - App usage breakdown (`AppUsageBreakdown`)
+    - App Blocker config (`Manage Launch Limits`)
+    - Blocks dashboard (card + FAB setup menu)
+- **Storage**: `SavedPreferencesLoader.loadAppLaunchLimitRules()` and related helper APIs
 
 ### Keyword Blocker
 - **Location**: `blockers/KeywordBlocker.kt`
@@ -129,6 +146,11 @@ app/
 "app_blocker_warning_info"  -> WarningData JSON
 "auto_block_enabled"        -> Boolean
 "auto_block_categories"     -> Set<String>
+"schedule_rules"            -> List<AppBlockScheduleRule> JSON
+"launch_limit_rules"        -> List<AppLaunchLimitRule> JSON
+
+// Cheat Hours
+"cheatHoursList"            -> List<AutoTimedActionItem> JSON
 
 // Keyword Blocker
 "blocked_keywords"          -> Set<String>
@@ -337,10 +359,11 @@ return PackageWand.getCategoryForPackage(packageName)
 2. Add to `DeenShieldAccessibilityService.onAccessibilityEvent()`
 3. Create config fragment in `ui/fragments/features/`
 4. Add card to `HomeFragment.kt`
-5. Add refresh broadcast action
-6. Update `SavedPreferencesLoader` for persistence
-7. Add to `SettingsFragment` if needed
-8. Test on real device with target apps
+5. Add status/setup entry to `BlocksFragment.kt` if user-facing
+6. Add refresh broadcast action
+7. Update `SavedPreferencesLoader` for persistence
+8. Add to `SettingsFragment` if needed
+9. Test on real device with target apps
 
 ### Adding a Premium Feature
 1. Check `PremiumManager.isPremium()` before activation
@@ -395,9 +418,9 @@ try {
 
 ## 📚 Additional Resources
 
-- **Full Guide**: See `DEVELOPMENT_GUIDE.md` in repo root
-- **AI Features**: See `AI_FEATURES.md` and `AI_IMPLEMENTATION_SUMMARY.md`
-- **Integration**: See `INTEGRATION_GUIDE.md` for TFLite setup
+- **Testing**: See `TESTING_GUIDE.md`
+- **Error Reporting**: See `ERROR_REPORTING_IMPLEMENTATION_GUIDE.md`
+- **Policy Docs**: `PRIVACY_POLICY.md` and `TERMS_OF_SERVICE.md`
 - **Play Store**: Follow Android App Publishing guidelines
 - **Material Design**: [material.io/components](https://material.io/components)
 
