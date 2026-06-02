@@ -8,6 +8,20 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+package-lock.json
+# ── Environment / secrets ──────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+# ── OS noise ───────────────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
 /build
 /captures
 .externalNativeBuild
