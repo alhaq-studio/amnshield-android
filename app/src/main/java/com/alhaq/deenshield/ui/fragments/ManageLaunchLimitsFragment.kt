@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.alhaq.deenshield.data.blockers.AppLaunchLimitRule
 import com.alhaq.deenshield.databinding.FragmentManageLaunchLimitsBinding
+import com.alhaq.deenshield.premium.PremiumManager
 import com.alhaq.deenshield.services.DeenShieldAccessibilityService
 import com.alhaq.deenshield.ui.adapters.LaunchLimitAdapter
 import com.alhaq.deenshield.ui.dialogs.SetLaunchLimitDialog
@@ -43,11 +44,27 @@ class ManageLaunchLimitsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        if (!PremiumManager.getInstance(requireContext().applicationContext).isPremium()) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Premium Required")
+                .setMessage("Launch limits are available for premium users.")
+                .setPositiveButton("View Plans") { _, _ ->
+                    val intent = Intent(requireContext(), com.alhaq.deenshield.ui.activity.FragmentActivity::class.java)
+                    intent.putExtra("feature_type", "premium_features")
+                    startActivity(intent)
+                    requireActivity().finish()
+                }
+                .setNegativeButton("Close") { _, _ -> requireActivity().finish() }
+                .setCancelable(false)
+                .show()
+            return
+        }
+
         savedPrefs = SavedPreferencesLoader(requireContext())
 
         // Setup back button
         binding.btnBackArrow.setOnClickListener {
-            requireActivity().finish()
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
 
         // Setup adapter
@@ -105,7 +122,8 @@ class ManageLaunchLimitsFragment : Fragment() {
             )
             dialog.show(childFragmentManager, "edit_launch_limit_${rule.id}")
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Error editing limit", Toast.LENGTH_SHORT).show()
+            android.util.Log.e("ManageLaunchLimits", "Error editing launch limit for ${rule.packageName}", e)
+            Toast.makeText(requireContext(), "Could not edit limit — try again", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -130,13 +148,16 @@ class ManageLaunchLimitsFragment : Fragment() {
                 .setNegativeButton("Cancel", null)
                 .show()
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Error deleting limit", Toast.LENGTH_SHORT).show()
+            android.util.Log.e("ManageLaunchLimits", "Error deleting launch limit for ${rule.packageName}", e)
+            Toast.makeText(requireContext(), "Could not delete limit — try again", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun sendRefreshRequest() {
         val intent = Intent(DeenShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
-        requireContext().sendBroadcast(intent)
+        requireContext().sendBroadcast(intent.setPackage(requireContext().packageName))
+        val unifiedIntent = Intent(DeenShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
+        requireContext().sendBroadcast(unifiedIntent.setPackage(requireContext().packageName))
     }
 
     override fun onDestroyView() {

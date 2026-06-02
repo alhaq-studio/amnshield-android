@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -20,6 +21,7 @@ import com.alhaq.deenshield.blockers.FocusModeBlocker
 import com.alhaq.deenshield.blockers.KeywordBlocker
 import com.alhaq.deenshield.blockers.ReelBlocker
 import com.alhaq.deenshield.blockers.ViewBlocker
+import com.alhaq.deenshield.data.blockers.UnifiedFeatureScheduleRule
 import com.alhaq.deenshield.premium.PremiumManager
 import com.alhaq.deenshield.ui.activity.MainActivity
 import com.alhaq.deenshield.ui.activity.WarningActivity
@@ -32,6 +34,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import java.util.Locale
 
 class DeenShieldAccessibilityService : BaseBlockingService() {
@@ -45,12 +48,14 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         const val INTENT_ACTION_REFRESH_VIEW_BLOCKER_COOLDOWN = "deenshield.refresh.viewblocker.cooldown"
         const val INTENT_ACTION_REFRESH_REEL_BLOCKER = "deenshield.refresh.reelblocker"
         const val INTENT_ACTION_REFRESH_REEL_BLOCKER_COOLDOWN = "deenshield.refresh.reelblocker.cooldown"
+        const val INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES = "deenshield.refresh.unified.feature.schedules"
         const val INTENT_ACTION_REFRESH_ANTI_UNINSTALL = ".deenshield.refresh.anti_uninstall"
         const val INTENT_ACTION_PASSWORD_VERIFIED = "deenshield.password.verified"
 
         private const val REEL_TRACKER_SCROLL_DEBOUNCE_MS = 800L
         private const val REEL_TRACKER_DUPLICATE_WINDOW_MS = 2_500L
         private const val REEL_TRACKER_SURFACE_REENTRY_MS = 10 * 60 * 1000L
+        private const val UNIFIED_SCHEDULE_EVAL_INTERVAL_MS = 15_000L
     }
 
     private lateinit var appBlocker: AppBlocker
@@ -83,10 +88,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
     private var isPasswordVerified = false
     private var currentProtectionSession: String? = null
     private var lastReelCountRefreshTime = 0L
+    private var lastUnifiedScheduleEvalTime = 0L
     private var cachedReelsScrolledToday = 0
     private var reelTrackerDate = TimeTools.getCurrentDate()
     private val lastReelTrackerHitTimes = mutableMapOf<String, Long>()
     private val lastReelTrackerSignatures = mutableMapOf<String, String>()
+    private var cachedDefaultLauncher: String? = null
 
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val eventChannel = Channel<AccessibilityEvent>(Channel.CONFLATED) { droppedEvent ->
@@ -112,6 +119,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         setupReelBlocker()
         setupViewBlocker()
         setupAntiUninstall()
+        cachedDefaultLauncher = getDefaultLauncherPackage()
 
         val filter = IntentFilter().apply {
             addAction(INTENT_ACTION_REFRESH_APP_BLOCKER)
@@ -120,6 +128,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
             addAction(INTENT_ACTION_REFRESH_VIEW_BLOCKER_COOLDOWN)
             addAction(INTENT_ACTION_REFRESH_REEL_BLOCKER)
             addAction(INTENT_ACTION_REFRESH_REEL_BLOCKER_COOLDOWN)
+            addAction(INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
             addAction(INTENT_ACTION_REFRESH_APP_BLOCKER_COOLDOWN)
             addAction(INTENT_ACTION_REFRESH_FOCUS_MODE)
             addAction(INTENT_ACTION_REFRESH_ANTI_UNINSTALL)
@@ -132,6 +141,8 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         } else {
             registerReceiver(refreshReceiver, filter)
         }
+
+        evaluateUnifiedFeatureSchedulesIfNeeded(force = true)
 
         startBackgroundWorker()
     }
@@ -149,9 +160,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 return
             }
 
+            evaluateUnifiedFeatureSchedulesIfNeeded()
+
             // Track app launches for launch limit feature
             if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                 trackAppLaunch(packageName)
+                cachedDefaultLauncher = getDefaultLauncherPackage()
             }
 
             val rootNode = rootInActiveWindow
@@ -173,23 +187,8 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
 
             val isPremiumUser = premiumManager.isPremium()
 
-            if (isPremiumUser && savedPreferencesLoader.isAppBlockerFeatureEnabled() && 
-                (appBlocker.blockedApps.isNotEmpty() || savedPreferencesLoader.loadAppLaunchLimitRules().isNotEmpty())) {
-                val appBlockerResult = appBlocker.doesAppNeedToBeBlocked(packageName, savedPreferencesLoader)
-                if (appBlockerResult.isBlocked) {
-                    blockingStatsManager.recordAppBlock(packageName, "Blocked by App Blocker")
-                    val intent = Intent(this, WarningActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        putExtra("mode", Constants.WARNING_SCREEN_MODE_APP_BLOCKER)
-                        putExtra("result_id", packageName)
-                    }
-                    startActivity(intent)
-                    return
-                }
-            }
-
-            if (isPremiumUser) {
-                val focusModeResult = focusModeBlocker.doesAppNeedToBeBlocked(packageName)
+            if (isPremiumUser && savedPreferencesLoader.isFocusModeFeatureEnabled()) {
+                val focusModeResult = focusModeBlocker.doesAppNeedToBeBlocked(packageName, cachedDefaultLauncher)
                 if (focusModeResult.isRequestingToUpdateSPData) {
                     savedPreferencesLoader.completeFocusSession()
                     savedPreferencesLoader.saveFocusModeData(focusModeBlocker.focusModeData)
@@ -199,6 +198,26 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                     blockingStatsManager.recordAppBlock(packageName, "Blocked by Focus Mode")
                     pressHome()
                     return
+                }
+            }
+
+            val isFocusModeActive = isPremiumUser && savedPreferencesLoader.isFocusModeFeatureEnabled() && focusModeBlocker.focusModeData.isTurnedOn
+            val isFocusBlockAllExSelectedActive = isFocusModeActive && focusModeBlocker.focusModeData.modeType == Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED
+
+            if (!isFocusBlockAllExSelectedActive) {
+                if (isPremiumUser && savedPreferencesLoader.isAppBlockerFeatureEnabled() && 
+                    (appBlocker.blockedApps.isNotEmpty() || savedPreferencesLoader.loadAppLaunchLimitRules().isNotEmpty())) {
+                    val appBlockerResult = appBlocker.doesAppNeedToBeBlocked(packageName, savedPreferencesLoader)
+                    if (appBlockerResult.isBlocked) {
+                        blockingStatsManager.recordAppBlock(packageName, "Blocked by App Blocker")
+                        val intent = Intent(this, WarningActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            putExtra("mode", Constants.WARNING_SCREEN_MODE_APP_BLOCKER)
+                            putExtra("result_id", packageName)
+                        }
+                        startActivity(intent)
+                        return
+                    }
                 }
             }
 
@@ -317,6 +336,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 INTENT_ACTION_REFRESH_VIEW_BLOCKER -> setupViewBlocker()
                 INTENT_ACTION_REFRESH_REEL_BLOCKER -> setupReelBlocker()
                 INTENT_ACTION_REFRESH_FOCUS_MODE -> setupFocusMode()
+                INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES -> evaluateUnifiedFeatureSchedulesIfNeeded(force = true)
                 INTENT_ACTION_REFRESH_ANTI_UNINSTALL -> setupAntiUninstall()
                 INTENT_ACTION_REFRESH_VIEW_BLOCKER_COOLDOWN -> {
                     val interval = intent.getIntExtra("selected_time", viewBlockerWarningConfig.timeInterval)
@@ -493,6 +513,18 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
     }
 
+    private fun getDefaultLauncherPackage(): String? {
+        return try {
+            val intent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+            }
+            val resolveInfo = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            resolveInfo?.activityInfo?.packageName
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     private fun shouldTrackReelExposure(event: AccessibilityEvent, key: String, now: Long): Boolean {
         val lastSeen = lastReelTrackerHitTimes[key]
         if (lastSeen == null) {
@@ -530,6 +562,123 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
     private fun setupFocusMode() {
         val focusModeData = savedPreferencesLoader.getFocusModeData()
         focusModeBlocker.update(focusModeData)
+    }
+
+    private fun evaluateUnifiedFeatureSchedulesIfNeeded(force: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!force && (now - lastUnifiedScheduleEvalTime) < UNIFIED_SCHEDULE_EVAL_INTERVAL_MS) {
+            return
+        }
+        lastUnifiedScheduleEvalTime = now
+
+        val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules()
+        if (rules.isEmpty()) return
+
+        UnifiedFeatureScheduleRule.FeatureTarget.entries.forEach { target ->
+            val targetRules = rules.filter { it.targets.contains(target) }
+            if (targetRules.isEmpty()) return@forEach
+
+            val hasActiveCheat = targetRules.any {
+                it.type == UnifiedFeatureScheduleRule.RuleType.CHEAT && isUnifiedRuleActive(it, now)
+            }
+            val hasActiveBlock = targetRules.any {
+                it.type == UnifiedFeatureScheduleRule.RuleType.BLOCK && isUnifiedRuleActive(it, now)
+            }
+
+            val desiredState = when {
+                hasActiveCheat -> false
+                hasActiveBlock -> true
+                else -> false
+            }
+            applyUnifiedFeatureState(target, desiredState)
+        }
+    }
+
+    private fun applyUnifiedFeatureState(
+        target: UnifiedFeatureScheduleRule.FeatureTarget,
+        enabled: Boolean
+    ) {
+        when (target) {
+            UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER -> {
+                if (savedPreferencesLoader.isAppBlockerFeatureEnabled() != enabled) {
+                    savedPreferencesLoader.setAppBlockerFeatureEnabled(enabled)
+                    setupAppBlocker()
+                }
+            }
+
+            UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER -> {
+                if (savedPreferencesLoader.isKeywordBlockerFeatureEnabled() != enabled) {
+                    savedPreferencesLoader.setKeywordBlockerFeatureEnabled(enabled)
+                    setupKeywordBlocker()
+                }
+            }
+
+            UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER -> {
+                if (savedPreferencesLoader.isReelBlockerEnabled() != enabled) {
+                    savedPreferencesLoader.setReelBlockerEnabled(enabled)
+                    setupReelBlocker()
+                }
+            }
+
+            UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE -> {
+                if (savedPreferencesLoader.isFocusModeFeatureEnabled() != enabled) {
+                    savedPreferencesLoader.setFocusModeFeatureEnabled(enabled)
+                    setupFocusMode()
+                }
+            }
+        }
+    }
+
+    private fun isUnifiedRuleActive(rule: UnifiedFeatureScheduleRule, nowMillis: Long): Boolean {
+        return when (rule.recurrence) {
+            UnifiedFeatureScheduleRule.Recurrence.ALWAYS -> true
+            UnifiedFeatureScheduleRule.Recurrence.HOURLY -> rule.activeUntilMillis > nowMillis
+            UnifiedFeatureScheduleRule.Recurrence.DAILY -> {
+                isDailyLikeWindowActive(rule.startMinute, rule.endMinute, nowMillis)
+            }
+
+            UnifiedFeatureScheduleRule.Recurrence.WEEKLY -> {
+                if (rule.selectedDays.isEmpty()) {
+                    false
+                } else {
+                    isWeeklyWindowActive(rule.startMinute, rule.endMinute, rule.selectedDays, nowMillis)
+                }
+            }
+        }
+    }
+
+    private fun isDailyLikeWindowActive(startMinutes: Int, endMinutes: Int, nowMillis: Long): Boolean {
+        if (startMinutes == endMinutes) return false
+
+        val now = Calendar.getInstance().apply { timeInMillis = nowMillis }
+        val currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+
+        return if (startMinutes < endMinutes) {
+            currentMinutes in startMinutes until endMinutes
+        } else {
+            currentMinutes >= startMinutes || currentMinutes < endMinutes
+        }
+    }
+
+    private fun isWeeklyWindowActive(
+        startMinutes: Int,
+        endMinutes: Int,
+        selectedDays: Set<Int>,
+        nowMillis: Long
+    ): Boolean {
+        if (startMinutes == endMinutes) return false
+
+        val now = Calendar.getInstance().apply { timeInMillis = nowMillis }
+        val currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+        val today = now.get(Calendar.DAY_OF_WEEK)
+        val yesterday = if (today == Calendar.SUNDAY) Calendar.SATURDAY else today - 1
+
+        return if (startMinutes < endMinutes) {
+            selectedDays.contains(today) && currentMinutes in startMinutes until endMinutes
+        } else {
+            (selectedDays.contains(today) && currentMinutes >= startMinutes) ||
+                (selectedDays.contains(yesterday) && currentMinutes < endMinutes)
+        }
     }
 
     private fun setupAntiUninstall() {

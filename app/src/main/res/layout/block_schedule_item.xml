@@ -36,6 +36,18 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/schedule_group_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:text="Grouped schedule"
+                    android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                    android:textColor="?attr/colorOnSecondaryContainer"
+                    android:visibility="gone" />
+
+                <TextView
                     android:id="@+id/schedule_time_window"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

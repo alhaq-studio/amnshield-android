@@ -51,7 +51,7 @@ class LaunchLimitAdapter(
 
             // Get current launch count
             val savedPrefs = SavedPreferencesLoader(context)
-            val currentCount = savedPrefs.getCurrentLaunchCount(rule.packageName)
+            val currentCount = savedPrefs.getCurrentLaunchCount(rule.packageName, rule)
             binding.currentCount.text = "Current: $currentCount / ${rule.maxLaunches}"
 
             binding.btnEdit.setOnClickListener {

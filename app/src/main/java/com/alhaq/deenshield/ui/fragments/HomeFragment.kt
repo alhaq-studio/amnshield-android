@@ -124,7 +124,7 @@ class HomeFragment : Fragment() {
             val isPremiumUser = premiumManager.isPremium()
             
             // Update Focus Mode status - check if a focus session is actually running
-            val focusModeData = com.alhaq.deenshield.utils.SavedPreferencesLoader(ctx).getFocusModeData()
+            val focusModeData = savedPreferencesLoader.getFocusModeData()
             val isFocusModeActive = isPremiumUser && focusModeData.isTurnedOn && isMainServiceEnabled
             updateChipStatus(
                 binding.chipFocusStatus,
@@ -141,6 +141,7 @@ class HomeFragment : Fragment() {
             // Update Keyword Blocker status
             // Check if any keywords are configured (custom keywords OR keyword packs)
             val hasCustomKeywords = savedPreferencesLoader.loadBlockedKeywords().isNotEmpty()
+            // TODO: Move keyword-pack prefs reading into SavedPreferencesLoader to satisfy project conventions
             val keywordPacksPrefs = ctx.getSharedPreferences("keyword_blocker_packs", android.content.Context.MODE_PRIVATE)
             val hasAdultPack = keywordPacksPrefs.getBoolean("adult_blocker", false)
             val isKeywordBlockerConfigured = hasCustomKeywords || hasAdultPack
@@ -171,6 +172,9 @@ class HomeFragment : Fragment() {
             val isAntiUninstallEnabled = antiUninstallPrefs.getBoolean("is_anti_uninstall_on", false)
             val hasDeviceAdmin = isDeviceAdminEnabled(ctx)
             updateChipStatus(binding.chipAntiUninstallStatus, isAntiUninstallEnabled && hasDeviceAdmin)
+            // TODO: When service is disabled, surface an actionable enable prompt (e.g. Snackbar or
+            // a banner chip) rather than silently showing OFF status on all feature chips.
+            // The showServiceEnableDialog() helper exists but is not yet wired into updateServiceStatus().
         }
     }
 

@@ -3,6 +3,8 @@
 ## Overview
 A comprehensive error/crash logging and user feedback collection system for AmnShield that respects user privacy by storing all data locally by default.
 
+For end-to-end verification steps, see `TESTING_GUIDE.md` and run **Test 17: Error Reporting & Crash Recovery**.
+
 ---
 
 ## ✅ What's Been Implemented

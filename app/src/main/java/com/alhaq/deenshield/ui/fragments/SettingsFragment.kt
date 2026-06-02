@@ -108,7 +108,7 @@ class SettingsFragment : Fragment() {
             binding.txtThemeStatus.text = when {
                 themeStyle == "gradient" -> getString(R.string.modern_gradient)
                 themeStyle == "purple" -> getString(R.string.purple_gradient)
-                themeStyle == "emerald" -> getString(R.string.emerald_dusk)
+                themeStyle == "emerald" -> getString(R.string.emerald_theme)
                 themeStyle == "sunset" -> getString(R.string.sunset_glow)
                 themeMode == AppCompatDelegate.MODE_NIGHT_NO -> getString(R.string.light_mode)
                 themeMode == AppCompatDelegate.MODE_NIGHT_YES -> getString(R.string.dark_mode)
@@ -521,7 +521,7 @@ class SettingsFragment : Fragment() {
             getString(R.string.system_default),
             getString(R.string.modern_gradient),
             getString(R.string.purple_gradient),
-            getString(R.string.emerald_dusk),
+            getString(R.string.emerald_theme),
             getString(R.string.sunset_glow)
         )
 
@@ -569,15 +569,15 @@ class SettingsFragment : Fragment() {
                         editor.putString("theme_style", "purple")
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                     }
-                    5 -> { // Emerald Dusk
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                    5 -> { // Emerald
+                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO)
                         editor.putString("theme_style", "emerald")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                     }
-                    6 -> { // Sunset Glow
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                    6 -> { // Sunset Glow (flat warm, slightly dark-ish)
+                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO)
                         editor.putString("theme_style", "sunset")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                     }
                 }
                 editor.apply()

@@ -34,15 +34,10 @@
             android:id="@+id/nav_reports"
             android:icon="@drawable/ic_deenshield_reports"
             android:title="@string/reports" />
-            
+
         <item
-            android:id="@+id/nav_faq"
-            android:icon="@drawable/baseline_help_outline_24"
-            android:title="@string/faq" />
-            
-        <item
-            android:id="@+id/nav_feedback"
-            android:icon="@drawable/baseline_share_24"
-            android:title="@string/feedback" />
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_deenshield_settings"
+            android:title="@string/settings" />
     </group>
 </menu>

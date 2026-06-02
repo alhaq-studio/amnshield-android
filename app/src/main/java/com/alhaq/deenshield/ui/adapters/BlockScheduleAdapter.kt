@@ -1,12 +1,16 @@
 package com.alhaq.deenshield.ui.adapters
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.alhaq.deenshield.data.blockers.AppBlockScheduleRule
 import com.alhaq.deenshield.databinding.BlockScheduleItemBinding
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class BlockScheduleAdapter(
     private val onEdit: (AppBlockScheduleRule) -> Unit,
@@ -22,18 +26,38 @@ class BlockScheduleAdapter(
         fun bind(rule: AppBlockScheduleRule) {
             binding.scheduleTitle.text = rule.title
 
-            // Format time window
-            val startHour = rule.startMinute / 60
-            val startMin = rule.startMinute % 60
-            val endHour = rule.endMinute / 60
-            val endMin = rule.endMinute % 60
-            val timeWindow = String.format("%02d:%02d - %02d:%02d", startHour, startMin, endHour, endMin)
+            if (rule.groupId.isNullOrBlank()) {
+                binding.scheduleGroupBadge.visibility = View.GONE
+            } else {
+                binding.scheduleGroupBadge.visibility = View.VISIBLE
+                binding.scheduleGroupBadge.text = rule.groupTitle?.takeIf { it.isNotBlank() } ?: "Batch schedule"
+            }
+
+            val timeWindow = when (rule.recurrence) {
+                AppBlockScheduleRule.Recurrence.ALWAYS -> "Always active"
+                AppBlockScheduleRule.Recurrence.HOURLY -> {
+                    if (rule.activeUntilMillis > System.currentTimeMillis()) {
+                        val until = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            .format(Date(rule.activeUntilMillis))
+                        "From now until $until"
+                    } else {
+                        "From now for ${rule.durationHours.coerceAtLeast(1)}h"
+                    }
+                }
+
+                else -> {
+                    val startHour = rule.startMinute / 60
+                    val startMin = rule.startMinute % 60
+                    val endHour = rule.endMinute / 60
+                    val endMin = rule.endMinute % 60
+                    String.format("%02d:%02d - %02d:%02d", startHour, startMin, endHour, endMin)
+                }
+            }
             binding.scheduleTimeWindow.text = timeWindow
 
-            // Format recurrence
-            val recurrenceText = when (rule.recurrence) {
-                AppBlockScheduleRule.Recurrence.HOURLY -> "Hourly"
-                AppBlockScheduleRule.Recurrence.DAILY -> "Daily"
+            binding.scheduleRecurrence.text = when (rule.recurrence) {
+                AppBlockScheduleRule.Recurrence.HOURLY -> "Repeats hourly"
+                AppBlockScheduleRule.Recurrence.DAILY -> "Repeats daily"
                 AppBlockScheduleRule.Recurrence.WEEKLY -> {
                     val days = mapOf(
                         1 to "Sun", 2 to "Mon", 3 to "Tue", 4 to "Wed",
@@ -43,11 +67,14 @@ class BlockScheduleAdapter(
                         .map { days[it] ?: "" }
                         .filter { it.isNotEmpty() }
                         .joinToString(", ")
-                    "Weekly: $selectedDayNames"
+                    if (selectedDayNames.isBlank()) {
+                        "Repeats weekly (no days set — edit to fix)"
+                    } else {
+                        "Repeats weekly on $selectedDayNames"
+                    }
                 }
-                AppBlockScheduleRule.Recurrence.ALWAYS -> "Always Active"
+                AppBlockScheduleRule.Recurrence.ALWAYS -> "Always active"
             }
-            binding.scheduleRecurrence.text = recurrenceText
 
             binding.btnEdit.setOnClickListener {
                 onEdit(rule)

@@ -12,7 +12,19 @@
         android:id="@+id/action_settings"
         android:icon="@drawable/ic_deenshield_settings"
         android:title="@string/settings"
-        app:showAsAction="always" />
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_faq"
+        android:icon="@drawable/baseline_help_outline_24"
+        android:title="@string/faq"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_feedback"
+        android:icon="@drawable/baseline_share_24"
+        android:title="@string/feedback"
+        app:showAsAction="never" />
     
     <item
         android:id="@+id/action_about"

@@ -6,7 +6,7 @@ You are an expert Android/Kotlin developer working on **AmnShield** - an Islamic
 
 ## 📋 Project Metadata
 
-**Last Updated**: May 15, 2026  
+**Last Updated**: May 29, 2026  
 **Current Version**: 1.1.6 (Production Ready)  
 **Build Status**: ✅ Successfully Built  
 **Target SDK**: Android 15 (API 36)  
@@ -35,11 +35,18 @@ You are an expert Android/Kotlin developer working on **AmnShield** - an Islamic
 - **Navigation**: Single-activity, multi-fragment architecture
 
 ### Navigation Model (Current)
-- **Bottom Navigation**: Home, Stats, Reports, Blocks
+- **Bottom Navigation (4 tabs)**: Home · Stats · Blocks · Profile
 - **Blocks Dashboard**: `BlocksFragment.kt` is the central live-block status and quick setup hub
 - **FAB Setup Hub**: Blocks dashboard FAB opens one menu for App Blocker, Keyword Blocker, Focus Mode, Cheat Hours, Schedules, and Launch Limits
 - **Top-right Overflow**: Notifications, Settings, About
 - **Left Drawer**: About removed to avoid duplication with overflow
+- **Reports**: Accessible from Stats screen via `btnViewReports`, not a bottom-nav tab
+
+### Recent Migration Notes
+- Older references to a bottom-nav **Settings** tab are outdated. Settings now lives in overflow.
+- Blocks/Schedules manager now supports both **individual** and **grouped** unified schedule controls.
+- Schedule management actions include type/recurrence updates, duplicate, delete, and grouped member visibility.
+- Launch-limit management is available from Blocks flows and dedicated manager screens.
 
 ### Core Structure
 ```
@@ -247,14 +254,15 @@ INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST
 INTENT_ACTION_REFRESH_VIEW_BLOCKER
 INTENT_ACTION_REFRESH_FOCUS_MODE
 INTENT_ACTION_REFRESH_ANTI_UNINSTALL
+INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES  // Unified feature schedule changes
 
 // Apply cooldowns
 INTENT_ACTION_REFRESH_APP_BLOCKER_COOLDOWN
 INTENT_ACTION_REFRESH_VIEW_BLOCKER_COOLDOWN
 
-// Usage
+// Usage — always scope to own package
 val intent = Intent(DeenShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
-context.sendBroadcast(intent)
+context.sendBroadcast(intent.setPackage(context.packageName))
 ```
 
 ---

@@ -38,6 +38,9 @@ class TweakKeywordBlocker(savedPreferencesLoader: SavedPreferencesLoader) :
                         ignoredAppsSize = selectedApps.size
                         dialogManageKeywordBlocker.ignoredKbApps.setText(dialogManageKeywordBlocker.ignoredKbApps.text.toString() + " " + "($ignoredAppsSize)")
                         savedPreferencesLoader?.saveKeywordBlockerIgnoredApps(selectedApps)
+                        // Notify the accessibility service so the in-memory ignored-package
+                        // set is refreshed without waiting for the dialog OK button.
+                        sendRefreshRequest(DeenShieldAccessibilityService.INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST)
                     }
                 }
             }

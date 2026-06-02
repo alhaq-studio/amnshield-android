@@ -1,11 +1,14 @@
 package com.alhaq.deenshield.data.blockers
 
-data class AppBlockScheduleRule(
+/**
+ * Unified schedule rule that controls blocker feature toggles (on/off) in a recurring window.
+ */
+data class UnifiedFeatureScheduleRule(
     val id: String,
     val title: String,
-    val packageName: String,
     val type: RuleType,
     val recurrence: Recurrence,
+    val targets: Set<FeatureTarget>,
     val startMinute: Int = 0,
     val endMinute: Int = 0,
     val selectedDays: Set<Int> = emptySet(),
@@ -25,5 +28,12 @@ data class AppBlockScheduleRule(
         DAILY,
         WEEKLY,
         ALWAYS
+    }
+
+    enum class FeatureTarget {
+        APP_BLOCKER,
+        KEYWORD_BLOCKER,
+        REEL_BLOCKER,
+        FOCUS_MODE
     }
 }

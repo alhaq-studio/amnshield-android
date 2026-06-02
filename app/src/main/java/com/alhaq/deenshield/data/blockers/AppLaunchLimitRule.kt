@@ -5,7 +5,7 @@ import java.util.Calendar
 /**
  * Data model for per-app launch/opens limiting rules.
  * Tracks how many times an app can be launched within a specific time period.
- * When the limit is reached, an automatic BLOCK schedule rule is created.
+ * When the limit is reached, the app is blocked by AppBlocker enforcement logic.
  *
  * @param id Unique identifier (UUID)
  * @param packageName Target app's package name
@@ -19,7 +19,7 @@ data class AppLaunchLimitRule(
     val packageName: String,
     val maxLaunches: Int,
     val timePeriod: TimePeriod,
-    val dayOfWeek: Int = Calendar.MONDAY,
+    val dayOfWeek: Int = Calendar.getInstance().get(Calendar.DAY_OF_WEEK),
     val createdAt: Long = System.currentTimeMillis()
 ) {
     enum class TimePeriod {

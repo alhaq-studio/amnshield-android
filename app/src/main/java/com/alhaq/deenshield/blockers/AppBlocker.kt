@@ -46,7 +46,7 @@ class AppBlocker:BaseBlocker() {
         if (savedPrefs != null) {
             val launchLimitRule = savedPrefs.getAppLaunchLimitRule(packageName)
             if (launchLimitRule != null) {
-                val currentCount = savedPrefs.getCurrentLaunchCount(packageName)
+                val currentCount = savedPrefs.getCurrentLaunchCount(packageName, launchLimitRule)
                 if (currentCount >= launchLimitRule.maxLaunches) {
                     return AppBlockerResult(isBlocked = true)
                 }

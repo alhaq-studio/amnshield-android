@@ -484,6 +484,7 @@
     <string name="app_theme">App Theme</string>
     <string name="modern_gradient">Warm Gradient</string>
     <string name="purple_gradient">Purple Gradient</string>
+    <string name="emerald_theme">Emerald</string>
     <string name="emerald_dusk">Emerald Dusk</string>
     <string name="sunset_glow">Sunset Glow</string>
     <string name="light_mode">Light Mode</string>

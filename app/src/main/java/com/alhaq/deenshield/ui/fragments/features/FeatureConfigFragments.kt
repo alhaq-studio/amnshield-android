@@ -203,6 +203,7 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
         binding.btnSelectApps.isEnabled = enabled
         binding.btnCheatHours.isEnabled = enabled
         binding.btnBlockSchedules.isEnabled = enabled
+        binding.btnLaunchLimits.isEnabled = enabled
         binding.btnWarningScreen.isEnabled = enabled
         binding.switchAutoBlock.isEnabled = enabled
         binding.btnSelectCategories.isEnabled = enabled
