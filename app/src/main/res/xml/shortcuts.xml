@@ -10,7 +10,7 @@
             android:action="android.intent.action.MAIN"
             android:targetPackage="com.alhaq.deenshield"
             android:targetClass="com.alhaq.amnshield.ui.activity.ShortcutActivity" />
-        <categories android:name="digiipaws" />
+        <categories android:name="com.alhaq.amnshield.shortcuts" />
         <capability-binding android:key="actions.intent.CREATE_MESSAGE" />
     </shortcut>
     <!-- Specify more shortcuts here. -->
