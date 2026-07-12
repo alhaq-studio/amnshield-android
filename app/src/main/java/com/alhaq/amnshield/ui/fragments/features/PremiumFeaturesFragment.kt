@@ -9,8 +9,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import com.android.billingclient.api.BillingClient
-import com.android.billingclient.api.ProductDetails
+import com.alhaq.amnshield.data.AmnShieldProductDetails
 import com.alhaq.amnshield.R
 import com.alhaq.amnshield.databinding.FragmentPremiumFeaturesBinding
 import com.alhaq.amnshield.premium.PremiumManager
@@ -28,7 +27,7 @@ class PremiumFeaturesFragment : Fragment() {
     private val premiumManager by lazy { PremiumManager.getInstance(requireContext().applicationContext) }
     private val preferencesLoader by lazy { SavedPreferencesLoader(requireContext().applicationContext) }
     private lateinit var billingClientWrapper: BillingClientWrapper
-    private val products = mutableMapOf<String, ProductDetails>()
+    private val products = mutableMapOf<String, AmnShieldProductDetails>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -86,13 +85,13 @@ class PremiumFeaturesFragment : Fragment() {
         }
         val activity = activity ?: return
         products[productId]?.let {
-            billingClientWrapper.launchPurchaseFlow(activity, it) { billingResult ->
-                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+            billingClientWrapper.launchPurchaseFlow(activity, it) { isSuccess, debugMessage ->
+                if (isSuccess) {
                     premiumManager.updatePremiumStatus(true)
                     updatePremiumState()
                     Toast.makeText(requireContext(), R.string.premium_purchase_success, Toast.LENGTH_LONG).show()
                 } else {
-                    Toast.makeText(requireContext(), "Purchase failed: ${billingResult.debugMessage}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), "Purchase failed: $debugMessage", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -150,14 +149,14 @@ class PremiumFeaturesFragment : Fragment() {
 
     private fun updateProductDetails() {
         activity?.runOnUiThread {
-            products[PremiumProducts.PRODUCT_LIFETIME]?.oneTimePurchaseOfferDetails?.let { offer ->
-                binding.txtLifetimePrice.text = offer.formattedPrice
+            products[PremiumProducts.PRODUCT_LIFETIME]?.let { product ->
+                binding.txtLifetimePrice.text = product.priceText
             }
-            products[PremiumProducts.PRODUCT_MONTHLY]?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.let { phase ->
-                binding.txtMonthlyPrice.text = phase.formattedPrice
+            products[PremiumProducts.PRODUCT_MONTHLY]?.let { product ->
+                binding.txtMonthlyPrice.text = product.priceText
             }
-            products[PremiumProducts.PRODUCT_YEARLY]?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.let { phase ->
-                binding.txtYearlyPrice.text = phase.formattedPrice
+            products[PremiumProducts.PRODUCT_YEARLY]?.let { product ->
+                binding.txtYearlyPrice.text = product.priceText
             }
         }
     }

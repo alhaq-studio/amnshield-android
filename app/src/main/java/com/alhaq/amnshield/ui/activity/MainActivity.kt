@@ -39,11 +39,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.alhaq.amnshield.data.AmnShieldAccount
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
-import com.android.billingclient.api.Purchase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -1177,7 +1176,7 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
     
-    private fun updateNavigationHeader(account: GoogleSignInAccount?) {
+    private fun updateNavigationHeader(account: AmnShieldAccount?) {
         val headerView = binding.navView.getHeaderView(0)
         val usernameView = headerView.findViewById<android.widget.TextView>(R.id.nav_header_username)
         val emailView = headerView.findViewById<android.widget.TextView>(R.id.nav_header_email)
@@ -1215,7 +1214,7 @@ class MainActivity : AppCompatActivity() {
     private fun ensureDrawerBranding(
         headerView: View,
         profileImageView: android.widget.ImageView,
-        account: GoogleSignInAccount?
+        account: AmnShieldAccount?
     ) {
         drawerBannerDrawable?.let { ViewCompat.setBackground(headerView, it) }
         if (account == null && brandLogoBitmap != null) {
@@ -1281,7 +1280,7 @@ class MainActivity : AppCompatActivity() {
         
         val billingWrapper = BillingClientWrapper(this)
         billingWrapper.startConnection {
-            billingWrapper.queryPurchases { purchases: List<com.android.billingclient.api.Purchase> ->
+            billingWrapper.queryPurchases { purchases: List<String> ->
                 if (purchases.isNotEmpty()) {
                     // User has active purchases - restore premium status
                     premiumManager.updatePremiumStatus(true)

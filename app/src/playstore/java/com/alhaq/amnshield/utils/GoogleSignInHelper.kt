@@ -3,14 +3,12 @@ package com.alhaq.amnshield.utils
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import androidx.activity.result.ActivityResultLauncher
 import com.alhaq.amnshield.R
+import com.alhaq.amnshield.data.AmnShieldAccount
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.tasks.Task
 
 class GoogleSignInHelper(private val context: Context) {
 
@@ -28,10 +26,18 @@ class GoogleSignInHelper(private val context: Context) {
         return googleSignInClient.signInIntent
     }
 
-    fun handleSignInResult(data: Intent?): GoogleSignInAccount? {
+    fun handleSignInResult(data: Intent?): AmnShieldAccount? {
         val task = GoogleSignIn.getSignedInAccountFromIntent(data)
         return try {
-            task.getResult(ApiException::class.java)
+            val account = task.getResult(ApiException::class.java)
+            account?.let {
+                AmnShieldAccount(
+                    displayName = it.displayName,
+                    email = it.email,
+                    photoUrl = it.photoUrl,
+                    idToken = it.idToken
+                )
+            }
         } catch (e: ApiException) {
             null
         }
@@ -43,8 +49,16 @@ class GoogleSignInHelper(private val context: Context) {
         }
     }
 
-    fun getLastSignedInAccount(): GoogleSignInAccount? {
-        return GoogleSignIn.getLastSignedInAccount(context)
+    fun getLastSignedInAccount(): AmnShieldAccount? {
+        val account = GoogleSignIn.getLastSignedInAccount(context)
+        return account?.let {
+            AmnShieldAccount(
+                displayName = it.displayName,
+                email = it.email,
+                photoUrl = it.photoUrl,
+                idToken = it.idToken
+            )
+        }
     }
 
     fun isSignedIn(): Boolean {

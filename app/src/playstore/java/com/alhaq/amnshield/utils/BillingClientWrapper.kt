@@ -3,6 +3,7 @@ package com.alhaq.amnshield.utils
 import android.app.Activity
 import android.content.Context
 import android.util.Log
+import com.alhaq.amnshield.data.AmnShieldProductDetails
 import com.android.billingclient.api.*
 
 class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListener {
@@ -12,7 +13,8 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .build()
 
-    private var onPurchaseFinished: ((BillingResult) -> Unit)? = null
+    private var onPurchaseFinished: ((Boolean, String) -> Unit)? = null
+    private val cachedProductDetails = mutableMapOf<String, ProductDetails>()
 
     companion object {
         private const val TAG = "BillingClientWrapper"
@@ -33,7 +35,7 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
         })
     }
 
-    fun queryProducts(productIds: List<String>, onProductsQueried: (List<ProductDetails>) -> Unit) {
+    fun queryProducts(productIds: List<String>, onProductsQueried: (List<AmnShieldProductDetails>) -> Unit) {
         val productList = productIds.map { productId ->
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(productId)
@@ -46,7 +48,14 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
         billingClient.queryProductDetailsAsync(params) { billingResult, queryResult ->
             val productDetailsList = queryResult.productDetailsList
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                onProductsQueried(productDetailsList)
+                val mapped = productDetailsList.map { details ->
+                    cachedProductDetails[details.productId] = details
+                    val price = details.oneTimePurchaseOfferDetails?.formattedPrice
+                        ?: details.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
+                        ?: ""
+                    AmnShieldProductDetails(details.productId, price)
+                }
+                onProductsQueried(mapped)
             } else {
                 Log.w(TAG, "Failed to query products: ${billingResult.debugMessage}")
                 onProductsQueried(emptyList())
@@ -54,11 +63,16 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
         }
     }
 
-    fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails, onPurchaseFinished: (BillingResult) -> Unit) {
+    fun launchPurchaseFlow(activity: Activity, productDetails: AmnShieldProductDetails, onPurchaseFinished: (Boolean, String) -> Unit) {
         this.onPurchaseFinished = onPurchaseFinished
+        val realDetails = cachedProductDetails[productDetails.productId]
+        if (realDetails == null) {
+            onPurchaseFinished(false, "Product details not found or cached")
+            return
+        }
         val productDetailsParamsList = listOf(
             BillingFlowParams.ProductDetailsParams.newBuilder()
-                .setProductDetails(productDetails)
+                .setProductDetails(realDetails)
                 .build()
         )
         val billingFlowParams = BillingFlowParams.newBuilder()
@@ -72,7 +86,7 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
      * This works for both real users and License Test accounts.
      * Test accounts will see their test purchases here without being charged.
      */
-    fun queryPurchases(onPurchasesQueried: (List<Purchase>) -> Unit) {
+    fun queryPurchases(onPurchasesQueried: (List<String>) -> Unit) {
         billingClient.queryPurchasesAsync(
             QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.INAPP)
@@ -80,7 +94,7 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
         ) { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 Log.d(TAG, "Found ${purchases.size} existing purchase(s)")
-                onPurchasesQueried(purchases)
+                onPurchasesQueried(purchases.mapNotNull { it.products.firstOrNull() })
             } else {
                 Log.w(TAG, "Failed to query purchases: ${billingResult.debugMessage}")
                 onPurchasesQueried(emptyList())
@@ -91,17 +105,18 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
     override fun onPurchasesUpdated(billingResult: BillingResult, purchases: List<Purchase>?) {
         Log.d(TAG, "onPurchasesUpdated - Result code: ${billingResult.responseCode}, Debug message: ${billingResult.debugMessage}")
         
-        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK && purchases != null) {
+        val isSuccess = billingResult.responseCode == BillingClient.BillingResponseCode.OK
+        if (isSuccess && purchases != null) {
             Log.d(TAG, "Processing ${purchases.size} purchase(s)")
             for (purchase in purchases) {
                 handlePurchase(purchase)
             }
         } else if (billingResult.responseCode == BillingClient.BillingResponseCode.USER_CANCELED) {
             Log.d(TAG, "User canceled the purchase")
-            onPurchaseFinished?.invoke(billingResult)
+            onPurchaseFinished?.invoke(false, "User canceled the purchase")
         } else {
             Log.w(TAG, "Purchase failed or canceled: ${billingResult.debugMessage}")
-            onPurchaseFinished?.invoke(billingResult)
+            onPurchaseFinished?.invoke(false, billingResult.debugMessage)
         }
     }
 
@@ -120,16 +135,16 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
                     .build()
                 billingClient.acknowledgePurchase(acknowledgePurchaseParams) { billingResult ->
                     Log.d(TAG, "Acknowledgment result: ${billingResult.responseCode}")
-                    onPurchaseFinished?.invoke(billingResult)
+                    val isAckSuccess = billingResult.responseCode == BillingClient.BillingResponseCode.OK
+                    onPurchaseFinished?.invoke(isAckSuccess, billingResult.debugMessage)
                 }
             } else {
                 // Already acknowledged, invoke callback immediately
-                onPurchaseFinished?.invoke(BillingResult.newBuilder()
-                    .setResponseCode(BillingClient.BillingResponseCode.OK)
-                    .build())
+                onPurchaseFinished?.invoke(true, "Already acknowledged")
             }
         } else {
             Log.d(TAG, "Purchase not in PURCHASED state: ${purchase.purchaseState}")
+            onPurchaseFinished?.invoke(false, "Purchase state is: ${purchase.purchaseState}")
         }
     }
 }

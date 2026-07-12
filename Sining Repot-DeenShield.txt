@@ -9,7 +9,7 @@ Valid until: Sunday, 16 April 2056
 ----------
 Variant: release
 Config: release
-Store: E:\Dev\DeenShield-Mobile-app\deenshield-release-key.jks
+Store: E:\Dev\AmnShield-Mobile-app\deenshield-release-key.jks
 Alias: deenshield_release
 MD5: 0B:85:61:22:CB:02:62:E3:E5:23:69:08:16:DB:CE:F9
 SHA1: EC:22:BB:B6:06:F0:4E:35:B6:09:E9:23:DE:E7:D7:C7:CE:1E:B5:1C
