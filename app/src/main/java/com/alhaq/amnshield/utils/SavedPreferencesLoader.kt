@@ -8,7 +8,6 @@ import com.google.gson.reflect.TypeToken
 import com.alhaq.amnshield.blockers.FocusModeBlocker
 import com.alhaq.amnshield.data.blockers.AppBlockScheduleRule
 import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
-import com.alhaq.amnshield.data.AttentionSpanVideoItem
 import com.alhaq.amnshield.ui.activity.MainActivity
 import com.alhaq.amnshield.ui.activity.TimedActionActivity
 import java.util.Calendar
@@ -299,38 +298,6 @@ class SavedPreferencesLoader(private val context: Context) {
         return gson.fromJson(json, type)
     }
 
-
-    fun saveUsageHoursAttentionSpanData(attentionSpanListData: MutableMap<String, MutableList<AttentionSpanVideoItem>>) {
-        val sharedPreferences =
-            context.getSharedPreferences("attention_span_data", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        val gson = Gson()
-
-        val json = gson.toJson(attentionSpanListData)
-
-        editor.putString("attention_data", json)
-        editor.apply()
-    }
-
-    fun loadUsageHoursAttentionSpanData(): MutableMap<String, MutableList<AttentionSpanVideoItem>> {
-        val sharedPreferences =
-            context.getSharedPreferences("attention_span_data", Context.MODE_PRIVATE)
-        val gson = Gson()
-
-        val json = sharedPreferences.getString("attention_data", null)
-
-        if (json.isNullOrEmpty()) return mutableMapOf()
-
-        val type =
-            object : TypeToken<MutableMap<String, MutableList<AttentionSpanVideoItem>>>() {}.type
-        return runCatching {
-            gson.fromJson<MutableMap<String, MutableList<AttentionSpanVideoItem>>>(json, type)
-                ?: mutableMapOf()
-        }.getOrElse {
-            Log.e("SavedPreferencesLoader", "Failed to load attention span data", it)
-            mutableMapOf()
-        }
-    }
 
 
     fun saveFocusModeData(focusModeData: FocusModeBlocker.FocusModeData) {
