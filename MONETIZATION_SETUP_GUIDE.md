@@ -66,15 +66,15 @@ This guide walks you through setting up your **Lemon Squeezy** merchant account,
 ## 🔗 Step 3: Wire up Checkout & Hosting Redirects
 
 1. **Get Checkout Link:**
-   In Lemon Squeezy, go to your product and copy the **Share / Checkout Link** (looks like `https://alhaq-studio.lemonsqueezy.com/checkout/buy/...`).
+   In Lemon Squeezy, go to your product and copy the **Share / Checkout Link** (looks like `https://alhaqstudio.lemonsqueezy.com/checkout/buy/745c25cb-e4ad-4d97-a0b4-6abdafa7887d`).
 
 2. **Update Hosting Redirects:**
-   Open the `Studio-site` workspace (`d:\PROJECTS\Web\Studio-site\firebase.json`) and replace the `PLACEHOLDER_VARIANT_ID` with the actual checkout path segment from Lemon Squeezy:
+   Open the `Studio-site` workspace (`d:\PROJECTS\Web\Studio-site\firebase.json`) and replace the destination with the actual checkout path from Lemon Squeezy:
    ```json
    "redirects": [
      {
        "source": "/amnshield-premium",
-       "destination": "https://alhaq-studio.lemonsqueezy.com/checkout/buy/your-checkout-id",
+       "destination": "https://alhaqstudio.lemonsqueezy.com/checkout/buy/745c25cb-e4ad-4d97-a0b4-6abdafa7887d",
        "type": 302
      }
    ]
