@@ -1,16 +1,7 @@
 {
-	"folders": [
-		{
-			"path": "."
-		},
-		{
-			"path": "../AmnShield-Website"
-		}
-	],
-	"settings": {
-		"java.configuration.updateBuildConfiguration": "interactive",
-		"terminal.integrated.env.windows": {
-			"JAVA_HOME": "D:\\Tools\\Java"
-		}
-	}
+    "folders": [
+        {
+            "path": ".."
+        }
+    ]
 }

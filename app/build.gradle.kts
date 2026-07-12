@@ -102,6 +102,7 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        aidl = true
     }
     lint {
         baseline = file("lint-baseline.xml")

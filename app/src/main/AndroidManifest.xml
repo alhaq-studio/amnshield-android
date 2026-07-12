@@ -157,6 +157,26 @@
             </intent-filter>
         </receiver>
 
+        <!-- API Bound Service for Guardian & paired client apps -->
+        <service
+            android:name=".api.AmnShieldApiService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.alhaq.amnshield.api.BIND" />
+            </intent-filter>
+        </service>
+
+        <!-- API Permission Dialog Activity -->
+        <activity
+            android:name=".api.ApiPermissionActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AmnShield.TransparentDialog">
+            <intent-filter>
+                <action android:name="com.alhaq.amnshield.api.REQUEST_PERMISSION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>
