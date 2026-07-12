@@ -32,12 +32,12 @@
 
         <item
             android:id="@+id/nav_reports"
-            android:icon="@drawable/ic_deenshield_reports"
+            android:icon="@drawable/ic_amnshield_reports"
             android:title="@string/reports" />
 
         <item
             android:id="@+id/nav_settings"
-            android:icon="@drawable/ic_deenshield_settings"
+            android:icon="@drawable/ic_amnshield_settings"
             android:title="@string/settings" />
     </group>
 </menu>

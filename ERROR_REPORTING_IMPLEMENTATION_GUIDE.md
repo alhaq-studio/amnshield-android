@@ -10,7 +10,7 @@ For end-to-end verification steps, see `TESTING_GUIDE.md` and run **Test 17: Err
 ## ✅ What's Been Implemented
 
 ### 1. **ErrorReportManager** (Core Manager)
-**Location:** `app/src/main/java/com/alhaq/deenshield/utils/ErrorReportManager.kt`
+**Location:** `app/src/main/java/com/alhaq/amnshield/utils/ErrorReportManager.kt`
 
 **Features:**
 - Centralized error/crash logging
@@ -39,14 +39,14 @@ errorManager.clearAllReports() // Privacy cleanup
 ```
 
 ### 2. **Enhanced CrashLogger**
-**Location:** `app/src/main/java/com/alhaq/deenshield/CrashLogger.kt`
+**Location:** `app/src/main/java/com/alhaq/amnshield/CrashLogger.kt`
 
 - Updated to use `ErrorReportManager` for all logging
 - Handles uncaught exceptions gracefully
 - Logs both fatal crashes and non-fatal errors
 
 ### 3. **CrashRecoveryActivity**
-**Location:** `app/src/main/java/com/alhaq/deenshield/ui/activity/CrashRecoveryActivity.kt`
+**Location:** `app/src/main/java/com/alhaq/amnshield/ui/activity/CrashRecoveryActivity.kt`
 
 **Purpose:** Shows after app crashes (when user reopens app)
 
@@ -58,7 +58,7 @@ errorManager.clearAllReports() // Privacy cleanup
 - Graceful return to main app
 
 ### 4. **ErrorReportingSettingsFragment**
-**Location:** `app/src/main/java/com/alhaq/deenshield/ui/fragments/settings/ErrorReportingSettingsFragment.kt`
+**Location:** `app/src/main/java/com/alhaq/amnshield/ui/fragments/settings/ErrorReportingSettingsFragment.kt`
 
 **Features:**
 - Toggle crash reporting on/off
@@ -257,7 +257,7 @@ The logs and feedback export flows are fully implemented using the Android Share
 
 **Architecture Questions:**
 - ErrorReportManager is a singleton for app-wide access
-- CrashLogger is set as default exception handler in `DeenShield` application class
+- CrashLogger is set as default exception handler in `AmnShield` application class
 - All storage is app-private (not accessible to other apps)
 
 **User FAQ:**
@@ -280,7 +280,7 @@ New Files Created:
 
 Updated Files:
 ├── CrashLogger.kt (Enhanced with ErrorReportManager)
-├── DeenShieldAccessibilityService.kt (Fixed logging calls, settings protection leaks, and OEM setting packages)
+├── AmnShieldAccessibilityService.kt (Fixed logging calls, settings protection leaks, and OEM setting packages)
 ├── AndroidManifest.xml (Registered CrashRecoveryActivity & exported AppInstallReceiver)
 ├── strings.xml (Added error reporting strings)
 ├── SettingsFragment.kt (Decoupled Share Crash Logs)

@@ -14,7 +14,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:name=".DeenShield"
+        android:name=".AmnShield"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -23,13 +23,13 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.DeenShield"
+        android:theme="@style/Theme.AmnShield"
         tools:targetApi="34">
         <activity
             android:name=".ui.activity.ShortcutActivity"
             android:excludeFromRecents="true"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.DeenShield.TransparentDialog"
+            android:theme="@style/Theme.AmnShield.TransparentDialog"
             android:exported="false" />
         <activity
             android:name=".ui.activity.WarningActivity"
@@ -87,7 +87,7 @@
             android:launchMode="singleTask" />
 
         <service
-            android:name=".services.DeenShieldAccessibilityService"
+            android:name=".services.AmnShieldAccessibilityService"
             android:exported="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -97,7 +97,7 @@
 
             <meta-data
                 android:name="android.accessibilityservice"
-                android:resource="@xml/deenshield_service_config" />
+                android:resource="@xml/amnshield_service_config" />
         </service>
 
         <receiver
@@ -132,7 +132,7 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.alhaq.deenshield.reels.WIDGET_REFRESH" />
+                <action android:name="com.alhaq.amnshield.reels.WIDGET_REFRESH" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -145,7 +145,7 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.alhaq.deenshield.screentime.WIDGET_REFRESH" />
+                <action android:name="com.alhaq.amnshield.screentime.WIDGET_REFRESH" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

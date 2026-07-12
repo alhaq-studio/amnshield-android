@@ -18,7 +18,7 @@
         errorLine1="            return String.format(&quot;%02d:00&quot;, hour)"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/usage/AppUsageBreakdown.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/usage/AppUsageBreakdown.kt"
             line="162"
             column="20"/>
     </issue>
@@ -29,7 +29,7 @@
         errorLine1="        val timeString = String.format(&quot;%02d:%02d:%02d&quot;, hours, minutes, seconds)"
         errorLine2="                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/utils/NotificationTimerManager.kt"
+            file="src/main/java/com/alhaq/amnshield/utils/NotificationTimerManager.kt"
             line="77"
             column="26"/>
     </issue>
@@ -40,7 +40,7 @@
         errorLine1="            String.format(&quot;%.1f%s&quot;, value, suffixes[index])"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/widgets/ReelsWidgetProvider.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/widgets/ReelsWidgetProvider.kt"
             line="166"
             column="13"/>
     </issue>
@@ -51,7 +51,7 @@
         errorLine1="        return String.format(&quot;%02d:%02d:%02d&quot;, hours, minutes, seconds)"
         errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/services/UsageTrackingService.kt"
+            file="src/main/java/com/alhaq/amnshield/services/UsageTrackingService.kt"
             line="227"
             column="16"/>
     </issue>
@@ -172,7 +172,7 @@
         errorLine1="agp = &quot;8.7.2&quot;"
         errorLine2="      ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="2"
             column="7"/>
     </issue>
@@ -183,7 +183,7 @@
         errorLine1="agp = &quot;8.7.2&quot;"
         errorLine2="      ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="2"
             column="7"/>
     </issue>
@@ -194,7 +194,7 @@
         errorLine1="agp = &quot;8.7.2&quot;"
         errorLine2="      ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="2"
             column="7"/>
     </issue>
@@ -205,7 +205,7 @@
         errorLine1="gson = &quot;2.11.0&quot;"
         errorLine2="       ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="5"
             column="8"/>
     </issue>
@@ -216,7 +216,7 @@
         errorLine1="gson = &quot;2.11.0&quot;"
         errorLine2="       ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="5"
             column="8"/>
     </issue>
@@ -227,7 +227,7 @@
         errorLine1="gson = &quot;2.11.0&quot;"
         errorLine2="       ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="5"
             column="8"/>
     </issue>
@@ -238,7 +238,7 @@
         errorLine1="kotlin = &quot;1.9.24&quot;"
         errorLine2="         ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="6"
             column="10"/>
     </issue>
@@ -249,7 +249,7 @@
         errorLine1="kotlin = &quot;1.9.24&quot;"
         errorLine2="         ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="6"
             column="10"/>
     </issue>
@@ -260,7 +260,7 @@
         errorLine1="kotlin = &quot;1.9.24&quot;"
         errorLine2="         ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="6"
             column="10"/>
     </issue>
@@ -271,7 +271,7 @@
         errorLine1="coreKtx = &quot;1.13.1&quot;"
         errorLine2="          ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="7"
             column="11"/>
     </issue>
@@ -282,7 +282,7 @@
         errorLine1="coreKtx = &quot;1.13.1&quot;"
         errorLine2="          ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="7"
             column="11"/>
     </issue>
@@ -293,7 +293,7 @@
         errorLine1="coreKtx = &quot;1.13.1&quot;"
         errorLine2="          ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="7"
             column="11"/>
     </issue>
@@ -304,7 +304,7 @@
         errorLine1="junitVersion = &quot;1.2.1&quot;"
         errorLine2="               ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="9"
             column="16"/>
     </issue>
@@ -315,7 +315,7 @@
         errorLine1="junitVersion = &quot;1.2.1&quot;"
         errorLine2="               ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="9"
             column="16"/>
     </issue>
@@ -326,7 +326,7 @@
         errorLine1="junitVersion = &quot;1.2.1&quot;"
         errorLine2="               ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="9"
             column="16"/>
     </issue>
@@ -337,7 +337,7 @@
         errorLine1="espressoCore = &quot;3.6.1&quot;"
         errorLine2="               ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="10"
             column="16"/>
     </issue>
@@ -348,7 +348,7 @@
         errorLine1="espressoCore = &quot;3.6.1&quot;"
         errorLine2="               ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="10"
             column="16"/>
     </issue>
@@ -359,7 +359,7 @@
         errorLine1="espressoCore = &quot;3.6.1&quot;"
         errorLine2="               ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="10"
             column="16"/>
     </issue>
@@ -370,7 +370,7 @@
         errorLine1="appcompat = &quot;1.7.0&quot;"
         errorLine2="            ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="11"
             column="13"/>
     </issue>
@@ -381,7 +381,7 @@
         errorLine1="appcompat = &quot;1.7.0&quot;"
         errorLine2="            ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="11"
             column="13"/>
     </issue>
@@ -392,7 +392,7 @@
         errorLine1="appcompat = &quot;1.7.0&quot;"
         errorLine2="            ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="11"
             column="13"/>
     </issue>
@@ -403,7 +403,7 @@
         errorLine1="material = &quot;1.12.0&quot;"
         errorLine2="           ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="12"
             column="12"/>
     </issue>
@@ -414,7 +414,7 @@
         errorLine1="material = &quot;1.12.0&quot;"
         errorLine2="           ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="12"
             column="12"/>
     </issue>
@@ -425,7 +425,7 @@
         errorLine1="material = &quot;1.12.0&quot;"
         errorLine2="           ~~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="12"
             column="12"/>
     </issue>
@@ -436,7 +436,7 @@
         errorLine1="activity = &quot;1.9.2&quot;"
         errorLine2="           ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="13"
             column="12"/>
     </issue>
@@ -447,7 +447,7 @@
         errorLine1="activity = &quot;1.9.2&quot;"
         errorLine2="           ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="13"
             column="12"/>
     </issue>
@@ -458,7 +458,7 @@
         errorLine1="activity = &quot;1.9.2&quot;"
         errorLine2="           ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="13"
             column="12"/>
     </issue>
@@ -469,7 +469,7 @@
         errorLine1="constraintlayout = &quot;2.1.4&quot;"
         errorLine2="                   ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="14"
             column="20"/>
     </issue>
@@ -480,7 +480,7 @@
         errorLine1="constraintlayout = &quot;2.1.4&quot;"
         errorLine2="                   ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="14"
             column="20"/>
     </issue>
@@ -491,7 +491,7 @@
         errorLine1="constraintlayout = &quot;2.1.4&quot;"
         errorLine2="                   ~~~~~~~">
         <location
-            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/DeenShield/gradle/libs.versions.toml"
+            file="$HOME/PROJECTS/DEENSHIELD/DeenSheild-Mobile-app/AmnShield/gradle/libs.versions.toml"
             line="14"
             column="20"/>
     </issue>
@@ -763,7 +763,7 @@
     <issue
         id="MissingTranslation"
         message="&quot;warning_launcher_settings&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
-        errorLine1="    &lt;string name=&quot;warning_launcher_settings&quot;>Set DeenShield as the default launcher to access this option&lt;/string>"
+        errorLine1="    &lt;string name=&quot;warning_launcher_settings&quot;>Set AmnShield as the default launcher to access this option&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -1390,7 +1390,7 @@
     <issue
         id="MissingTranslation"
         message="&quot;accessibility_permission_keyword_blocker&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
-        errorLine1="    &lt;string name=&quot;accessibility_permission_keyword_blocker&quot;>&quot;         Enabling this would unlock the following in DeenShield: 1. Block custom keywords 2. Block content like adult material           DeenShield needs access to accessibility data to know when you open a specific feature within an app, like a social media feed or a game.         This lets DeenShield block those features for you based on your preferences, helping you stay focused and reduce screen distractions.           Rest assured, all accessibility data stays securely on your device—we never share or transmit your data, ensuring your privacy is always protected.                &quot;&lt;/string>"
+        errorLine1="    &lt;string name=&quot;accessibility_permission_keyword_blocker&quot;>&quot;         Enabling this would unlock the following in AmnShield: 1. Block custom keywords 2. Block content like adult material           AmnShield needs access to accessibility data to know when you open a specific feature within an app, like a social media feed or a game.         This lets AmnShield block those features for you based on your preferences, helping you stay focused and reduce screen distractions.           Rest assured, all accessibility data stays securely on your device—we never share or transmit your data, ensuring your privacy is always protected.                &quot;&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -1401,7 +1401,7 @@
     <issue
         id="MissingTranslation"
         message="&quot;accessibility_permission_general_features&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
-        errorLine1="    &lt;string name=&quot;accessibility_permission_general_features&quot;>&quot;         Enabling this would unlock the following in DeenShield: 1. Anti-Uninstall (Setup required to run)           DeenShield needs access to accessibility data to know when you open a specific feature within an app, like a social media feed or a game.         This lets DeenShield block those features for you based on your preferences, helendping you stay focused and reduce screen distractions.           Rest assured, all accessibility data stays securely on your device—we never share or transmit your data, ensuring your privacy is always protected.                &quot;&lt;/string>"
+        errorLine1="    &lt;string name=&quot;accessibility_permission_general_features&quot;>&quot;         Enabling this would unlock the following in AmnShield: 1. Anti-Uninstall (Setup required to run)           AmnShield needs access to accessibility data to know when you open a specific feature within an app, like a social media feed or a game.         This lets AmnShield block those features for you based on your preferences, helendping you stay focused and reduce screen distractions.           Rest assured, all accessibility data stays securely on your device—we never share or transmit your data, ensuring your privacy is always protected.                &quot;&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -1412,7 +1412,7 @@
     <issue
         id="MissingTranslation"
         message="&quot;admin_permission_desc&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
-        errorLine1="    &lt;string name=&quot;admin_permission_desc&quot;>DeenShield Anti-Uninstall&lt;/string>"
+        errorLine1="    &lt;string name=&quot;admin_permission_desc&quot;>AmnShield Anti-Uninstall&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -1885,7 +1885,7 @@
     <issue
         id="MissingTranslation"
         message="&quot;accessibility_perm_desc&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
-        errorLine1="    &lt;string name=&quot;accessibility_perm_desc&quot;>DeenShield uses the Accessibility permission to provide features like app monitoring and usage tracking to enhance your experience. This permission allows DeenShield to detect app activities and help manage device usage effectively. Rest assured, all data is processed locally on your device and is never sent to any server or third party. Your privacy and data security are our top priorities.     By pressing Accept, you acknowledge and agree to the above .&lt;/string>"
+        errorLine1="    &lt;string name=&quot;accessibility_perm_desc&quot;>AmnShield uses the Accessibility permission to provide features like app monitoring and usage tracking to enhance your experience. This permission allows AmnShield to detect app activities and help manage device usage effectively. Rest assured, all data is processed locally on your device and is never sent to any server or third party. Your privacy and data security are our top priorities.     By pressing Accept, you acknowledge and agree to the above .&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -1950,8 +1950,8 @@
 
     <issue
         id="MissingTranslation"
-        message="&quot;this_will_allow_deenshield_to&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
-        errorLine1="    &lt;string name=&quot;this_will_allow_deenshield_to&quot;>This will allow deenshield to:&lt;/string>"
+        message="&quot;this_will_allow_amnshield_to&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;this_will_allow_amnshield_to&quot;>This will allow amnshield to:&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -1973,7 +1973,7 @@
     <issue
         id="MissingTranslation"
         message="&quot;device_admin_perm&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
-        errorLine1="    &lt;string name=&quot;device_admin_perm&quot;>DeenShield uses Device Admin permission to enhance security and block uninstalling deenshield until a specific period. All data remains securely stored on your device and is never shared externally.&lt;/string>"
+        errorLine1="    &lt;string name=&quot;device_admin_perm&quot;>AmnShield uses Device Admin permission to enhance security and block uninstalling amnshield until a specific period. All data remains securely stored on your device and is never shared externally.&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -1995,7 +1995,7 @@
     <issue
         id="MissingTranslation"
         message="&quot;device_perm_draw_over_other_apps&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
-        errorLine1="    &lt;string name=&quot;device_perm_draw_over_other_apps&quot;>DeenShield uses the &quot;Display over other apps&quot; permission to show a small floating overlay on the screen. This overlay tracks the number of reels watched and the time spent, helping users be more aware of their usage in real time.&lt;/string>"
+        errorLine1="    &lt;string name=&quot;device_perm_draw_over_other_apps&quot;>AmnShield uses the &quot;Display over other apps&quot; permission to show a small floating overlay on the screen. This overlay tracks the number of reels watched and the time spent, helping users be more aware of their usage in real time.&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -2049,8 +2049,8 @@
 
     <issue
         id="MissingTranslation"
-        message="&quot;find_deenshield_and_press_enable&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
-        errorLine1="    &lt;string name=&quot;find_deenshield_and_press_enable&quot;>Find DeenShield and press enable&lt;/string>"
+        message="&quot;find_amnshield_and_press_enable&quot; is not translated in &quot;de&quot; (German) or &quot;hi&quot; (Hindi)"
+        errorLine1="    &lt;string name=&quot;find_amnshield_and_press_enable&quot;>Find AmnShield and press enable&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -2379,8 +2379,8 @@
 
     <issue
         id="MissingTranslation"
-        message="&quot;welcome_to_deenshield&quot; is not translated in &quot;de&quot; (German), &quot;hi&quot; (Hindi), &quot;pt&quot; (Portuguese), &quot;fa&quot; (Persian), &quot;fr&quot; (French), &quot;tr&quot; (Turkish), &quot;zh&quot; (Chinese)"
-        errorLine1="    &lt;string name=&quot;welcome_to_deenshield&quot;>Welcome to DeenShield&lt;/string>"
+        message="&quot;welcome_to_amnshield&quot; is not translated in &quot;de&quot; (German), &quot;hi&quot; (Hindi), &quot;pt&quot; (Portuguese), &quot;fa&quot; (Persian), &quot;fr&quot; (French), &quot;tr&quot; (Turkish), &quot;zh&quot; (Chinese)"
+        errorLine1="    &lt;string name=&quot;welcome_to_amnshield&quot;>Welcome to AmnShield&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -2457,7 +2457,7 @@
     <issue
         id="MissingTranslation"
         message="&quot;prevent_app_removal&quot; is not translated in &quot;de&quot; (German), &quot;hi&quot; (Hindi), &quot;pt&quot; (Portuguese), &quot;fa&quot; (Persian), &quot;fr&quot; (French), &quot;tr&quot; (Turkish), &quot;zh&quot; (Chinese)"
-        errorLine1="    &lt;string name=&quot;prevent_app_removal&quot;>Prevent uninstallation of DeenShield&lt;/string>"
+        errorLine1="    &lt;string name=&quot;prevent_app_removal&quot;>Prevent uninstallation of AmnShield&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -2676,8 +2676,8 @@
 
     <issue
         id="MissingTranslation"
-        message="&quot;about_deenshield&quot; is not translated in &quot;de&quot; (German), &quot;hi&quot; (Hindi), &quot;pt&quot; (Portuguese), &quot;fa&quot; (Persian), &quot;fr&quot; (French), &quot;tr&quot; (Turkish), &quot;zh&quot; (Chinese)"
-        errorLine1="    &lt;string name=&quot;about_deenshield&quot;>About DeenShield&lt;/string>"
+        message="&quot;about_amnshield&quot; is not translated in &quot;de&quot; (German), &quot;hi&quot; (Hindi), &quot;pt&quot; (Portuguese), &quot;fa&quot; (Persian), &quot;fr&quot; (French), &quot;tr&quot; (Turkish), &quot;zh&quot; (Chinese)"
+        errorLine1="    &lt;string name=&quot;about_amnshield&quot;>About AmnShield&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/strings.xml"
@@ -2732,7 +2732,7 @@
     <issue
         id="Untranslatable"
         message="The resource string &quot;app_name&quot; has been marked as translatable=&quot;false&quot; elsewhere (usually in the `values` folder), but is translated to &quot;pt&quot; (Portuguese) here"
-        errorLine1="    &lt;string name=&quot;app_name&quot; translatetable=&quot;false&quot;>DeenShield&lt;/string>"
+        errorLine1="    &lt;string name=&quot;app_name&quot; translatetable=&quot;false&quot;>AmnShield&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values-pt-rBR/strings.xml"
@@ -2754,7 +2754,7 @@
     <issue
         id="Untranslatable"
         message="The resource string &quot;app_name&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;fr&quot; (French) here"
-        errorLine1=" &lt;string name=&quot;app_name&quot; translatable=&quot;false&quot;>DeenShield&lt;/string>"
+        errorLine1=" &lt;string name=&quot;app_name&quot; translatable=&quot;false&quot;>AmnShield&lt;/string>"
         errorLine2="                         ~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values-fr/strings.xml"
@@ -2765,7 +2765,7 @@
     <issue
         id="Untranslatable"
         message="The resource string &quot;app_name&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;tr&quot; (Turkish) here"
-        errorLine1="    &lt;string name=&quot;app_name&quot; translatable=&quot;false&quot;>DeenShield&lt;/string>"
+        errorLine1="    &lt;string name=&quot;app_name&quot; translatable=&quot;false&quot;>AmnShield&lt;/string>"
         errorLine2="                            ~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values-tr/strings.xml"
@@ -2776,7 +2776,7 @@
     <issue
         id="Untranslatable"
         message="The resource string &quot;app_name&quot; is marked as translatable=&quot;false&quot;, but is translated to &quot;zh&quot; (Chinese) here"
-        errorLine1="    &lt;string name=&quot;app_name&quot; translatable=&quot;false&quot;>DeenShield&lt;/string>"
+        errorLine1="    &lt;string name=&quot;app_name&quot; translatable=&quot;false&quot;>AmnShield&lt;/string>"
         errorLine2="                            ~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values-zh-rCN/strings.xml"
@@ -3098,7 +3098,7 @@
         errorLine1="                adapter.notifyDataSetChanged() // To update checkboxes"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/activity/SelectAppsActivity.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/activity/SelectAppsActivity.kt"
             line="115"
             column="17"/>
     </issue>
@@ -3109,7 +3109,7 @@
         errorLine1="        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/utils/PermissionGuideHelper.kt"
+            file="src/main/java/com/alhaq/amnshield/utils/PermissionGuideHelper.kt"
             line="73"
             column="20"/>
     </issue>
@@ -3120,7 +3120,7 @@
         errorLine1="            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/utils/PermissionGuideHelper.kt"
+            file="src/main/java/com/alhaq/amnshield/utils/PermissionGuideHelper.kt"
             line="180"
             column="17"/>
     </issue>
@@ -3255,7 +3255,7 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/Theme.DeenShield`)"
+        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/Theme.AmnShield`)"
         errorLine1="    android:background=&quot;?attr/colorSurface&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -3266,7 +3266,7 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/Theme.DeenShield`)"
+        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/Theme.AmnShield`)"
         errorLine1="    android:background=&quot;?attr/colorSurface&quot;>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -3277,7 +3277,7 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/Theme.DeenShield`)"
+        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/Theme.AmnShield`)"
         errorLine1="    android:background=&quot;?attr/colorSurface&quot;"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -3288,7 +3288,7 @@
 
     <issue
         id="Overdraw"
-        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/Theme.DeenShield`)"
+        message="Possible overdraw: Root element paints background `?attr/colorSurface` with a theme that also paints a background (inferred theme is `@style/Theme.AmnShield`)"
         errorLine1="    android:background=&quot;?attr/colorSurface&quot;"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
@@ -4685,8 +4685,8 @@
 
     <issue
         id="UnusedResources"
-        message="The resource `R.style.Widget_DeenShield_CardView` appears to be unused"
-        errorLine1="    &lt;style name=&quot;Widget.DeenShield.CardView&quot; parent=&quot;Widget.Material3.CardView.Elevated&quot;>"
+        message="The resource `R.style.Widget_AmnShield_CardView` appears to be unused"
+        errorLine1="    &lt;style name=&quot;Widget.AmnShield.CardView&quot; parent=&quot;Widget.Material3.CardView.Elevated&quot;>"
         errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/values/themes.xml"
@@ -4795,7 +4795,7 @@
         errorLine1="class CustomMarkerView(context: Context, layoutResource: Int) :"
         errorLine2="      ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/views/CustomMarkerView.kt"
+            file="src/main/java/com/alhaq/amnshield/views/CustomMarkerView.kt"
             line="11"
             column="7"/>
     </issue>
@@ -5045,10 +5045,10 @@
     <issue
         id="SetTextI18n"
         message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="            &quot;DeenShield requires device usage access to monitor apps, helping you manage screen time effectively and stay focused on your goals. Rest assured, all data stays securely on your device and is never shared with anyone, ensuring your privacy is fully protected.&quot;"
+        errorLine1="            &quot;AmnShield requires device usage access to monitor apps, helping you manage screen time effectively and stay focused on your goals. Rest assured, all data stays securely on your device and is never shared with anyone, ensuring your privacy is fully protected.&quot;"
         errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/usage/AllAppsUsageFragment.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/usage/AllAppsUsageFragment.kt"
             line="253"
             column="14"/>
     </issue>
@@ -5059,7 +5059,7 @@
         errorLine1="        dialogBinding.point1.text = &quot;Track what apps you use&quot;"
         errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/usage/AllAppsUsageFragment.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/usage/AllAppsUsageFragment.kt"
             line="255"
             column="38"/>
     </issue>
@@ -5070,7 +5070,7 @@
         errorLine1="        binding.sessions.text = stat.startTimes.size.toString()"
         errorLine2="                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/usage/AppUsageBreakdown.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/usage/AppUsageBreakdown.kt"
             line="48"
             column="33"/>
     </issue>
@@ -5081,7 +5081,7 @@
         errorLine1="                binding.txtVersion.text = &quot;Version $versionName&quot;"
         errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/SettingsFragment.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/SettingsFragment.kt"
             line="65"
             column="43"/>
     </issue>
@@ -5092,7 +5092,7 @@
         errorLine1="                binding.txtVersion.text = &quot;Version $versionName&quot;"
         errorLine2="                                           ~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/SettingsFragment.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/SettingsFragment.kt"
             line="65"
             column="44"/>
     </issue>
@@ -5103,7 +5103,7 @@
         errorLine1="                        binding.txtScreenTime.text = &quot;${hours}h ${minutes}m&quot;"
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/StatsFragment.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/StatsFragment.kt"
             line="108"
             column="54"/>
     </issue>
@@ -5114,7 +5114,7 @@
         errorLine1="                        binding.txtReelsCount.text = reelsToday.toString()"
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/StatsFragment.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/StatsFragment.kt"
             line="111"
             column="54"/>
     </issue>
@@ -5125,7 +5125,7 @@
         errorLine1="                                binding.txtTopApp1.text = &quot;1. $appName - ${appTime}m&quot;"
         errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/StatsFragment.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/StatsFragment.kt"
             line="132"
             column="59"/>
     </issue>
@@ -5136,7 +5136,7 @@
         errorLine1="                                binding.txtTopApp2.text = &quot;2. $appName - ${appTime}m&quot;"
         errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/StatsFragment.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/StatsFragment.kt"
             line="144"
             column="59"/>
     </issue>
@@ -5147,7 +5147,7 @@
         errorLine1="                                binding.txtTopApp3.text = &quot;3. $appName - ${appTime}m&quot;"
         errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/fragments/StatsFragment.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/fragments/StatsFragment.kt"
             line="156"
             column="59"/>
     </issue>
@@ -5155,10 +5155,10 @@
     <issue
         id="SetTextI18n"
         message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="            binding.btnDigiWelbeing.text = &quot;Tracked Using DeenShield&quot;"
+        errorLine1="            binding.btnDigiWelbeing.text = &quot;Tracked Using AmnShield&quot;"
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/ui/activity/UsageMetricsActivity.kt"
+            file="src/main/java/com/alhaq/amnshield/ui/activity/UsageMetricsActivity.kt"
             line="114"
             column="45"/>
     </issue>
@@ -5169,7 +5169,7 @@
         errorLine1="                    text = newCount.toString()"
         errorLine2="                           ~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/alhaq/deenshield/services/UsageTrackingService.kt"
+            file="src/main/java/com/alhaq/amnshield/services/UsageTrackingService.kt"
             line="393"
             column="28"/>
     </issue>
@@ -5517,8 +5517,8 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;Redirection works only on Chrome, Brave, Firefox, and Opera. If you check the box above, the keyword blocker will function across all apps, but redirection will be disabled in unsupported apps, and DeenShield will press the home button when a blocked keyword is detected.&quot;, should use `@string` resource"
-        errorLine1="        android:text=&quot;Redirection works only on Chrome, Brave, Firefox, and Opera. If you check the box above, the keyword blocker will function across all apps, but redirection will be disabled in unsupported apps, and DeenShield will press the home button when a blocked keyword is detected.&quot; />"
+        message="Hardcoded string &quot;Redirection works only on Chrome, Brave, Firefox, and Opera. If you check the box above, the keyword blocker will function across all apps, but redirection will be disabled in unsupported apps, and AmnShield will press the home button when a blocked keyword is detected.&quot;, should use `@string` resource"
+        errorLine1="        android:text=&quot;Redirection works only on Chrome, Brave, Firefox, and Opera. If you check the box above, the keyword blocker will function across all apps, but redirection will be disabled in unsupported apps, and AmnShield will press the home button when a blocked keyword is detected.&quot; />"
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/dialog_keyword_blocker_config.xml"
@@ -5627,8 +5627,8 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;DeenShield needs Accessibility permissions to help you track your screen time. The setup process varies based on how you installed the app.&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;DeenShield needs Accessibility permissions to help you track your screen time. The setup process varies based on how you installed the app.&quot;"
+        message="Hardcoded string &quot;AmnShield needs Accessibility permissions to help you track your screen time. The setup process varies based on how you installed the app.&quot;, should use `@string` resource"
+        errorLine1="                android:text=&quot;AmnShield needs Accessibility permissions to help you track your screen time. The setup process varies based on how you installed the app.&quot;"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/fragment_accessibility_guide.xml"
@@ -5671,8 +5671,8 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;If you installed from an APK, follow these steps:\n\n1️⃣ Open Settings → Apps → DeenShield\n\n2️⃣ Tap Permissions → Special App Access → Accessibility → Enable DeenShield\n\n3️⃣ Return to DeenShield App Info → Scroll down → Tap Restricted Settings → Allow\n\n💡 Pro tip: Install via F-Droid app for a smoother setup! 🚀&quot;, should use `@string` resource"
-        errorLine1="                        android:text=&quot;If you installed from an APK, follow these steps:\n\n1️⃣ Open Settings → Apps → DeenShield\n\n2️⃣ Tap Permissions → Special App Access → Accessibility → Enable DeenShield\n\n3️⃣ Return to DeenShield App Info → Scroll down → Tap Restricted Settings → Allow\n\n💡 Pro tip: Install via F-Droid app for a smoother setup! 🚀&quot;"
+        message="Hardcoded string &quot;If you installed from an APK, follow these steps:\n\n1️⃣ Open Settings → Apps → AmnShield\n\n2️⃣ Tap Permissions → Special App Access → Accessibility → Enable AmnShield\n\n3️⃣ Return to AmnShield App Info → Scroll down → Tap Restricted Settings → Allow\n\n💡 Pro tip: Install via F-Droid app for a smoother setup! 🚀&quot;, should use `@string` resource"
+        errorLine1="                        android:text=&quot;If you installed from an APK, follow these steps:\n\n1️⃣ Open Settings → Apps → AmnShield\n\n2️⃣ Tap Permissions → Special App Access → Accessibility → Enable AmnShield\n\n3️⃣ Return to AmnShield App Info → Scroll down → Tap Restricted Settings → Allow\n\n💡 Pro tip: Install via F-Droid app for a smoother setup! 🚀&quot;"
         errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/fragment_accessibility_guide.xml"
@@ -5770,8 +5770,8 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;DeenShield require a few permissions to run properly&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;DeenShield require a few permissions to run properly&quot;"
+        message="Hardcoded string &quot;AmnShield require a few permissions to run properly&quot;, should use `@string` resource"
+        errorLine1="                android:text=&quot;AmnShield require a few permissions to run properly&quot;"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/fragment_permissions.xml"
@@ -5913,8 +5913,8 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;Welcome to DeenShield&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;Welcome to DeenShield&quot;"
+        message="Hardcoded string &quot;Welcome to AmnShield&quot;, should use `@string` resource"
+        errorLine1="                android:text=&quot;Welcome to AmnShield&quot;"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/fragment_welcome.xml"
@@ -5924,8 +5924,8 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;You&apos;re among the first to try DeenShield, an app designed to help you take control of your screen time in a fun and engaging way. 🚀\n\nSince we&apos;re still in beta, you might encounter a few rough edges—we&apos;d love your feedback to make DeenShield even better!\n\nLet&apos;s start your journey to a healthier digital balance. 🎯&quot;, should use `@string` resource"
-        errorLine1="                android:text=&quot;You&apos;re among the first to try DeenShield, an app designed to help you take control of your screen time in a fun and engaging way. 🚀\n\nSince we&apos;re still in beta, you might encounter a few rough edges—we&apos;d love your feedback to make DeenShield even better!\n\nLet&apos;s start your journey to a healthier digital balance. 🎯&quot;"
+        message="Hardcoded string &quot;You&apos;re among the first to try AmnShield, an app designed to help you take control of your screen time in a fun and engaging way. 🚀\n\nSince we&apos;re still in beta, you might encounter a few rough edges—we&apos;d love your feedback to make AmnShield even better!\n\nLet&apos;s start your journey to a healthier digital balance. 🎯&quot;, should use `@string` resource"
+        errorLine1="                android:text=&quot;You&apos;re among the first to try AmnShield, an app designed to help you take control of your screen time in a fun and engaging way. 🚀\n\nSince we&apos;re still in beta, you might encounter a few rough edges—we&apos;d love your feedback to make AmnShield even better!\n\nLet&apos;s start your journey to a healthier digital balance. 🎯&quot;"
         errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/fragment_welcome.xml"
@@ -6067,8 +6067,8 @@
 
     <issue
         id="HardcodedText"
-        message="Hardcoded string &quot;Tracked using deenshield.life&quot;, should use `@string` resource"
-        errorLine1="        android:text=&quot;Tracked using deenshield.life&quot;"
+        message="Hardcoded string &quot;Tracked using amnshield.life&quot;, should use `@string` resource"
+        errorLine1="        android:text=&quot;Tracked using amnshield.life&quot;"
         errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/res/layout/reel_stats.xml"

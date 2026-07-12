@@ -37,7 +37,7 @@
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
-            style="@style/Widget.DeenShield.BottomNavigation"
+            style="@style/Widget.AmnShield.BottomNavigation"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:labelVisibilityMode="labeled"
@@ -51,7 +51,7 @@
     <!-- Navigation Drawer -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
-        style="@style/Widget.DeenShield.NavigationDrawer"
+        style="@style/Widget.AmnShield.NavigationDrawer"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"

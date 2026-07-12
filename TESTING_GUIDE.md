@@ -102,18 +102,18 @@
 
 **Expected Results**:
 - **Balanced sensitivity**: Images should blur or show overlay
-- **Log output**: `DeenShield-AI: BLUR verdict for com.instagram.android: female_detected (confidence: 0.65+)`
+- **Log output**: `AmnShield-AI: BLUR verdict for com.instagram.android: female_detected (confidence: 0.65+)`
 - **Overlay**: Shows "Protected by Smart Blur" with "Continue Anyway" button
 - **Stats**: View block recorded in Reports
 
 **Debugging**:
 ```bash
 # Check logs
-adb logcat | grep "DeenShield-AI"
+adb logcat | grep "AmnShield-AI"
 
 # Expected output:
-# D/DeenShield-AI: Processing smart content for: com.instagram.android
-# D/DeenShield-AI: BLUR verdict for com.instagram.android: female_detected (confidence: 0.75)
+# D/AmnShield-AI: Processing smart content for: com.instagram.android
+# D/AmnShield-AI: BLUR verdict for com.instagram.android: female_detected (confidence: 0.75)
 ```
 
 ---
@@ -141,7 +141,7 @@ adb logcat | grep "DeenShield-AI"
 **Debugging**:
 ```bash
 # Chrome should detect:
-# D/DeenShield-AI: BLUR verdict for com.android.chrome: male_detected_browser (confidence: 0.70)
+# D/AmnShield-AI: BLUR verdict for com.android.chrome: male_detected_browser (confidence: 0.70)
 
 # Instagram should allow:
 # (no BLUR/BLOCK log for male-only images)
@@ -165,8 +165,8 @@ adb logcat | grep "DeenShield-AI"
 - **If inappropriate**: Overlay shown or navigated back
 - **Log output**: 
   ```
-  D/DeenShield-AI: Processing smart content for: com.google.android.youtube
-  D/DeenShield-AI: BLUR verdict: female_detected (confidence: 0.68)
+  D/AmnShield-AI: Processing smart content for: com.google.android.youtube
+  D/AmnShield-AI: BLUR verdict: female_detected (confidence: 0.68)
   ```
 - **Behavior**: Video prevents playback or shows warning
 
@@ -494,22 +494,22 @@ Export available: CSV, TXT
 ### Enable Verbose Logging
 ```bash
 # Filter for AmnShield AI logs
-adb logcat -s DeenShield-AI
+adb logcat -s AmnShield-AI
 
 # Filter for all AmnShield logs
-adb logcat | grep DeenShield
+adb logcat | grep AmnShield
 
 # Clear logs and start fresh
-adb logcat -c && adb logcat -s DeenShield-AI
+adb logcat -c && adb logcat -s AmnShield-AI
 ```
 
 ### Check Service Status
 ```bash
 # Verify accessibility service is running
-adb shell dumpsys accessibility | grep DeenShield
+adb shell dumpsys accessibility | grep AmnShield
 
 # Check if Smart Blur is enabled
-adb shell "run-as com.alhaq.deenshield cat /data/data/com.alhaq.deenshield/shared_prefs/smart_features.xml" | grep blur_enabled
+adb shell "run-as com.alhaq.amnshield cat /data/data/com.alhaq.amnshield/shared_prefs/smart_features.xml" | grep blur_enabled
 ```
 
 ### Trigger Test Event
@@ -653,6 +653,6 @@ Before releasing, verify:
 **Issues?** File bug report with:
 - Steps to reproduce
 - Expected vs actual behavior
-- Logs from the AmnShield AI tag: `adb logcat -s DeenShield-AI`
+- Logs from the AmnShield AI tag: `adb logcat -s AmnShield-AI`
 - Device info (model, Android version)
 - Sensitivity setting used

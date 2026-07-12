@@ -179,7 +179,7 @@
     <string name="fix_your_life">Réparer ta vie</string>
     <string name="perform_actions_like_a_back_press">Effectuer des actions comme appuyer sur retour</string>
     <string name="read_content_on_screen">Lire le contenu à l\'écran</string>
-    <string name="this_will_allow_deenshield_to">Ceci permettra à AmnShield de :</string>
+    <string name="this_will_allow_amnshield_to">Ceci permettra à AmnShield de :</string>
     <string name="enable_2">Activer %1$s</string>
     <string name="device_admin_perm">AmnShield uses Device Admin permission to enhance security and block uninstalling AmnShield until a specific period. All data remains securely stored on your device and is never shared externally.</string>
     <string name="prevent_uninstallation_attempts_until_a_set_condition_is_met">Prevent uninstallation attempts until a set condition is met</string>
@@ -189,7 +189,7 @@
     <string name="calculate_how_many_reels_tiktok_short_videos_you_scroll_per_day">Calculate how many reels/ tiktok/ short videos you scroll per day</string>
     <string name="plan_a_robbery">Planifier un cambriolage</string>
     <string name="please_provide_display_over_other_apps_permission_to_access_this_feature">Please provide display over other apps permission to access this feature</string>
-    <string name="find_deenshield_and_press_enable">Trouvez AmnShield et appuyez sur Activer</string>
+    <string name="find_amnshield_and_press_enable">Trouvez AmnShield et appuyez sur Activer</string>
     <string name="discard_changes">Abandonner les modifications ?</string>
     <string name="are_you_sure_you_want_to_discard_all_changes_and_exit">Are you sure you want to discard all changes and exit?</string>
     <string name="yes">Oui</string>
@@ -228,7 +228,7 @@
     <string name="stats">Statistiques</string>
     
     <!-- Home Screen -->
-    <string name="welcome_to_deenshield">Bienvenue dans AmnShield</string>
+    <string name="welcome_to_amnshield">Bienvenue dans AmnShield</string>
     <string name="protect_your_digital_wellbeing">Protect your digital wellbeing with powerful tools</string>
     <string name="quick_actions">Actions rapides</string>
     <string name="hide_welcome_card">Masquer la carte de bienvenue</string>
@@ -266,7 +266,7 @@
     <string name="share_crash_logs">Partager les journaux de plantage</string>
     <string name="help_and_faq">Aide et FAQ</string>
     <string name="help_and_faq_description">Questions courantes et dépannage</string>
-    <string name="about_deenshield">À propos d\'AmnShield</string>
+    <string name="about_amnshield">À propos d\'AmnShield</string>
     <string name="app_version">Version 0.26.4.2026</string>
     <string name="github">GitHub</string>
     <string name="telegram">Telegram</string>

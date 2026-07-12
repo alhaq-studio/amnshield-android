@@ -25,6 +25,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DeenShield"
+rootProject.name = "AmnShield"
 include(":app")
  

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Cloud / device-to-device backup rules for DeenShield.
+    Cloud / device-to-device backup rules for AmnShield.
 
     Sensitive prefs are excluded so that the anti-uninstall password,
     premium status, compassionate access grants, and protected-app

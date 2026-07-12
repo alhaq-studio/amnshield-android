@@ -91,7 +91,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="By default, DeenShield only scans URL bars, search fields, and address bars in browsers and social media apps. Enable this to scan all visible text fields on screen (may increase battery usage)."
+                    android:text="By default, AmnShield only scans URL bars, search fields, and address bars in browsers and social media apps. Enable this to scan all visible text fields on screen (may increase battery usage)."
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 

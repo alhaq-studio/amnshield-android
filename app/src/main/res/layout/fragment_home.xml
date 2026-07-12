@@ -45,7 +45,7 @@
                         style="@style/TextAppearance.Material3.HeadlineSmall"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/welcome_to_deenshield"
+                        android:text="@string/welcome_to_amnshield"
                         android:textColor="?attr/colorOnPrimaryContainer"
                         android:textStyle="bold" />
 
@@ -358,7 +358,7 @@
                         android:layout_width="@dimen/icon_size_large"
                         android:layout_height="@dimen/icon_size_large"
                         android:layout_marginBottom="@dimen/spacing_small"
-                        android:src="@drawable/ic_deenshield_stats"
+                        android:src="@drawable/ic_amnshield_stats"
                         android:tint="?attr/colorPrimary" />
 
                     <TextView

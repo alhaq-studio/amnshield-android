@@ -27,6 +27,7 @@ Desktop.ini
 .externalNativeBuild
 .cxx
 keystore.properties
+deenshield-release-key.jks
 
 # ── Node / JS (Firebase Admin SDK, tooling, etc.) ──────────────────────────
 node_modules/

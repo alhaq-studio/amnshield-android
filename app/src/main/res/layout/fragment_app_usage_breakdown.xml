@@ -177,7 +177,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_configure_schedule"
-                    style="@style/Widget.DeenShield.Button.Outlined"
+                    style="@style/Widget.AmnShield.Button.Outlined"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -187,7 +187,7 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_manage_schedules"
-                    style="@style/Widget.DeenShield.Button.Text"
+                    style="@style/Widget.AmnShield.Button.Text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"

@@ -8,11 +8,11 @@ PSL_SUPPORTED_ACCOUNT_CREATION_METHODS,PSL_ACM_OAUTH,true,MULTIPLE_CHOICE,Which 
 PSL_SUPPORTED_ACCOUNT_CREATION_METHODS,PSL_ACM_OTHER,,MULTIPLE_CHOICE,Which of the following methods of account creation does your app support? Select all that apply/Other
 PSL_SUPPORTED_ACCOUNT_CREATION_METHODS,PSL_ACM_NONE,,MULTIPLE_CHOICE,Which of the following methods of account creation does your app support? Select all that apply/My app does not allow users to create an account
 PSL_ACM_SPECIFY,,,MAYBE_REQUIRED,Describe the method of account creation that your app supports
-PSL_ACCOUNT_DELETION_URL,,https://amn.alhaq-initiative.org/legal/deenshield_docs/privacy-policies/mobile/index.html#user-data_protection-policy,MAYBE_REQUIRED,Add a link that users can use to request that their account and associated data be deleted 
+PSL_ACCOUNT_DELETION_URL,,https://amn.alhaq-initiative.org/legal/amnshield_docs/privacy-policies/mobile/index.html#user-data_protection-policy,MAYBE_REQUIRED,Add a link that users can use to request that their account and associated data be deleted 
 PSL_SUPPORT_DATA_DELETION_BY_USER,DATA_DELETION_YES,true,SINGLE_CHOICE,Do you provide a way for users to request that their data is deleted?/Yes
 PSL_SUPPORT_DATA_DELETION_BY_USER,DATA_DELETION_NO,,SINGLE_CHOICE,Do you provide a way for users to request that their data is deleted?/No
 PSL_SUPPORT_DATA_DELETION_BY_USER,DATA_DELETION_NO_AUTO_DELETED,,SINGLE_CHOICE,"Do you provide a way for users to request that their data is deleted?/No, but user data is automatically deleted within 90 days"
-PSL_DATA_DELETION_URL,,https://amn.alhaq-initiative.org/legal/deenshield_docs/privacy-policies/mobile/index.html#user-data_protection-policy,MAYBE_REQUIRED,Delete data URL
+PSL_DATA_DELETION_URL,,https://amn.alhaq-initiative.org/legal/amnshield_docs/privacy-policies/mobile/index.html#user-data_protection-policy,MAYBE_REQUIRED,Delete data URL
 PSL_DATA_COLLECTION_COMPLIES_FAMILY_POLICY,,,OPTIONAL,"Only answer this question if you've indicated that your app's target age group includes children, or you've opted into the Designed for Families programme. If either of the above is true, you are required to follow the Google Play Families policy (https://support.google.com/googleplay/android-developer/answer/9893335). Do you want to let users know about this commitment in the Data safety section on your Store Listing?"
 PSL_INDEPENDENTLY_VALIDATED,,,OPTIONAL,"Has your app successfully completed an independent security review, according to the Mobile Application Security Assessment (MASA) framework? Only answer ‘yes’ if the review is in good standing."
 PSL_UPI_BADGE_OPT_IN,,,OPTIONAL,Do you want to show this badge on your store listing?

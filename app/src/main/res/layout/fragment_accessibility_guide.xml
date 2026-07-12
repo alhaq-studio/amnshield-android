@@ -60,7 +60,7 @@
                 android:gravity="center"
                 android:letterSpacing="0.02"
                 android:lineSpacingMultiplier="1.2"
-                android:text="DeenShield needs Accessibility permissions to help you manage your screen time and block distracting content. Follow the steps below to complete setup."
+                android:text="AmnShield needs Accessibility permissions to help you manage your screen time and block distracting content. Follow the steps below to complete setup."
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.card.MaterialCardView
@@ -111,7 +111,7 @@
                         android:layout_marginTop="12dp"
                         android:letterSpacing="0.02"
                         android:lineSpacingMultiplier="1.2"
-                        android:text="1️⃣ Tap the button below to open Accessibility Settings\n\n2️⃣ Find and select 'DeenShield' from the list\n\n3️⃣ Toggle the switch to ON\n\n4️⃣ Confirm by tapping 'Allow' or 'OK'\n\n✅ This permission allows DeenShield to detect app usage and block distracting content"
+                        android:text="1️⃣ Tap the button below to open Accessibility Settings\n\n2️⃣ Find and select 'AmnShield' from the list\n\n3️⃣ Toggle the switch to ON\n\n4️⃣ Confirm by tapping 'Allow' or 'OK'\n\n✅ This permission allows AmnShield to detect app usage and block distracting content"
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
                 </LinearLayout>
@@ -165,7 +165,7 @@
                         android:layout_marginTop="12dp"
                         android:letterSpacing="0.02"
                         android:lineSpacingMultiplier="1.2"
-                        android:text="✅ If the above steps worked, you're all set! DeenShield is now ready to help you manage your digital wellbeing.\n\n⚠️ If accessibility isn't working properly:\n\nSome devices may restrict certain permissions by default. Please follow these additional steps:\n\n1️⃣ Open Settings → Apps → DeenShield\n\n2️⃣ Tap 'Permissions' → 'Special App Access'\n\n3️⃣ Select 'Accessibility' → Enable DeenShield\n\n4️⃣ Return to DeenShield App Info → Scroll down\n\n5️⃣ Tap 'Restricted Settings' → Select 'Allow'\n\n6️⃣ Restart the app and verify accessibility is enabled\n\n💡 Following these steps ensures full functionality on all devices."
+                        android:text="✅ If the above steps worked, you're all set! AmnShield is now ready to help you manage your digital wellbeing.\n\n⚠️ If accessibility isn't working properly:\n\nSome devices may restrict certain permissions by default. Please follow these additional steps:\n\n1️⃣ Open Settings → Apps → AmnShield\n\n2️⃣ Tap 'Permissions' → 'Special App Access'\n\n3️⃣ Select 'Accessibility' → Enable AmnShield\n\n4️⃣ Return to AmnShield App Info → Scroll down\n\n5️⃣ Tap 'Restricted Settings' → Select 'Allow'\n\n6️⃣ Restart the app and verify accessibility is enabled\n\n💡 Following these steps ensures full functionality on all devices."
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
                 </LinearLayout>

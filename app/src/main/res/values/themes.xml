@@ -1,6 +1,6 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="Base.Theme.DeenShield" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.AmnShield" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/md_theme_primary</item>
         <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
         <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
@@ -49,12 +49,12 @@
         <item name="colorSurfaceContainerHighest">@color/md_theme_surfaceContainerHighest</item>
         
         <!-- Set default button styles -->
-        <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
-        <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
-        <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
+        <item name="materialButtonStyle">@style/Widget.AmnShield.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.AmnShield.Button.Outlined</item>
+        <item name="borderlessButtonStyle">@style/Widget.AmnShield.Button.Text</item>
     </style>
 
-    <style name="Theme.DeenShield" parent="Base.Theme.DeenShield" />
+    <style name="Theme.AmnShield" parent="Base.Theme.AmnShield" />
 
     <!-- Modern Gradient Theme -->
     <!-- Pass 1 readability tune-up: full M3 token coverage so dialogs, sheets,
@@ -62,7 +62,7 @@
          deep indigo/purple gradient instead of falling back to default light
          tones. Surfaces are translucent dark layers (not fully transparent) so
          text always has a contrast cushion above the gradient. -->
-    <style name="Theme.DeenShield.Gradient" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.AmnShield.Gradient" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowBackground">@drawable/gradient_background</item>
 
         <!-- Primary / Secondary / Tertiary -->
@@ -124,12 +124,12 @@
         -->
 
         <!-- Button Styles -->
-        <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
-        <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
-        <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
+        <item name="materialButtonStyle">@style/Widget.AmnShield.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.AmnShield.Button.Outlined</item>
+        <item name="borderlessButtonStyle">@style/Widget.AmnShield.Button.Text</item>
     </style>
 
-    <style name="Theme.DeenShield.TransparentDialog" parent="Theme.Material3.DayNight">
+    <style name="Theme.AmnShield.TransparentDialog" parent="Theme.Material3.DayNight">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
@@ -137,7 +137,7 @@
     </style>
 
     <!-- Enhanced Button Styles -->
-    <style name="Widget.DeenShield.Button" parent="Widget.Material3.Button">
+    <style name="Widget.AmnShield.Button" parent="Widget.Material3.Button">
         <item name="android:minHeight">48dp</item>
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">12dp</item>
@@ -152,7 +152,7 @@
         <item name="android:stateListAnimator">@null</item>
     </style>
 
-    <style name="Widget.DeenShield.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+    <style name="Widget.AmnShield.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:minHeight">48dp</item>
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">12dp</item>
@@ -166,7 +166,7 @@
         <item name="android:letterSpacing">0.01</item>
     </style>
 
-    <style name="Widget.DeenShield.Button.Text" parent="Widget.Material3.Button.TextButton">
+    <style name="Widget.AmnShield.Button.Text" parent="Widget.Material3.Button.TextButton">
         <item name="android:minHeight">44dp</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
@@ -177,7 +177,7 @@
         <item name="android:letterSpacing">0.01</item>
     </style>
 
-    <style name="Widget.DeenShield.NavigationDrawer" parent="Widget.Material3.NavigationView">
+    <style name="Widget.AmnShield.NavigationDrawer" parent="Widget.Material3.NavigationView">
         <item name="android:background">?attr/colorSurfaceContainerLow</item>
         <item name="itemIconTint">@color/nav_item_tint</item>
         <item name="itemTextColor">@color/nav_item_tint</item>
@@ -188,7 +188,7 @@
         <item name="android:elevation">8dp</item>
     </style>
 
-    <style name="Widget.DeenShield.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
+    <style name="Widget.AmnShield.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
         <item name="android:background">?attr/colorSurfaceContainerLow</item>
         <item name="itemIconTint">@color/bottom_nav_item_tint</item>
         <item name="itemTextColor">@color/bottom_nav_item_tint</item>
@@ -202,14 +202,14 @@
     <style name="Widget.Material3.Button.FilledTonalButton" parent="Widget.Material3.Button" />
 
     <!-- Enhanced Card Style -->
-    <style name="Widget.DeenShield.CardView" parent="Widget.Material3.CardView.Elevated">
+    <style name="Widget.AmnShield.CardView" parent="Widget.Material3.CardView.Elevated">
         <item name="cardCornerRadius">16dp</item>
         <item name="cardElevation">4dp</item>
         <item name="contentPadding">16dp</item>
     </style>
 
     <!-- Emerald Theme (flat light, high readability) -->
-    <style name="Theme.DeenShield.Emerald" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.AmnShield.Emerald" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/emerald_primary</item>
         <item name="colorOnPrimary">@color/emerald_onPrimary</item>
         <item name="colorPrimaryContainer">@color/emerald_primaryContainer</item>
@@ -242,13 +242,13 @@
         <item name="colorSurfaceInverse">#1D3129</item>
         <item name="colorOnSurfaceInverse">#EAF7F1</item>
         <item name="colorPrimaryInverse">@color/emerald_primaryContainer</item>
-        <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
-        <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
-        <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
+        <item name="materialButtonStyle">@style/Widget.AmnShield.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.AmnShield.Button.Outlined</item>
+        <item name="borderlessButtonStyle">@style/Widget.AmnShield.Button.Text</item>
     </style>
 
     <!-- Sunset Glow Theme -->
-    <style name="Theme.DeenShield.Sunset" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.AmnShield.Sunset" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/sunset_primary</item>
         <item name="colorOnPrimary">@color/sunset_onPrimary</item>
         <item name="colorPrimaryContainer">@color/sunset_primaryContainer</item>
@@ -281,13 +281,13 @@
         <item name="colorSurfaceInverse">#4A2D22</item>
         <item name="colorOnSurfaceInverse">#F7E9E0</item>
         <item name="colorPrimaryInverse">@color/sunset_primaryContainer</item>
-        <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
-        <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
-        <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
+        <item name="materialButtonStyle">@style/Widget.AmnShield.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.AmnShield.Button.Outlined</item>
+        <item name="borderlessButtonStyle">@style/Widget.AmnShield.Button.Text</item>
     </style>
 
     <!-- Purple Gradient Theme -->
-    <style name="Theme.DeenShield.Purple" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.AmnShield.Purple" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowBackground">@drawable/gradient_background_purple</item>
         <item name="colorPrimary">@color/purple_primary</item>
         <item name="colorOnPrimary">@color/purple_onPrimary</item>
@@ -321,9 +321,9 @@
         <item name="colorSurfaceInverse">#F0E8FF</item>
         <item name="colorOnSurfaceInverse">#1C1236</item>
         <item name="colorPrimaryInverse">@color/purple_primaryContainer</item>
-        <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
-        <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
-        <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
+        <item name="materialButtonStyle">@style/Widget.AmnShield.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.AmnShield.Button.Outlined</item>
+        <item name="borderlessButtonStyle">@style/Widget.AmnShield.Button.Text</item>
     </style>
 
 </resources>

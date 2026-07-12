@@ -2,9 +2,9 @@ name: Android Build & Test CI
 
 on:
   push:
-    branches: [ main, Test/Beta ]
+    branches: [ main, Test/Beta, Rebranding/Beta ]
   pull_request:
-    branches: [ main, Test/Beta ]
+    branches: [ main, Test/Beta, Rebranding/Beta ]
 
 jobs:
   build:
@@ -25,22 +25,31 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run Unit Tests
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew testPlaystoreDebugUnitTest
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
+      - name: Build Playstore Debug APK
+        run: ./gradlew assemblePlaystoreDebug
 
-      - name: Build Staging APK
-        run: ./gradlew assembleStaging
+      - name: Build F-Droid Debug APK
+        run: ./gradlew assembleFdroidDebug
 
-      - name: Upload Debug APK
+      - name: Build Universal Debug APK
+        run: ./gradlew assembleUniversalDebug
+
+      - name: Upload Playstore APK
         uses: actions/upload-artifact@v4
         with:
-          name: AmnShield-Debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: AmnShield-Playstore-APK
+          path: app/build/outputs/apk/playstore/debug/app-playstore-debug.apk
 
-      - name: Upload Staging APK
+      - name: Upload F-Droid APK
         uses: actions/upload-artifact@v4
         with:
-          name: AmnShield-Staging-APK
-          path: app/build/outputs/apk/staging/app-staging.apk
+          name: AmnShield-Fdroid-APK
+          path: app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk
+
+      - name: Upload Universal APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AmnShield-Universal-APK
+          path: app/build/outputs/apk/universal/debug/app-universal-debug.apk

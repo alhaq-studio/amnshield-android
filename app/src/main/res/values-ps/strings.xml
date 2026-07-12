@@ -179,7 +179,7 @@
     <string name="fix_your_life">خپل ژوند سم کړئ</string>
     <string name="perform_actions_like_a_back_press">د شاتګ تڼۍ غوندې کړنې ترسره کول</string>
     <string name="read_content_on_screen">د سکرین منځپانګه لوستل</string>
-    <string name="this_will_allow_deenshield_to">دا به امن شیلډ ته اجازه ورکړي چې:</string>
+    <string name="this_will_allow_amnshield_to">دا به امن شیلډ ته اجازه ورکړي چې:</string>
     <string name="enable_2">%1$s فعال کړئ</string>
     <string name="device_admin_perm">AmnShield uses Device Admin permission to enhance security and block uninstalling AmnShield until a specific period. All data remains securely stored on your device and is never shared externally.</string>
     <string name="prevent_uninstallation_attempts_until_a_set_condition_is_met">Prevent uninstallation attempts until a set condition is met</string>
@@ -189,7 +189,7 @@
     <string name="calculate_how_many_reels_tiktok_short_videos_you_scroll_per_day">Calculate how many reels/ tiktok/ short videos you scroll per day</string>
     <string name="plan_a_robbery">د غلا پلان</string>
     <string name="please_provide_display_over_other_apps_permission_to_access_this_feature">Please provide display over other apps permission to access this feature</string>
-    <string name="find_deenshield_and_press_enable">امن شیلډ ومومئ او فعالول کېکاږئ</string>
+    <string name="find_amnshield_and_press_enable">امن شیلډ ومومئ او فعالول کېکاږئ</string>
     <string name="discard_changes">بدلونونه پریږدئ؟</string>
     <string name="are_you_sure_you_want_to_discard_all_changes_and_exit">Are you sure you want to discard all changes and exit?</string>
     <string name="yes">هو</string>
@@ -228,7 +228,7 @@
     <string name="stats">احصایه</string>
     
     <!-- Home Screen -->
-    <string name="welcome_to_deenshield">امن شیلډ ته ښه راغلاست</string>
+    <string name="welcome_to_amnshield">امن شیلډ ته ښه راغلاست</string>
     <string name="protect_your_digital_wellbeing">Protect your digital wellbeing with powerful tools</string>
     <string name="quick_actions">ګړندۍ کړنې</string>
     <string name="hide_welcome_card">د هرکلي کارت پټ کړئ</string>
@@ -266,7 +266,7 @@
     <string name="share_crash_logs">د خرابۍ لاګونه شریک کړئ</string>
     <string name="help_and_faq">مرسته او پوښتنې</string>
     <string name="help_and_faq_description">عام پوښتنې او د ستونزو حل</string>
-    <string name="about_deenshield">د امن شیلډ په اړه</string>
+    <string name="about_amnshield">د امن شیلډ په اړه</string>
     <string name="app_version">نسخه 0.26.4.2026</string>
     <string name="github">ګیټ‌هب</string>
     <string name="telegram">ټلیګرام</string>

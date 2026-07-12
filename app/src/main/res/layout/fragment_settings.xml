@@ -487,7 +487,7 @@
                         android:layout_width="@dimen/icon_size_medium"
                         android:layout_height="@dimen/icon_size_medium"
                         android:layout_gravity="center_vertical"
-                        android:src="@drawable/ic_deenshield_notification"
+                        android:src="@drawable/ic_amnshield_notification"
                         android:tint="?attr/colorPrimary" />
 
                     <TextView
@@ -635,7 +635,7 @@
                             style="@style/TextAppearance.Material3.BodyLarge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/about_deenshield"
+                            android:text="@string/about_amnshield"
                             android:textStyle="bold" />
 
                         <TextView

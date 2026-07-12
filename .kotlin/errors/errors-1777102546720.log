@@ -1,5 +1,5 @@
 kotlin version: 2.3.20
-error message: org.jetbrains.kotlin.util.FileAnalysisException: While analysing E:/Dev/DeenShield-Mobile-app/app/src/main/java/com/alhaq/deenshield/ui/activity/MainActivity.kt:191:39: java.io.FileNotFoundException: E:\Dev\DeenShield-Mobile-app\app\build\intermediates\built_in_kotlinc\debug\compileDebugKotlin\classes\com\alhaq\deenshield\ui\activity\FragmentActivity.class (The system cannot find the path specified)
+error message: org.jetbrains.kotlin.util.FileAnalysisException: While analysing E:/Dev/AmnShield-Mobile-app/app/src/main/java/com/alhaq/amnshield/ui/activity/MainActivity.kt:191:39: java.io.FileNotFoundException: E:\Dev\AmnShield-Mobile-app\app\build\intermediates\built_in_kotlinc\debug\compileDebugKotlin\classes\com\alhaq\amnshield\ui\activity\FragmentActivity.class (The system cannot find the path specified)
 	at org.jetbrains.kotlin.util.AnalysisExceptionsKt.wrapIntoFileAnalysisExceptionIfNeeded(AnalysisExceptions.kt:57)
 	at org.jetbrains.kotlin.fir.FirCliExceptionHandler.handleExceptionOnFileAnalysis(Utils.kt:270)
 	at org.jetbrains.kotlin.fir.resolve.transformers.body.resolve.FirDeclarationsResolveTransformer.transformFile(FirDeclarationsResolveTransformer.kt:1940)
@@ -52,7 +52,7 @@ error message: org.jetbrains.kotlin.util.FileAnalysisException: While analysing 
 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
 	at java.base/java.lang.Thread.run(Thread.java:840)
-Caused by: java.io.FileNotFoundException: E:\Dev\DeenShield-Mobile-app\app\build\intermediates\built_in_kotlinc\debug\compileDebugKotlin\classes\com\alhaq\deenshield\ui\activity\FragmentActivity.class (The system cannot find the path specified)
+Caused by: java.io.FileNotFoundException: E:\Dev\AmnShield-Mobile-app\app\build\intermediates\built_in_kotlinc\debug\compileDebugKotlin\classes\com\alhaq\amnshield\ui\activity\FragmentActivity.class (The system cannot find the path specified)
 	at java.base/java.io.FileInputStream.open0(Native Method)
 	at java.base/java.io.FileInputStream.open(FileInputStream.java:216)
 	at java.base/java.io.FileInputStream.<init>(FileInputStream.java:157)

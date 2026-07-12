@@ -41,7 +41,7 @@
                     android:text="How long to unlock for after proceeding?"
                     android:textStyle="bold" />
 
-                <com.alhaq.deenshield.views.HorizontalNumberPicker
+                <com.alhaq.amnshield.views.HorizontalNumberPicker
                     android:id="@+id/select_mins"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

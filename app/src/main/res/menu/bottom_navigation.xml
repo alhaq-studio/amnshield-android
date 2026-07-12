@@ -2,14 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_home"
-        android:icon="@drawable/ic_deenshield_home"
+        android:icon="@drawable/ic_amnshield_home"
         android:title="@string/home" />
     <item
         android:id="@+id/nav_stats"
-        android:icon="@drawable/ic_deenshield_stats"
+        android:icon="@drawable/ic_amnshield_stats"
         android:title="@string/stats" />
     <item
         android:id="@+id/nav_settings"
-        android:icon="@drawable/ic_deenshield_settings"
+        android:icon="@drawable/ic_amnshield_settings"
         android:title="@string/settings" />
 </menu>

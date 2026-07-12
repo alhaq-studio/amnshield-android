@@ -52,7 +52,7 @@ You are an expert Android/Kotlin developer working on **AmnShield** - an Islamic
 ```
 app/
 ├── services/
-│   └── DeenShieldAccessibilityService.kt    # Single unified accessibility service
+│   └── AmnShieldAccessibilityService.kt    # Single unified accessibility service
 ├── blockers/
 │   ├── AppBlocker.kt                        # App blocking logic
 │   ├── KeywordBlocker.kt                    # Keyword detection & blocking
@@ -77,7 +77,7 @@ app/
 
 ### Critical Architecture Decisions
 
-1. **Single Accessibility Service**: `DeenShieldAccessibilityService.kt` is the ONLY accessibility service. The previous `GeneralFeaturesService` has been merged into it for professional appearance in Android settings.
+1. **Single Accessibility Service**: `AmnShieldAccessibilityService.kt` is the ONLY accessibility service. The previous `GeneralFeaturesService` has been merged into it for professional appearance in Android settings.
 
 2. **Self-Protection**: The app MUST ignore itself in all blocking/detection logic. Always check:
    ```kotlin
@@ -137,7 +137,7 @@ app/
 - **Premium**: Required for access
 
 ### Anti-Uninstall Protection
-- **Implementation**: Integrated into `DeenShieldAccessibilityService`
+- **Implementation**: Integrated into `AmnShieldAccessibilityService`
 - **Modes**: Password protection OR time-based protection
 - **Storage**: `"anti_uninstall"` SharedPreferences
 - **Protected Apps**: Loaded from Smart App Guard + AmnShield itself
@@ -246,7 +246,7 @@ if (!premiumManager.isPremium()) {
 
 ## 🔄 Broadcast Actions & Service Communication
 
-### Refresh Actions (Send to DeenShieldAccessibilityService)
+### Refresh Actions (Send to AmnShieldAccessibilityService)
 ```kotlin
 // Refresh specific features
 INTENT_ACTION_REFRESH_APP_BLOCKER
@@ -261,7 +261,7 @@ INTENT_ACTION_REFRESH_APP_BLOCKER_COOLDOWN
 INTENT_ACTION_REFRESH_VIEW_BLOCKER_COOLDOWN
 
 // Usage — always scope to own package
-val intent = Intent(DeenShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+val intent = Intent(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
 context.sendBroadcast(intent.setPackage(context.packageName))
 ```
 
@@ -364,7 +364,7 @@ return PackageWand.getCategoryForPackage(packageName)
 
 ### Adding a New Blocker
 1. Create class in `blockers/` extending existing patterns
-2. Add to `DeenShieldAccessibilityService.onAccessibilityEvent()`
+2. Add to `AmnShieldAccessibilityService.onAccessibilityEvent()`
 3. Create config fragment in `ui/fragments/features/`
 4. Add card to `HomeFragment.kt`
 5. Add status/setup entry to `BlocksFragment.kt` if user-facing
@@ -396,7 +396,7 @@ return PackageWand.getCategoryForPackage(packageName)
 try {
     // Risky operation
 } catch (e: Exception) {
-    android.util.Log.e("DeenShield", "Feature error", e)
+    android.util.Log.e("AmnShield", "Feature error", e)
     // Fail gracefully
 }
 ```
@@ -437,7 +437,7 @@ try {
 ## 🎓 Key Takeaways
 
 1. **Privacy First**: All processing on-device, minimal network usage
-2. **Single Service**: Only `DeenShieldAccessibilityService` registered
+2. **Single Service**: Only `AmnShieldAccessibilityService` registered
 3. **Self-Awareness**: Always skip AmnShield's own package
 4. **Centralized State**: Use `SavedPreferencesLoader` exclusively
 5. **Premium Gating**: Check `PremiumManager` for all premium features

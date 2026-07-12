@@ -46,7 +46,7 @@
                 android:layout_height="72dp"
                 android:alpha="0.45"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_deenshield_notification"
+                android:src="@drawable/ic_amnshield_notification"
                 app:tint="?attr/colorOnSurfaceVariant" />
 
             <TextView

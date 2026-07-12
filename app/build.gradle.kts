@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.alhaq.deenshield"
+    namespace = "com.alhaq.amnshield"
     compileSdk = 36
 
     signingConfigs {
@@ -77,6 +77,19 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
     }
+
+    flavorDimensions.add("distribution")
+    productFlavors {
+        create("playstore") {
+            dimension = "distribution"
+        }
+        create("fdroid") {
+            dimension = "distribution"
+        }
+        create("universal") {
+            dimension = "distribution"
+        }
+    }
     
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -116,8 +129,12 @@ dependencies {
 
     implementation(libs.mpandroidchart)
     implementation(libs.timerangepicker)
-    implementation(libs.play.services.auth)
-    implementation(libs.billing.ktx)
+    
+    add("playstoreImplementation", libs.play.services.auth)
+    add("playstoreImplementation", libs.billing.ktx)
+    add("universalImplementation", libs.play.services.auth)
+    add("universalImplementation", libs.billing.ktx)
+    
     implementation(libs.androidx.documentfile)
 
 }
