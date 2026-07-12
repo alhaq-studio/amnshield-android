@@ -103,7 +103,7 @@
         <receiver
             android:name=".receivers.AdminReceiver"
             android:description="@string/admin_permission_desc"
-            android:exported="false"
+            android:exported="true"
             android:permission="android.permission.BIND_DEVICE_ADMIN">
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
@@ -161,7 +161,7 @@
         <!-- BroadcastReceiver for auto-blocking newly installed apps -->
         <receiver
             android:name=".receivers.AppInstallReceiver"
-            android:exported="false"
+            android:exported="true"
             android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />

@@ -37,19 +37,31 @@ class PermissionsBottomSheet : BottomSheetDialogFragment() {
         }
 
         binding.accessibilityPermission.setOnClickListener {
-            startActivity(viewModel.permissionsManager.getAccessibilityServiceIntent())
+            safeStartActivity(viewModel.permissionsManager.getAccessibilityServiceIntent())
         }
         binding.deviceAdminPermission.setOnClickListener {
-            startActivity(viewModel.permissionsManager.getDeviceAdminIntent())
+            safeStartActivity(viewModel.permissionsManager.getDeviceAdminIntent())
         }
         binding.overlayPermission.setOnClickListener {
-            startActivity(viewModel.permissionsManager.getDrawOverOtherAppsIntent())
+            safeStartActivity(viewModel.permissionsManager.getDrawOverOtherAppsIntent())
         }
         binding.usageStatsPermission.setOnClickListener {
-            startActivity(viewModel.permissionsManager.getUsageStatsIntent())
+            safeStartActivity(viewModel.permissionsManager.getUsageStatsIntent())
         }
         binding.notificationPermission.setOnClickListener {
-            startActivity(viewModel.permissionsManager.getNotificationPermissionIntent())
+            safeStartActivity(viewModel.permissionsManager.getNotificationPermissionIntent())
+        }
+    }
+
+    private fun safeStartActivity(intent: android.content.Intent) {
+        try {
+            startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                startActivity(android.content.Intent(android.provider.Settings.ACTION_SETTINGS))
+            } catch (ex: Exception) {
+                android.widget.Toast.makeText(context, "Could not open settings", android.widget.Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

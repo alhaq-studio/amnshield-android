@@ -35,6 +35,9 @@ class FocusModeConfigFragment : BaseFeatureFragment() {
             selectedApps?.let {
                 savedPreferencesLoader.saveFocusModeSelectedApps(it)
                 updateSelectedAppsCount(it.size)
+                val intent = Intent(DeenShieldAccessibilityService.INTENT_ACTION_REFRESH_FOCUS_MODE)
+                intent.setPackage(requireContext().packageName)
+                requireContext().sendBroadcast(intent)
             }
         }
     }

@@ -27,3 +27,22 @@ Desktop.ini
 .externalNativeBuild
 .cxx
 keystore.properties
+
+# ── Node / JS (Firebase Admin SDK, tooling, etc.) ──────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+package-lock.json
+
+# ── Environment / secrets ──────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+google-services.json
+
+# ── OS noise ───────────────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini

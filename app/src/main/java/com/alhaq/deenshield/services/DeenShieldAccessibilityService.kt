@@ -5,10 +5,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.core.content.edit
@@ -20,10 +20,12 @@ import com.alhaq.deenshield.blockers.FocusModeBlocker
 import com.alhaq.deenshield.blockers.KeywordBlocker
 import com.alhaq.deenshield.blockers.ReelBlocker
 import com.alhaq.deenshield.blockers.ViewBlocker
+import com.alhaq.deenshield.data.blockers.UnifiedFeatureScheduleRule
 import com.alhaq.deenshield.premium.PremiumManager
 import com.alhaq.deenshield.ui.activity.MainActivity
 import com.alhaq.deenshield.ui.activity.WarningActivity
 import com.alhaq.deenshield.utils.BlockingStatsManager
+import com.alhaq.deenshield.utils.ScheduleUtils
 import com.alhaq.deenshield.utils.TimeTools
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -32,6 +34,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import java.util.Locale
 
 class DeenShieldAccessibilityService : BaseBlockingService() {
@@ -45,12 +48,14 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         const val INTENT_ACTION_REFRESH_VIEW_BLOCKER_COOLDOWN = "deenshield.refresh.viewblocker.cooldown"
         const val INTENT_ACTION_REFRESH_REEL_BLOCKER = "deenshield.refresh.reelblocker"
         const val INTENT_ACTION_REFRESH_REEL_BLOCKER_COOLDOWN = "deenshield.refresh.reelblocker.cooldown"
+        const val INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES = "deenshield.refresh.unified.feature.schedules"
         const val INTENT_ACTION_REFRESH_ANTI_UNINSTALL = ".deenshield.refresh.anti_uninstall"
         const val INTENT_ACTION_PASSWORD_VERIFIED = "deenshield.password.verified"
 
         private const val REEL_TRACKER_SCROLL_DEBOUNCE_MS = 800L
         private const val REEL_TRACKER_DUPLICATE_WINDOW_MS = 2_500L
         private const val REEL_TRACKER_SURFACE_REENTRY_MS = 10 * 60 * 1000L
+        private const val UNIFIED_SCHEDULE_EVAL_INTERVAL_MS = 15_000L
     }
 
     private lateinit var appBlocker: AppBlocker
@@ -64,7 +69,6 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
 
     private var appBlockerWarningConfig = MainActivity.WarningData()
     private var viewBlockerWarningConfig = MainActivity.WarningData()
-    private var lastEventTimeStamp = 0L
 
     // Anti-uninstall protection state
     private var isAntiUninstallOn = false
@@ -81,12 +85,13 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
     private var lastPasswordVerificationTime = 0L
     private val PASSWORD_VERIFICATION_COOLDOWN = 5 * 60 * 1000L
     private var isPasswordVerified = false
-    private var currentProtectionSession: String? = null
     private var lastReelCountRefreshTime = 0L
+    private var lastUnifiedScheduleEvalTime = 0L
     private var cachedReelsScrolledToday = 0
     private var reelTrackerDate = TimeTools.getCurrentDate()
     private val lastReelTrackerHitTimes = mutableMapOf<String, Long>()
     private val lastReelTrackerSignatures = mutableMapOf<String, String>()
+    private var cachedDefaultLauncher: String? = null
 
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val eventChannel = Channel<AccessibilityEvent>(Channel.CONFLATED) { droppedEvent ->
@@ -112,6 +117,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         setupReelBlocker()
         setupViewBlocker()
         setupAntiUninstall()
+        cachedDefaultLauncher = getDefaultLauncherPackage()
 
         val filter = IntentFilter().apply {
             addAction(INTENT_ACTION_REFRESH_APP_BLOCKER)
@@ -120,26 +126,36 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
             addAction(INTENT_ACTION_REFRESH_VIEW_BLOCKER_COOLDOWN)
             addAction(INTENT_ACTION_REFRESH_REEL_BLOCKER)
             addAction(INTENT_ACTION_REFRESH_REEL_BLOCKER_COOLDOWN)
+            addAction(INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
             addAction(INTENT_ACTION_REFRESH_APP_BLOCKER_COOLDOWN)
             addAction(INTENT_ACTION_REFRESH_FOCUS_MODE)
             addAction(INTENT_ACTION_REFRESH_ANTI_UNINSTALL)
             addAction(INTENT_ACTION_PASSWORD_VERIFIED)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Internal-only broadcasts; never expose to other apps to prevent
-            // remote bypass of password verification or blocker state.
             registerReceiver(refreshReceiver, filter, RECEIVER_NOT_EXPORTED)
         } else {
             registerReceiver(refreshReceiver, filter)
         }
 
+        evaluateUnifiedFeatureSchedulesIfNeeded(force = true)
+
         startBackgroundWorker()
+    }
+
+    private fun isSettingsApp(packageName: String?): Boolean {
+        packageName ?: return false
+        return packageName == "com.android.settings" ||
+                packageName == "com.google.android.settings" ||
+                packageName == "com.samsung.android.settings" ||
+                packageName.endsWith(".settings")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
         val packageName = event.packageName?.toString() ?: return
 
+        var rootNode: AccessibilityNodeInfo? = null
         try {
             if (packageName.equals("com.alhaq.deenshield", ignoreCase = true)) {
                 return
@@ -149,7 +165,14 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 return
             }
 
-            val rootNode = rootInActiveWindow
+            evaluateUnifiedFeatureSchedulesIfNeeded()
+
+            if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                trackAppLaunch(packageName)
+                cachedDefaultLauncher = getDefaultLauncherPackage()
+            }
+
+            rootNode = rootInActiveWindow
             val rootPackage = rootNode?.packageName?.toString() ?: packageName
 
             if (rootPackage.equals("com.alhaq.deenshield", ignoreCase = true) ||
@@ -158,7 +181,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 return
             }
 
-            if (isAntiUninstallOn && packageName == "com.android.settings" && rootNode != null) {
+            if (isAntiUninstallOn && isSettingsApp(packageName) && rootNode != null) {
                 checkAndBlockDangerousSettingsScreens(rootNode)
             }
 
@@ -168,22 +191,8 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
 
             val isPremiumUser = premiumManager.isPremium()
 
-            if (isPremiumUser && savedPreferencesLoader.isAppBlockerFeatureEnabled() && appBlocker.blockedApps.isNotEmpty()) {
-                val appBlockerResult = appBlocker.doesAppNeedToBeBlocked(packageName)
-                if (appBlockerResult.isBlocked) {
-                    blockingStatsManager.recordAppBlock(packageName, "Blocked by App Blocker")
-                    val intent = Intent(this, WarningActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        putExtra("mode", Constants.WARNING_SCREEN_MODE_APP_BLOCKER)
-                        putExtra("result_id", packageName)
-                    }
-                    startActivity(intent)
-                    return
-                }
-            }
-
-            if (isPremiumUser) {
-                val focusModeResult = focusModeBlocker.doesAppNeedToBeBlocked(packageName)
+            if (isPremiumUser && savedPreferencesLoader.isFocusModeFeatureEnabled()) {
+                val focusModeResult = focusModeBlocker.doesAppNeedToBeBlocked(packageName, cachedDefaultLauncher)
                 if (focusModeResult.isRequestingToUpdateSPData) {
                     savedPreferencesLoader.completeFocusSession()
                     savedPreferencesLoader.saveFocusModeData(focusModeBlocker.focusModeData)
@@ -196,6 +205,25 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 }
             }
 
+            val isFocusModeActive = isPremiumUser && savedPreferencesLoader.isFocusModeFeatureEnabled() && focusModeBlocker.focusModeData.isTurnedOn
+            val isFocusBlockAllExSelectedActive = isFocusModeActive && focusModeBlocker.focusModeData.modeType == Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED
+
+            if (!isFocusBlockAllExSelectedActive) {
+                if (isPremiumUser && savedPreferencesLoader.isAppBlockerFeatureEnabled()) {
+                    val appBlockerResult = appBlocker.doesAppNeedToBeBlocked(packageName, savedPreferencesLoader)
+                    if (appBlockerResult.isBlocked) {
+                        blockingStatsManager.recordAppBlock(packageName, "Blocked by App Blocker")
+                        val intent = Intent(this, WarningActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            putExtra("mode", Constants.WARNING_SCREEN_MODE_APP_BLOCKER)
+                            putExtra("result_id", packageName)
+                        }
+                        startActivity(intent)
+                        return
+                    }
+                }
+            }
+
             val eventCopy = AccessibilityEvent.obtain(event)
             val sendResult = eventChannel.trySend(eventCopy)
             if (sendResult.isFailure) {
@@ -204,6 +232,8 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         } catch (t: Throwable) {
             android.util.Log.e("DeenShield", "Accessibility pipeline error", t)
             crashLogger.logNonFatalError("AccessibilityService", "Pipeline error", Exception(t))
+        } finally {
+            rootNode?.recycle()
         }
     }
 
@@ -226,50 +256,54 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
     private fun processDeferredChecks(event: AccessibilityEvent) {
         val packageName = event.packageName?.toString() ?: return
         val rootNode = rootInActiveWindow ?: return
-        val rootPackage = rootNode.packageName?.toString() ?: packageName
+        try {
+            val rootPackage = rootNode.packageName?.toString() ?: packageName
 
-        if (packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
-            rootPackage.equals("com.alhaq.deenshield", ignoreCase = true) ||
-            packageName.equals("com.android.systemui", ignoreCase = true) ||
-            rootPackage.equals("com.android.systemui", ignoreCase = true)
-        ) {
-            return
-        }
-
-        val hasCoreKeywords = savedPreferencesLoader.isKeywordBlockerFeatureEnabled() &&
-            savedPreferencesLoader.loadBlockedKeywords().isNotEmpty()
-        if (hasCoreKeywords) {
-            try {
-                val keywordResult = keywordBlocker.checkIfUserGettingFreaky(rootNode, event)
-                if (keywordResult.resultDetectWord != null) {
-                    blockingStatsManager.recordKeywordBlock(keywordResult.resultDetectWord, packageName)
-                    pressBack()
-                    return
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("DeenShield", "Core Keyword blocker error", e)
+            if (packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
+                rootPackage.equals("com.alhaq.deenshield", ignoreCase = true) ||
+                packageName.equals("com.android.systemui", ignoreCase = true) ||
+                rootPackage.equals("com.android.systemui", ignoreCase = true)
+            ) {
+                return
             }
-        }
 
-        if (premiumManager.isPremium()) {
-            try {
-                refreshReelCountCacheIfNeeded()
-                reelBlocker.reelsScrolledToday = cachedReelsScrolledToday
-
-                val detectedReelSurface = reelBlocker.detectReelSurfaceId(rootNode, packageName)
-                if (detectedReelSurface != null) {
-                    trackReelExposure(packageName, detectedReelSurface, event)
+            val hasCoreKeywords = savedPreferencesLoader.isKeywordBlockerFeatureEnabled() &&
+                savedPreferencesLoader.loadBlockedKeywords().isNotEmpty()
+            if (hasCoreKeywords) {
+                try {
+                    val keywordResult = keywordBlocker.checkIfUserGettingFreaky(rootNode, event)
+                    if (keywordResult.resultDetectWord != null) {
+                        blockingStatsManager.recordKeywordBlock(keywordResult.resultDetectWord, packageName)
+                        pressBack()
+                        return
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("DeenShield", "Core Keyword blocker error", e)
                 }
-
-                val reelBlockerResult = reelBlocker.doesReelNeedToBeBlocked(rootNode, packageName)
-                if (reelBlockerResult != null && reelBlockerResult.isBlocked) {
-                    blockingStatsManager.recordViewBlock(packageName, reelBlockerResult.viewId)
-                    handleReelBlockerResult(reelBlockerResult)
-                    return
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("DeenShield", "Reel blocker error", e)
             }
+
+            if (premiumManager.isPremium()) {
+                try {
+                    refreshReelCountCacheIfNeeded()
+                    reelBlocker.reelsScrolledToday = cachedReelsScrolledToday
+
+                    val detectedReelSurface = reelBlocker.detectReelSurfaceId(rootNode, packageName)
+                    if (detectedReelSurface != null) {
+                        trackReelExposure(packageName, detectedReelSurface, event)
+                    }
+
+                    val reelBlockerResult = reelBlocker.doesReelNeedToBeBlocked(rootNode, packageName)
+                    if (reelBlockerResult != null && reelBlockerResult.isBlocked) {
+                        blockingStatsManager.recordViewBlock(packageName, reelBlockerResult.viewId)
+                        handleReelBlockerResult(reelBlockerResult)
+                        return
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("DeenShield", "Reel blocker error", e)
+                }
+            }
+        } finally {
+            rootNode.recycle()
         }
     }
 
@@ -288,20 +322,6 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         startActivity(dialogIntent)
     }
 
-    private fun handleViewBlockerResult(result: ViewBlocker.ViewBlockerResult?) {
-        if (result == null || !result.isBlocked) return
-
-        pressBack()
-
-        if (viewBlockerWarningConfig.isWarningDialogHidden) return
-        val dialogIntent = Intent(this, WarningActivity::class.java)
-        dialogIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        dialogIntent.putExtra("mode", Constants.WARNING_SCREEN_MODE_VIEW_BLOCKER)
-        dialogIntent.putExtra("result_id", result.viewId)
-        dialogIntent.putExtra("is_press_home", result.requestHomePressInstead)
-        startActivity(dialogIntent)
-    }
-
     private val refreshReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent == null) return
@@ -311,6 +331,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 INTENT_ACTION_REFRESH_VIEW_BLOCKER -> setupViewBlocker()
                 INTENT_ACTION_REFRESH_REEL_BLOCKER -> setupReelBlocker()
                 INTENT_ACTION_REFRESH_FOCUS_MODE -> setupFocusMode()
+                INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES -> evaluateUnifiedFeatureSchedulesIfNeeded(force = true)
                 INTENT_ACTION_REFRESH_ANTI_UNINSTALL -> setupAntiUninstall()
                 INTENT_ACTION_REFRESH_VIEW_BLOCKER_COOLDOWN -> {
                     val interval = intent.getIntExtra("selected_time", viewBlockerWarningConfig.timeInterval)
@@ -344,7 +365,6 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 INTENT_ACTION_PASSWORD_VERIFIED -> {
                     isPasswordVerified = true
                     lastPasswordVerificationTime = System.currentTimeMillis()
-                    android.util.Log.d("DeenShield", "Password verified, 5-minute cooldown started")
                 }
             }
         }
@@ -355,11 +375,8 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         appBlocker.blockedApps = savedPreferencesLoader.loadBlockedApps().toHashSet()
         appBlocker.restoreCooldowns(savedPreferencesLoader.loadAppBlockerCooldownData())
         appBlocker.refreshCheatHoursData(savedPreferencesLoader.loadAppBlockerCheatHoursList())
+        appBlocker.refreshScheduleRules(savedPreferencesLoader.loadAppBlockerScheduleRules())
         savedPreferencesLoader.saveAppBlockerCooldownData(appBlocker.getCooldownSnapshot())
-
-        val cheatHours = getSharedPreferences("cheat_hours", Context.MODE_PRIVATE)
-        appBlocker.cheatMinuteStartTime = cheatHours.getInt("app_blocker_start_time", -1)
-        appBlocker.cheatMinutesEndTime = cheatHours.getInt("app_blocker_end_time", -1)
     }
 
     private fun setupKeywordBlocker() {
@@ -395,8 +412,6 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
     }
 
     private fun setupViewBlocker() {
-        // ViewBlocker no longer detects reels/shorts (handled by ReelBlocker), but
-        // we still load its warning config + cooldown snapshot for backward compat.
         viewBlockerWarningConfig = savedPreferencesLoader.loadViewBlockerWarningInfo()
         viewBlocker.restoreCooldowns(savedPreferencesLoader.loadViewBlockerCooldownData())
         savedPreferencesLoader.saveViewBlockerCooldownData(viewBlocker.getCooldownSnapshot())
@@ -418,7 +433,6 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         reelBlocker.cheatMinuteStartTime = cheatHoursPrefs.getInt("view_blocker_start_time", -1)
         reelBlocker.cheatMinutesEndTime = cheatHoursPrefs.getInt("view_blocker_end_time", -1)
 
-        // Per-platform toggles + browser support.
         reelBlocker.isYoutubeEnabled = reelBlockerPrefs.getBoolean("is_youtube_enabled", true)
         reelBlocker.isInstagramEnabled = reelBlockerPrefs.getBoolean("is_instagram_enabled", true)
         reelBlocker.isTiktokEnabled = reelBlockerPrefs.getBoolean("is_tiktok_enabled", true)
@@ -478,6 +492,26 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         legacyMetricsPrefs.edit { putInt("total_reels", updatedCount) }
     }
 
+    private fun trackAppLaunch(packageName: String) {
+        try {
+            savedPreferencesLoader.trackAppLaunch(packageName)
+        } catch (e: Exception) {
+            android.util.Log.e("DeenShield", "Error tracking app launch", e)
+        }
+    }
+
+    private fun getDefaultLauncherPackage(): String? {
+        return try {
+            val intent = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+            }
+            val resolveInfo = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)
+            resolveInfo?.activityInfo?.packageName
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     private fun shouldTrackReelExposure(event: AccessibilityEvent, key: String, now: Long): Boolean {
         val lastSeen = lastReelTrackerHitTimes[key]
         if (lastSeen == null) {
@@ -517,6 +551,85 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         focusModeBlocker.update(focusModeData)
     }
 
+    private fun evaluateUnifiedFeatureSchedulesIfNeeded(force: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!force && (now - lastUnifiedScheduleEvalTime) < UNIFIED_SCHEDULE_EVAL_INTERVAL_MS) {
+            return
+        }
+        lastUnifiedScheduleEvalTime = now
+
+        val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules()
+        if (rules.isEmpty()) return
+
+        UnifiedFeatureScheduleRule.FeatureTarget.entries.forEach { target ->
+            val targetRules = rules.filter { it.targets.contains(target) }
+            if (targetRules.isEmpty()) return@forEach
+
+            val activeCheat = targetRules.firstOrNull {
+                it.type == UnifiedFeatureScheduleRule.RuleType.CHEAT && isUnifiedRuleActive(it, now)
+            }
+            val activeBlock = targetRules.firstOrNull {
+                it.type == UnifiedFeatureScheduleRule.RuleType.BLOCK && isUnifiedRuleActive(it, now)
+            }
+
+            // Priority: Active Cheat > Active Block > Manual User Setting
+            when {
+                activeCheat != null -> applyUnifiedFeatureState(target, false)
+                activeBlock != null -> applyUnifiedFeatureState(target, true)
+                // If no schedule is active, we don't change the state.
+                // This lets the user's manual toggle in the UI remain in control.
+            }
+        }
+    }
+
+    private fun applyUnifiedFeatureState(
+        target: UnifiedFeatureScheduleRule.FeatureTarget,
+        enabled: Boolean
+    ) {
+        when (target) {
+            UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER -> {
+                if (savedPreferencesLoader.isAppBlockerFeatureEnabled() != enabled) {
+                    savedPreferencesLoader.setAppBlockerFeatureEnabled(enabled)
+                    setupAppBlocker()
+                }
+            }
+
+            UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER -> {
+                if (savedPreferencesLoader.isKeywordBlockerFeatureEnabled() != enabled) {
+                    savedPreferencesLoader.setKeywordBlockerFeatureEnabled(enabled)
+                    setupKeywordBlocker()
+                }
+            }
+
+            UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER -> {
+                if (savedPreferencesLoader.isReelBlockerEnabled() != enabled) {
+                    savedPreferencesLoader.setReelBlockerEnabled(enabled)
+                    setupReelBlocker()
+                }
+            }
+
+            UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE -> {
+                if (savedPreferencesLoader.isFocusModeFeatureEnabled() != enabled) {
+                    savedPreferencesLoader.setFocusModeFeatureEnabled(enabled)
+                    setupFocusMode()
+                }
+            }
+        }
+    }
+
+    private fun isUnifiedRuleActive(rule: UnifiedFeatureScheduleRule, nowMillis: Long): Boolean {
+        return when (rule.recurrence) {
+            UnifiedFeatureScheduleRule.Recurrence.ALWAYS -> true
+            UnifiedFeatureScheduleRule.Recurrence.HOURLY -> rule.activeUntilMillis > nowMillis
+            UnifiedFeatureScheduleRule.Recurrence.DAILY -> {
+                ScheduleUtils.isDailyWindowActive(rule.startMinute, rule.endMinute, nowMillis)
+            }
+            UnifiedFeatureScheduleRule.Recurrence.WEEKLY -> {
+                ScheduleUtils.isWeeklyWindowActive(rule.startMinute, rule.endMinute, rule.selectedDays, nowMillis)
+            }
+        }
+    }
+
     private fun setupAntiUninstall() {
         val info = getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
         isAntiUninstallOn = info.getBoolean("is_anti_uninstall_on", false)
@@ -533,7 +646,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         if (node == null) return
 
         var isDangerousScreen = false
-        traverseAndDetectScreen(node) { detectedType, appPackage ->
+        traverseAndDetectScreen(node, node) { detectedType, appPackage ->
             when (detectedType) {
                 "device_admin" -> if (isAntiUninstallOn && isConfiguringBlocked) isDangerousScreen = true
                 "accessibility_deenshield" -> if (isAntiUninstallOn && isConfiguringBlocked) isDangerousScreen = true
@@ -551,7 +664,6 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
 
                 if (currentTime - lastBlockTime > blockCooldown) {
                     lastBlockTime = currentTime
-                    currentProtectionSession = "settings_" + currentTime
                     handleAntiUninstallAttempt()
                 }
             }
@@ -589,7 +701,6 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
 
                 if (currentTime - lastBlockTime > blockCooldown) {
                     lastBlockTime = currentTime
-                    currentProtectionSession = "launcher_" + currentTime
                     handleAntiUninstallAttempt()
                 }
             }
@@ -621,7 +732,11 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            scanNodeForUninstallDialog(node.getChild(i), onAppDetected)
+            val child = node.getChild(i)
+            if (child != null) {
+                scanNodeForUninstallDialog(child, onAppDetected)
+                child.recycle()
+            }
         }
     }
 
@@ -634,23 +749,27 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
     }
 
-    private fun traverseAndDetectScreen(node: AccessibilityNodeInfo?, onScreenDetected: (String, String?) -> Unit) {
-        if (node == null) return
+    private fun traverseAndDetectScreen(
+        node: AccessibilityNodeInfo?, 
+        windowRoot: AccessibilityNodeInfo?, 
+        onScreenDetected: (String, String?) -> Unit
+    ) {
+        if (node == null || windowRoot == null) return
 
         if (node.className != null && node.className == "android.widget.TextView") {
             val nodeText = node.text?.toString()?.lowercase(Locale.ROOT) ?: ""
 
             if ((nodeText.contains("device admin") || nodeText.contains("device administrators")) &&
-                checkForDeenShieldMention(this.rootInActiveWindow)
+                checkForDeenShieldMention(windowRoot)
             ) {
-                if (checkForActionButton(this.rootInActiveWindow)) {
+                if (checkForActionButton(windowRoot)) {
                     onScreenDetected("device_admin", null)
                     return
                 }
             }
 
             if (nodeText.contains("deenshield") && nodeText.contains("accessibility")) {
-                if (checkForToggleContext(this.rootInActiveWindow)) {
+                if (checkForToggleContext(windowRoot)) {
                     onScreenDetected("accessibility_deenshield", null)
                     return
                 }
@@ -659,7 +778,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
             if (nodeText.contains("uninstall") || nodeText.contains("remove")) {
                 for (packageName in protectedApps) {
                     val appName = packageName.substringAfterLast(".").lowercase(Locale.ROOT)
-                    if (checkForAppMention(this.rootInActiveWindow, appName, packageName)) {
+                    if (checkForAppMention(windowRoot, appName, packageName)) {
                         onScreenDetected("app_uninstall", packageName)
                         return
                     }
@@ -668,7 +787,11 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            traverseAndDetectScreen(node.getChild(i), onScreenDetected)
+            val child = node.getChild(i)
+            if (child != null) {
+                traverseAndDetectScreen(child, windowRoot, onScreenDetected)
+                child.recycle()
+            }
         }
     }
 
@@ -689,7 +812,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            if (checkForActionButton(node.getChild(i))) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = checkForActionButton(child)
+                child.recycle()
+                if (found) return true
+            }
         }
 
         return false
@@ -711,7 +839,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            if (checkForToggleContext(node.getChild(i))) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = checkForToggleContext(child)
+                child.recycle()
+                if (found) return true
+            }
         }
 
         return false
@@ -732,7 +865,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            if (checkForAppMention(node.getChild(i), appName, packageName)) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = checkForAppMention(child, appName, packageName)
+                child.recycle()
+                if (found) return true
+            }
         }
 
         return false
@@ -749,7 +887,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            if (checkForDeenShieldMention(node.getChild(i))) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = checkForDeenShieldMention(child)
+                child.recycle()
+                if (found) return true
+            }
         }
 
         return false

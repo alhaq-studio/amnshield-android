@@ -1,0 +1,46 @@
+name: Android Build & Test CI
+
+on:
+  push:
+    branches: [ main, Test/Beta ]
+  pull_request:
+    branches: [ main, Test/Beta ]
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Build Staging APK
+        run: ./gradlew assembleStaging
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AmnShield-Debug-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Staging APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AmnShield-Staging-APK
+          path: app/build/outputs/apk/staging/app-staging.apk

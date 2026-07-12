@@ -476,7 +476,7 @@
     
     <!-- Welcome Screen -->
     <string name="app_theme">سمة التطبيق</string>
-    <string name="modern_gradient">تدرج عصري (بيتا)</string>
+    <string name="modern_gradient">تدرج دافئ</string>
     <string name="emerald_dusk">غسق الزمرد</string>
     <string name="sunset_glow">توهج الغروب</string>
     <string name="light_mode">الوضع الفاتح</string>

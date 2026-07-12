@@ -18,7 +18,14 @@ class ViewBlocker : BaseBlocker() {
             if (node == null || id.isNullOrEmpty()) return null
             return try {
                 val matches = node.findAccessibilityNodeInfosByViewId(id)
-                if (matches.isNullOrEmpty()) null else matches[0]
+                if (matches.isNullOrEmpty()) {
+                    null
+                } else {
+                    for (i in 1 until matches.size) {
+                        matches[i].recycle()
+                    }
+                    matches[0]
+                }
             } catch (e: Exception) {
                 null
             }

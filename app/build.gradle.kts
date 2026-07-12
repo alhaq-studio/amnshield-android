@@ -32,8 +32,8 @@ android {
         applicationId = "com.alhaq.deenshield"
         minSdk = 26
         targetSdk = 36
-        versionCode = 124
-        versionName = "0.14.5.2026"
+        versionCode = 125
+        versionName = "0.14.6.2026"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         // Fix for 16 KB page size devices (Android 15+)
@@ -57,6 +57,13 @@ android {
             versionNameSuffix = "-DEBUG"
             isDebuggable = true
             isMinifyEnabled = false
+        }
+
+        create("staging") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".staging"
+            versionNameSuffix = "-STAGING"
+            matchingFallbacks.add("debug")
         }
         
         release {

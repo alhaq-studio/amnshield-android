@@ -476,7 +476,7 @@
     
     <!-- Welcome Screen -->
     <string name="app_theme">د اپ قالب</string>
-    <string name="modern_gradient">عصري ګریډینټ (بیټا)</string>
+    <string name="modern_gradient">تود ګریډینټ</string>
     <string name="emerald_dusk">د زمرد ماښام</string>
     <string name="sunset_glow">د لمر لوېدو رنا</string>
     <string name="light_mode">روښانه حالت</string>

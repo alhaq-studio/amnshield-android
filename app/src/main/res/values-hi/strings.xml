@@ -476,7 +476,7 @@
     
     <!-- Welcome Screen -->
     <string name="app_theme">ऐप थीम</string>
-    <string name="modern_gradient">आधुनिक ग्रेडिएंट (बीटा)</string>
+    <string name="modern_gradient">वार्म ग्रेडिएंट</string>
     <string name="emerald_dusk">पन्ना सांझ</string>
     <string name="sunset_glow">सूर्यास्त चमक</string>
     <string name="light_mode">हल्का मोड</string>

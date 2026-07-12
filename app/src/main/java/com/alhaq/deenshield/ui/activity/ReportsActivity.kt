@@ -1,8 +1,10 @@
 package com.alhaq.deenshield.ui.activity
 
 import android.content.Intent
+import android.app.AppOpsManager
 import android.os.Bundle
 import android.widget.TextView
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,6 +15,7 @@ import com.alhaq.deenshield.ui.dto.Report
 import com.alhaq.deenshield.utils.ReportGenerator
 import com.alhaq.deenshield.utils.BlockingStatsManager
 import com.alhaq.deenshield.utils.SavedPreferencesLoader
+import com.alhaq.deenshield.utils.UsageStatsHelper
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import java.io.File
@@ -30,6 +33,8 @@ class ReportsActivity : AppCompatActivity() {
     private lateinit var chipTotalBlocks: Chip
     private lateinit var chipFocusTime: Chip
     private lateinit var chipReelsScrolled: Chip
+    private lateinit var txtUsageRecommendation: TextView
+    private var topRiskyAppName: String? = null
 
     private var currentDate: LocalDate = LocalDate.now()
     private var latestReports: List<Report> = emptyList()
@@ -57,6 +62,7 @@ class ReportsActivity : AppCompatActivity() {
             chipTotalBlocks = findViewById(R.id.chip_total_blocks)
             chipFocusTime = findViewById(R.id.chip_focus_time)
             chipReelsScrolled = findViewById(R.id.chip_reels_scrolled)
+            txtUsageRecommendation = findViewById(R.id.txt_usage_recommendation)
 
             btnPrevDay.setOnClickListener {
                 currentDate = currentDate.minusDays(1)
@@ -124,6 +130,8 @@ class ReportsActivity : AppCompatActivity() {
             val reelsData = SavedPreferencesLoader(this).getReelsScrolled()
             val reelsToday = reelsData[currentDate.toString()] ?: 0
             chipReelsScrolled.text = "$reelsToday reels"
+
+            refreshUsageRecommendation()
         } catch (t: Throwable) {
             android.util.Log.e("ReportsActivity", "refreshReports failed", t)
             latestReports = emptyList()
@@ -131,12 +139,78 @@ class ReportsActivity : AppCompatActivity() {
             chipTotalBlocks.text = "0 blocks"
             chipFocusTime.text = "0m focus"
             chipReelsScrolled.text = "0 reels"
+            txtUsageRecommendation.text = "Could not calculate app usage recommendation for this day."
             android.widget.Toast.makeText(
                 this,
                 "Could not load report for this day",
                 android.widget.Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    private fun refreshUsageRecommendation() {
+        if (!hasUsageStatsPermission()) {
+            topRiskyAppName = null
+            txtUsageRecommendation.text = "Grant usage access to enable app-level recommendations."
+            return
+        }
+
+        val stats = UsageStatsHelper(this).getForegroundStatsByDay(currentDate)
+            .filter {
+                it.totalTime >= 180_000L &&
+                    !it.packageName.equals("com.alhaq.deenshield", ignoreCase = true) &&
+                    !it.packageName.equals("android", ignoreCase = true) &&
+                    !it.packageName.equals("com.android.systemui", ignoreCase = true)
+            }
+
+        val top = stats.maxByOrNull { it.totalTime }
+        if (top == null) {
+            topRiskyAppName = null
+            txtUsageRecommendation.text = "No high-risk app usage detected for this day."
+            return
+        }
+
+        topRiskyAppName = getAppLabel(top.packageName)
+
+        val minutes = (top.totalTime / 60000L).toInt()
+        val sessions = top.sessions.size
+        val riskText = when {
+            minutes >= 240 || sessions >= 35 -> "High"
+            minutes >= 120 || sessions >= 20 -> "Moderate"
+            else -> "Elevated"
+        }
+
+        txtUsageRecommendation.text =
+            "$riskText risk: ${topRiskyAppName ?: top.packageName} used ${minutes}m across $sessions sessions. " +
+                "Consider limiting usage in App Blocker."
+    }
+
+    private fun getAppLabel(packageName: String): String {
+        return try {
+            val info = packageManager.getApplicationInfo(packageName, 0)
+            packageManager.getApplicationLabel(info).toString()
+        } catch (_: Exception) {
+            packageName
+        }
+    }
+
+    private fun hasUsageStatsPermission(): Boolean {
+        val appOpsManager = getSystemService(AppOpsManager::class.java)
+        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            appOpsManager.unsafeCheckOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                android.os.Process.myUid(),
+                packageName
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            appOpsManager.checkOpNoThrow(
+                AppOpsManager.OPSTR_GET_USAGE_STATS,
+                android.os.Process.myUid(),
+                packageName
+            )
+        }
+        return mode == AppOpsManager.MODE_ALLOWED
     }
 
     private fun exportReport(reports: List<Report>) {

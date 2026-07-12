@@ -1,6 +1,6 @@
 # Privacy Policy for AmnShield
 
-**Last Updated: 2026-04-25**
+**Last Updated: 2026-05-15** · _Policy last reviewed for accuracy: 2026-05-29_
 
 ## 1. Introduction
 
@@ -16,6 +16,7 @@ To provide our features, AmnShield collects information in the following ways:
 
 *   **Account Information:** When you choose to sign in with your Google Account, we receive your basic profile information, such as your name and email address, as provided by Google. This is used solely for authentication and managing premium features.
 *   **Configuration Data:** You provide us with your preferences and settings, such as lists of blocked applications, blocked keywords, focus mode configurations, and other settings you configure within the app. This data is stored locally on your device.
+*   **Schedule and Limit Rules:** App block schedules, grouped unified schedules, and app launch-limit rules are stored locally on your device to enforce your selected controls.
 
 ### b. Information Collected Automatically Through App Usage
 
@@ -24,10 +25,9 @@ This is the most sensitive category of data, and we want to be exceptionally cle
 *   **Application Usage Data:**
     *   We monitor the applications you use (`packageName`) to enforce your app blocking and focus mode rules.
     *   We use Android's `UsageStatsManager` API to gather aggregated screen time for different apps to display usage statistics to you within the app.
-*   **On-Screen Content (for Keyword and Smart Features):**
+*   **On-Screen Content (for Keyword and Wellbeing Features):**
     *   **Keyword Blocker:** The Accessibility Service analyzes text appearing on your screen in real-time to identify and block keywords that you have defined.
-    *   **Smart Blur / Smart Content Moderation (Premium Feature):** For this feature, the Accessibility Service analyzes on-screen text and images. This content is passed to an on-device machine learning model (TensorFlow Lite) to detect potentially inappropriate content (e.g., nudity, suggestive content).
-    *   **Crucially, all this analysis happens locally.** The text, images, and videos from other apps never leave your device.
+    *   **Crucially, all this analysis happens locally.** The text from other apps never leaves your device.
 *   **Crash Logs and Error Reports:** The application generates logs when it crashes or encounters errors. These logs contain:
     *   Device information (manufacturer, model, Android version)
     *   App version and error details
@@ -49,13 +49,11 @@ We require certain permissions to provide the features of AmnShield. Here is a d
 *   **Accessibility Service:** This is the core permission that allows AmnShield to function. We use it to:
     *   Detect the app you are currently using to enforce app blocking and focus mode.
     *   Read the text on your screen to identify and block keywords.
-    *   Analyze on-screen content for the Smart Blur feature.
     *   **We do not log or store any of this data.** It is processed in real-time on your device and then discarded.
 *   **Package Usage Stats:** This permission allows us to access your app usage history. We use this to:
     *   Show you detailed statistics about your app usage.
     *   **This data is stored locally on your device and is not transmitted to our servers.**
 *   **System Alert Window (Overlay):** This permission allows us to display content over other apps. We use this to:
-    *   Show the Smart Blur overlay when inappropriate content is detected.
     *   Display the warning screen when a blocked app or view is accessed.
 *   **Device Administrator:** This permission is optional and is only required for the Anti-Uninstall feature. It allows us to:
     *   Prevent the app from being uninstalled without your permission.
@@ -73,9 +71,9 @@ We require certain permissions to provide the features of AmnShield. Here is a d
 We use the information we collect solely to provide and improve the functionality of the AmnShield app.
 
 *   **To Provide Core Features:** Your configuration data and the data from the Accessibility Service are used to make the app, view, and keyword blockers work as you've configured them.
+*   **To Enforce Scheduled Controls:** Locally stored schedule and launch-limit data are used to apply time-based blocking, feature toggles, and grouped management actions you configure.
 *   **To Display Your Stats:** App usage data is used to generate the charts and statistics you see on the "Stats" screen.
 *   **To Authenticate and Manage Your Account:** Your Google Account information is used to sign you in and verify your premium status.
-*   **For On-Device Smart Features:** Text and image data are used locally by the on-device machine learning models to provide smart content moderation.
 *   **To Maintain Reliability:** Local diagnostics support troubleshooting when you choose to export reports.
 *   **To Run Protection Workflows:** Boot restore, install-event auto protection, widgets, and reminders use local settings stored on your device.
 *   **To Improve the App:** Anonymized crash logs, which you voluntarily share, help us diagnose and fix bugs.

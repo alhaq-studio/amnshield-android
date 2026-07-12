@@ -55,6 +55,7 @@ import com.alhaq.deenshield.databinding.DialogRemoveAntiUninstallBinding
 import com.alhaq.deenshield.receivers.AdminReceiver
 import com.alhaq.deenshield.services.DeenShieldAccessibilityService
 import com.alhaq.deenshield.ui.fragments.HomeFragment
+import com.alhaq.deenshield.ui.fragments.BlocksFragment
 import com.alhaq.deenshield.ui.fragments.StatsFragment
 import com.alhaq.deenshield.ui.fragments.SettingsFragment
 import com.alhaq.deenshield.ui.activity.FragmentActivity
@@ -69,7 +70,6 @@ import com.alhaq.deenshield.utils.UserFeedback
 import com.alhaq.deenshield.utils.ZipUtils
 import com.alhaq.deenshield.utils.BillingClientWrapper
 import com.alhaq.deenshield.premium.PremiumManager
-import com.alhaq.deenshield.permissions.PermissionsBottomSheet
 import com.alhaq.deenshield.permissions.PermissionsManager
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -200,10 +200,7 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, FragmentActivity::class.java)
             intent.putExtra("fragment", WelcomeFragment.FRAGMENT_ID)
             startActivity(intent, options.toBundle())
-            // Show permissions bottom sheet on first launch
-            val permissionsBottomSheet = PermissionsBottomSheet()
-            permissionsBottomSheet.show(supportFragmentManager, PermissionsBottomSheet.TAG)
-            setFirstLaunchComplete(true)
+            // Onboarding and permissions are handled by FragmentActivity / PermissionsFragment.
         }
         showDonationDialog()
     }
@@ -236,9 +233,9 @@ class MainActivity : AppCompatActivity() {
                     startActivity(intent)
                     true
                 }
-                R.id.navigation_settings -> {
+                R.id.navigation_blocks -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.nav_host_fragment, SettingsFragment())
+                        .replace(R.id.nav_host_fragment, BlocksFragment())
                         .commit()
                     true
                 }
@@ -282,10 +279,15 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.action_settings -> {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.nav_host_fragment, SettingsFragment())
-                    .commit()
-                binding.bottomNavigation.selectedItemId = R.id.navigation_settings
+                openSettingsScreen()
+                true
+            }
+            R.id.action_faq -> {
+                showFAQDialog()
+                true
+            }
+            R.id.action_feedback -> {
+                showFeedbackDialog()
                 true
             }
             R.id.action_about -> {
@@ -325,6 +327,7 @@ class MainActivity : AppCompatActivity() {
                     val selectedApps = result.data?.getStringArrayListExtra("SELECTED_APPS")
                     selectedApps?.let {
                         savedPreferencesLoader.saveFocusModeSelectedApps(selectedApps)
+                        sendRefreshRequest(DeenShieldAccessibilityService.INTENT_ACTION_REFRESH_FOCUS_MODE)
                     }
                 }
             }
@@ -1159,19 +1162,19 @@ class MainActivity : AppCompatActivity() {
                     val intent = Intent(this, ReportsActivity::class.java)
                     startActivity(intent)
                 }
-                R.id.nav_about -> {
-                    showAboutDialog()
-                }
-                R.id.nav_faq -> {
-                    showFAQDialog()
-                }
-                R.id.nav_feedback -> {
-                    showFeedbackDialog()
+                R.id.nav_settings -> {
+                    openSettingsScreen()
                 }
             }
             drawerLayout.closeDrawer(GravityCompat.START)
             true
         }
+    }
+
+    private fun openSettingsScreen() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.nav_host_fragment, SettingsFragment())
+            .commit()
     }
     
     private fun updateNavigationHeader(account: GoogleSignInAccount?) {

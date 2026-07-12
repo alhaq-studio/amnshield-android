@@ -19,12 +19,15 @@ import com.alhaq.deenshield.services.DeenShieldAccessibilityService
 import com.alhaq.deenshield.ui.activity.SelectAppsActivity
 import com.alhaq.deenshield.ui.activity.TimedActionActivity
 import com.alhaq.deenshield.ui.activity.ManageKeywordsActivity
+import com.alhaq.deenshield.ui.activity.FragmentActivity
+import com.alhaq.deenshield.ui.fragments.ManageBlockSchedulesFragment
 import com.alhaq.deenshield.ui.dialogs.TweakAppBlockerWarning
 import com.alhaq.deenshield.ui.dialogs.TweakViewBlockerCheatHours
 import com.alhaq.deenshield.ui.dialogs.TweakViewBlockerWarning
 import com.alhaq.deenshield.ui.dialogs.TweakUsageTracker
 import com.alhaq.deenshield.ui.dialogs.TweakKeywordBlocker
 import com.alhaq.deenshield.ui.dialogs.TweakKeywordPack
+import com.alhaq.deenshield.ui.fragments.usage.AllAppsUsageFragment
 import com.alhaq.deenshield.utils.SavedPreferencesLoader
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.alhaq.deenshield.premium.PremiumManager
@@ -120,6 +123,20 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
             cheatHoursLauncher.launch(intent, activityOptions)
         }
 
+        binding.btnBlockSchedules.setOnClickListener {
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+            }
+            startActivity(intent)
+        }
+
+        binding.btnLaunchLimits.setOnClickListener {
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", com.alhaq.deenshield.ui.fragments.ManageLaunchLimitsFragment.FRAGMENT_ID)
+            }
+            startActivity(intent)
+        }
+
         binding.btnWarningScreen.setOnClickListener {
             TweakAppBlockerWarning(savedPreferencesLoader).show(
                 childFragmentManager,
@@ -185,6 +202,8 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
     private fun setAppBlockerControlsEnabled(enabled: Boolean) {
         binding.btnSelectApps.isEnabled = enabled
         binding.btnCheatHours.isEnabled = enabled
+        binding.btnBlockSchedules.isEnabled = enabled
+        binding.btnLaunchLimits.isEnabled = enabled
         binding.btnWarningScreen.isEnabled = enabled
         binding.switchAutoBlock.isEnabled = enabled
         binding.btnSelectCategories.isEnabled = enabled

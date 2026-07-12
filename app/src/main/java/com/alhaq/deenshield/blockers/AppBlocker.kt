@@ -1,69 +1,105 @@
 package com.alhaq.deenshield.blockers
 
 import android.os.SystemClock
-import com.alhaq.deenshield.ui.activity.TimedActionActivity
+import com.alhaq.deenshield.data.blockers.AppBlockScheduleRule
+import com.alhaq.deenshield.utils.SavedPreferencesLoader
+import com.alhaq.deenshield.utils.ScheduleUtils
 import com.alhaq.deenshield.utils.TimeTools
+import com.alhaq.deenshield.ui.activity.TimedActionActivity
 import java.util.Calendar
 
-class AppBlocker:BaseBlocker() {
+class AppBlocker : BaseBlocker() {
 
-    // package-name -> end-time-in-millis
-    private var cooldownAppsList:MutableMap<String,Long> = mutableMapOf()
+    // package-name -> end-time-in-millis (grace period / temporary bypass)
+    private var cooldownAppsList: MutableMap<String, Long> = mutableMapOf()
 
-    // package-name -> [(start-time, end-time), ...]
+    // package-name -> [(start-time, end-time), ...] (legacy cheat hours)
     private var cheatHours: MutableMap<String, List<Pair<Int, Int>>> = mutableMapOf()
 
+    private var scheduleRules: List<AppBlockScheduleRule> = emptyList()
+
     var blockedApps = hashSetOf<String>()
-    var cheatMinuteStartTime = -1
-    var cheatMinutesEndTime = -1
 
     /**
      * Check if app needs to be blocked
      *
      * @param packageName
+     * @param savedPrefs Optional SavedPreferencesLoader for launch limit checking
      * @return
      */
-    fun doesAppNeedToBeBlocked(packageName: String): AppBlockerResult {
+    fun doesAppNeedToBeBlocked(packageName: String, savedPrefs: SavedPreferencesLoader? = null): AppBlockerResult {
 
-        // Never block DeenShield itself
-        if (packageName.equals("com.alhaq.deenshield", ignoreCase = true)) {
+        // 1. Core exclusions (Never block)
+        if (packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
+            packageName.equals("com.android.systemui", ignoreCase = true) ||
+            packageName.equals("android", ignoreCase = true)
+        ) {
             return AppBlockerResult(isBlocked = false)
         }
 
-        // Never block core system surfaces to avoid launcher/system soft-lock behavior
-        if (packageName.equals("com.android.systemui", ignoreCase = true) ||
-            packageName.equals("android", ignoreCase = true)) {
-            return AppBlockerResult(isBlocked = false)
+        val packageRules = scheduleRules.filter { it.packageName == packageName }
+
+        // 2. Check for active CHEAT rules (highest priority bypass)
+        val activeCheatEnd = getActiveRuleEndTime(
+            packageRules.filter { it.type == AppBlockScheduleRule.RuleType.CHEAT }
+        )
+        if (activeCheatEnd != null) {
+            return AppBlockerResult(isBlocked = false, cheatHoursEndTime = activeCheatEnd)
         }
 
-        if(cooldownAppsList.containsKey(packageName)){
-            val now = System.currentTimeMillis()
-            // check if app has surpassed the cooldown period
-            if (cooldownAppsList[packageName]!! <= now){
-                removeCooldownFrom(packageName)
-                return AppBlockerResult(isBlocked = true)
-            }
-
-            // app is still under cooldown
-            return AppBlockerResult(
-                isBlocked = false,
-                cooldownEndTime = cooldownAppsList[packageName]!!
-            )
-        }
-
-        // check if app is under cheat-hours
-        val endCheatMillis = getEndTimeInMillis(packageName)
+        // 3. Check for legacy cheat hours (bypass)
+        val endCheatMillis = getLegacyCheatEndTimeInMillis(packageName)
         if (endCheatMillis != null) {
             return AppBlockerResult(isBlocked = false, cheatHoursEndTime = endCheatMillis)
         }
 
-        if (blockedApps.contains(packageName)) {
-            return AppBlockerResult(
-                isBlocked = true
-            )
+        // 4. Check for Cooldown/Bypass (grace period)
+        if (cooldownAppsList.containsKey(packageName)) {
+            val now = System.currentTimeMillis()
+            val bypassEnd = cooldownAppsList[packageName]!!
+            if (now < bypassEnd) {
+                return AppBlockerResult(isBlocked = false, cooldownEndTime = bypassEnd)
+            } else {
+                removeCooldownFrom(packageName)
+                // Period expired, proceed to check if it should be blocked
+            }
         }
-        return AppBlockerResult(isBlocked = false)
+
+        // 5. Check if the app is scheduled or manually blocked
+        var shouldBeBlocked = false
+
+        // A) Launch Limit check
+        if (savedPrefs != null) {
+            val launchLimitRule = savedPrefs.getAppLaunchLimitRule(packageName)
+            if (launchLimitRule != null) {
+                val currentCount = savedPrefs.getCurrentLaunchCount(packageName, launchLimitRule)
+                if (currentCount >= launchLimitRule.maxLaunches) {
+                    shouldBeBlocked = true
+                }
+            }
+        }
+
+        // B) Block Schedules check
+        val blockRules = packageRules.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK }
+        if (blockRules.isNotEmpty()) {
+            val activeBlockEnd = getActiveRuleEndTime(blockRules)
+            if (activeBlockEnd != null) {
+                shouldBeBlocked = true
+            }
+        }
+
+        // C) Manual Block List check
+        if (blockedApps.contains(packageName)) {
+            // If there are BLOCK rules defined for this app, they override the manual list.
+            // If none are active, we don't block. If there are NO rules, we block always.
+            if (blockRules.isEmpty()) {
+                shouldBeBlocked = true
+            }
+        }
+
+        return AppBlockerResult(isBlocked = shouldBeBlocked)
     }
+
     fun putCooldownTo(packageName: String, endTime: Long) {
         cooldownAppsList[packageName] = endTime
     }
@@ -82,80 +118,64 @@ class AppBlocker:BaseBlocker() {
         return HashMap(cooldownAppsList)
     }
 
-    /**
-     * Check if the package is currently under cheat hours.
-     *
-     * @param packageName The app package name.
-     * @return Returns null if the app is not under cheat hours, or the timestamp (uptimeMillis) when it ends.
-     */
-    private fun getEndTimeInMillis(packageName: String): Long? {
-        if (cheatHours[packageName] == null) return null
+    private fun getLegacyCheatEndTimeInMillis(packageName: String): Long? {
+        val rules = cheatHours[packageName] ?: return null
+        val nowMillis = System.currentTimeMillis()
 
-        val currentTime = Calendar.getInstance()
-        val currentHour = currentTime.get(Calendar.HOUR_OF_DAY)
-        val currentMinute = currentTime.get(Calendar.MINUTE)
-
-        val currentMinutes = TimeTools.convertToMinutesFromMidnight(currentHour, currentMinute)
-        val uptimeNow = SystemClock.uptimeMillis()
-
-        cheatHours[packageName]?.forEach { (startMinutes, endMinutes) ->
-            if ((startMinutes <= endMinutes && currentMinutes in startMinutes until endMinutes) ||
-                (startMinutes > endMinutes && (currentMinutes >= startMinutes || currentMinutes < endMinutes))
-            ) {
-                var dayOffsetMinutes = 0
-
-                // if cheat hours cross midnight and it is still the first day treat the end time as tomorrow
-                if (startMinutes > endMinutes && currentMinutes > endMinutes) {
-                    dayOffsetMinutes = 1440
-                }
-
-                // Convert endMinutes to uptimeMillis
-                val diffMinutes = endMinutes + dayOffsetMinutes - currentMinutes
-
-                val endTimeMillis = uptimeNow + (diffMinutes * 60 * 1000)
-
-                return endTimeMillis
-            }
+        rules.forEach { (startMinutes, endMinutes) ->
+            val endTime = ScheduleUtils.getDailyWindowEndTime(startMinutes, endMinutes, nowMillis)
+            if (endTime != null) return endTime
         }
         return null
     }
-
 
     fun refreshCheatHoursData(cheatList: List<TimedActionActivity.AutoTimedActionItem>) {
         cheatHours.clear()
         cheatList.forEach { item ->
             val startTime = item.startTimeInMins
             val endTime = item.endTimeInMins
-            val packageNames: ArrayList<String> = item.packages
+            item.packages.forEach { pkg ->
+                val list = cheatHours.getOrPut(pkg) { mutableListOf() } as MutableList
+                list.add(Pair(startTime, endTime))
+            }
+        }
+    }
 
-            packageNames.forEach { packageName ->
+    fun refreshScheduleRules(rules: List<AppBlockScheduleRule>) {
+        scheduleRules = rules
+    }
 
-                if (cheatHours.containsKey(packageName)) {
-                    val cheatHourTimeData = cheatHours[packageName].orEmpty()
-                    val cheatHourNewTimeData: MutableList<Pair<Int, Int>> =
-                        cheatHourTimeData.toMutableList()
+    private fun getActiveRuleEndTime(rules: List<AppBlockScheduleRule>): Long? {
+        if (rules.isEmpty()) return null
 
-                    cheatHourNewTimeData.add(Pair(startTime, endTime))
-                    cheatHours[packageName] = cheatHourNewTimeData
-                } else {
-                    cheatHours[packageName] = listOf(Pair(startTime, endTime))
+        val nowMillis = System.currentTimeMillis()
+        var latestEnd: Long? = null
+
+        rules.forEach { rule ->
+            val candidateEnd = when (rule.recurrence) {
+                AppBlockScheduleRule.Recurrence.ALWAYS -> nowMillis + (24L * 60L * 60L * 1000L)
+                AppBlockScheduleRule.Recurrence.HOURLY -> {
+                    if (rule.activeUntilMillis > nowMillis) rule.activeUntilMillis else null
                 }
+                AppBlockScheduleRule.Recurrence.DAILY -> {
+                    ScheduleUtils.getDailyWindowEndTime(rule.startMinute, rule.endMinute, nowMillis)
+                }
+                AppBlockScheduleRule.Recurrence.WEEKLY -> {
+                    ScheduleUtils.getWeeklyWindowEndTime(rule.startMinute, rule.endMinute, rule.selectedDays, nowMillis)
+                }
+            }
+
+            if (candidateEnd != null) {
+                latestEnd = if (latestEnd == null) candidateEnd else maxOf(latestEnd, candidateEnd)
             }
         }
 
+        return latestEnd
     }
 
-    /**
-     * App blocker check result
-     *
-     * @property isBlocked
-     * @property cheatHoursEndTime specifies when cheat-hour ends. returns -1 if not in cheat-hour
-     * @property cooldownEndTime specifies when cooldown ends. returns -1 if not in cooldown
-     */
     data class AppBlockerResult(
         val isBlocked: Boolean,
         val cheatHoursEndTime: Long = -1L,
         val cooldownEndTime: Long = -1L
     )
-
 }

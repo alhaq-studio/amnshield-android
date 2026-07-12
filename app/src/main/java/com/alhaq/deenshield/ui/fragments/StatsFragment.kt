@@ -18,6 +18,7 @@ import com.alhaq.deenshield.ui.activity.UsageMetricsActivity
 import com.alhaq.deenshield.ui.fragments.usage.AllAppsUsageFragment
 import com.alhaq.deenshield.utils.BlockingStatsManager
 import com.alhaq.deenshield.utils.UsageStatsHelper
+import com.alhaq.deenshield.utils.SavedPreferencesLoader
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,6 +31,7 @@ class StatsFragment : Fragment() {
     private var _binding: FragmentStatsBinding? = null
     private val binding get() = _binding!!
     private val premiumManager by lazy { PremiumManager.getInstance(requireContext()) }
+    private val savedPreferencesLoader by lazy { SavedPreferencesLoader(requireContext()) }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -109,116 +111,127 @@ class StatsFragment : Fragment() {
     private fun loadStats() {
         lifecycleScope.launch {
             context?.let { ctx ->
-                val usageStatsHelper = UsageStatsHelper(ctx)
-                
-                withContext(Dispatchers.IO) {
-                    val calendar = Calendar.getInstance()
-                    calendar.set(Calendar.HOUR_OF_DAY, 0)
-                    calendar.set(Calendar.MINUTE, 0)
-                    calendar.set(Calendar.SECOND, 0)
-                    calendar.set(Calendar.MILLISECOND, 0)
-                    val startTime = calendar.timeInMillis
-                    val endTime = System.currentTimeMillis()
+                try {
+                    val usageStatsHelper = UsageStatsHelper(ctx)
 
-                    // Get usage stats using getForegroundStatsByTimestamps
-                    val statsList = usageStatsHelper.getForegroundStatsByTimestamps(startTime, endTime)
-                    val totalTime = statsList.sumOf { it.totalTime }
+                    withContext(Dispatchers.IO) {
+                        val calendar = Calendar.getInstance()
+                        calendar.set(Calendar.HOUR_OF_DAY, 0)
+                        calendar.set(Calendar.MINUTE, 0)
+                        calendar.set(Calendar.SECOND, 0)
+                        calendar.set(Calendar.MILLISECOND, 0)
+                        val startTime = calendar.timeInMillis
+                        val endTime = System.currentTimeMillis()
 
-                    // Get yesterday's reels count for comparison
-                    val savedPreferencesLoader = com.alhaq.deenshield.utils.SavedPreferencesLoader(ctx)
-                    val reelsData = savedPreferencesLoader.getReelsScrolled()
-                    val todayDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-                    val reelsToday = reelsData[todayDate] ?: 0
-                    val yesterdayDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).let { formatter ->
-                        val yesterdayCal = Calendar.getInstance().apply {
-                            add(Calendar.DAY_OF_YEAR, -1)
+                        // Get usage stats using getForegroundStatsByTimestamps
+                        val statsList = usageStatsHelper.getForegroundStatsByTimestamps(startTime, endTime)
+                        val totalTime = statsList.sumOf { it.totalTime }
+
+                        // Get yesterday's reels count for comparison
+                        val reelsData = savedPreferencesLoader.getReelsScrolled()
+                        val todayDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                        val reelsToday = reelsData[todayDate] ?: 0
+                        val yesterdayDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).let { formatter ->
+                            val yesterdayCal = Calendar.getInstance().apply {
+                                add(Calendar.DAY_OF_YEAR, -1)
+                            }
+                            formatter.format(yesterdayCal.time)
                         }
-                        formatter.format(yesterdayCal.time)
+                        val yesterdayReels = reelsData[yesterdayDate] ?: 0
+
+                        // Get top 3 apps
+                        val sortedApps = statsList.sortedByDescending { it.totalTime }.take(3)
+
+                        withContext(Dispatchers.Main) {
+                            // Update screen time
+                            val hours = totalTime / (1000 * 60 * 60)
+                            val minutes = (totalTime % (1000 * 60 * 60)) / (1000 * 60)
+                            binding.txtScreenTime.text = "${hours}h ${minutes}m"
+
+                            // Update reels count
+                            binding.txtReelsCount.text = reelsToday.toString()
+
+                            // Calculate percentage change and color-code
+                            val percentage = if (yesterdayReels > 0) {
+                                ((reelsToday - yesterdayReels).toFloat() / yesterdayReels * 100).toInt()
+                            } else {
+                                0
+                            }
+                            binding.txtReelsPercentage.text = if (percentage >= 0) "+$percentage%" else "$percentage%"
+                            // Red = more reels (worse), Green = fewer reels (better)
+                            val pctColor = if (percentage <= 0)
+                                ContextCompat.getColor(requireContext(), R.color.md_theme_primary)
+                            else
+                                ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
+                            binding.txtReelsPercentage.setTextColor(pctColor)
+
+                            // Update daily report summary with live blocking stats
+                            val blockStats = BlockingStatsManager.getInstance(ctx).getTodayStats()
+                            val totalBlocks = blockStats.appBlocksCount + blockStats.keywordBlocksCount + blockStats.viewBlocksCount
+                            val summaryParts = mutableListOf<String>()
+                            if (totalBlocks > 0) summaryParts.add("$totalBlocks blocks")
+                            if (blockStats.focusSessionsCount > 0) summaryParts.add("${blockStats.focusSessionsCount} focus sessions")
+                            if (blockStats.totalFocusMinutes > 0) summaryParts.add("${formatMinutes(blockStats.totalFocusMinutes)} focus time")
+                            if (reelsToday > 0) summaryParts.add("$reelsToday reels scrolled")
+                            binding.dailyReportSummary.text = if (summaryParts.isNotEmpty()) {
+                                summaryParts.joinToString(" · ")
+                            } else {
+                                "No activity recorded yet today."
+                            }
+
+                            // Update top apps
+                            binding.txtTopApp1.text = "1. No usage yet"
+                            binding.txtTopApp2.text = "2. No usage yet"
+                            binding.txtTopApp3.text = "3. No usage yet"
+
+                            if (sortedApps.isNotEmpty()) {
+                                val app1 = sortedApps.getOrNull(0)
+                                if (app1 != null) {
+                                    val appName = try {
+                                        val appInfo = ctx.packageManager.getApplicationInfo(app1.packageName, 0)
+                                        ctx.packageManager.getApplicationLabel(appInfo).toString()
+                                    } catch (e: Exception) {
+                                        app1.packageName
+                                    }
+                                    val appTime = app1.totalTime / (1000 * 60)
+                                    binding.txtTopApp1.text = "1. $appName - ${appTime}m"
+                                }
+
+                                val app2 = sortedApps.getOrNull(1)
+                                if (app2 != null) {
+                                    val appName = try {
+                                        val appInfo = ctx.packageManager.getApplicationInfo(app2.packageName, 0)
+                                        ctx.packageManager.getApplicationLabel(appInfo).toString()
+                                    } catch (e: Exception) {
+                                        app2.packageName
+                                    }
+                                    val appTime = app2.totalTime / (1000 * 60)
+                                    binding.txtTopApp2.text = "2. $appName - ${appTime}m"
+                                }
+
+                                val app3 = sortedApps.getOrNull(2)
+                                if (app3 != null) {
+                                    val appName = try {
+                                        val appInfo = ctx.packageManager.getApplicationInfo(app3.packageName, 0)
+                                        ctx.packageManager.getApplicationLabel(appInfo).toString()
+                                    } catch (e: Exception) {
+                                        app3.packageName
+                                    }
+                                    val appTime = app3.totalTime / (1000 * 60)
+                                    binding.txtTopApp3.text = "3. $appName - ${appTime}m"
+                                }
+                            }
+                        }
                     }
-                    val yesterdayReels = reelsData[yesterdayDate] ?: 0
-
-                    // Get top 3 apps
-                    val sortedApps = statsList.sortedByDescending { it.totalTime }.take(3)
-
-                    withContext(Dispatchers.Main) {
-                        // Update screen time
-                        val hours = totalTime / (1000 * 60 * 60)
-                        val minutes = (totalTime % (1000 * 60 * 60)) / (1000 * 60)
-                        binding.txtScreenTime.text = "${hours}h ${minutes}m"
-
-                        // Update reels count
-                        binding.txtReelsCount.text = reelsToday.toString()
-
-                        // Calculate percentage change and color-code
-                        val percentage = if (yesterdayReels > 0) {
-                            ((reelsToday - yesterdayReels).toFloat() / yesterdayReels * 100).toInt()
-                        } else {
-                            0
-                        }
-                        binding.txtReelsPercentage.text = if (percentage >= 0) "+$percentage%" else "$percentage%"
-                        // Red = more reels (worse), Green = fewer reels (better)
-                        val pctColor = if (percentage <= 0)
-                            ContextCompat.getColor(requireContext(), R.color.md_theme_primary)
-                        else
-                            ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark)
-                        binding.txtReelsPercentage.setTextColor(pctColor)
-
-                        // Update daily report summary with live blocking stats
-                        val blockStats = BlockingStatsManager.getInstance(ctx).getTodayStats()
-                        val totalBlocks = blockStats.appBlocksCount + blockStats.keywordBlocksCount + blockStats.viewBlocksCount
-                        val summaryParts = mutableListOf<String>()
-                        if (totalBlocks > 0) summaryParts.add("$totalBlocks blocks")
-                        if (blockStats.focusSessionsCount > 0) summaryParts.add("${blockStats.focusSessionsCount} focus sessions")
-                        if (blockStats.totalFocusMinutes > 0) summaryParts.add("${formatMinutes(blockStats.totalFocusMinutes)} focus time")
-                        if (reelsToday > 0) summaryParts.add("$reelsToday reels scrolled")
-                        binding.dailyReportSummary.text = if (summaryParts.isNotEmpty())
-                            summaryParts.joinToString(" · ")
-                        else
-                            "No activity recorded yet today."
-
-                        // Update top apps
-                        binding.txtTopApp1.text = "1. No usage yet"
-                        binding.txtTopApp2.text = "2. No usage yet"
-                        binding.txtTopApp3.text = "3. No usage yet"
-
-                        if (sortedApps.isNotEmpty()) {
-                            val app1 = sortedApps.getOrNull(0)
-                            if (app1 != null) {
-                                val appName = try {
-                                    val appInfo = ctx.packageManager.getApplicationInfo(app1.packageName, 0)
-                                    ctx.packageManager.getApplicationLabel(appInfo).toString()
-                                } catch (e: Exception) {
-                                    app1.packageName
-                                }
-                                val appTime = app1.totalTime / (1000 * 60)
-                                binding.txtTopApp1.text = "1. $appName - ${appTime}m"
-                            }
-
-                            val app2 = sortedApps.getOrNull(1)
-                            if (app2 != null) {
-                                val appName = try {
-                                    val appInfo = ctx.packageManager.getApplicationInfo(app2.packageName, 0)
-                                    ctx.packageManager.getApplicationLabel(appInfo).toString()
-                                } catch (e: Exception) {
-                                    app2.packageName
-                                }
-                                val appTime = app2.totalTime / (1000 * 60)
-                                binding.txtTopApp2.text = "2. $appName - ${appTime}m"
-                            }
-
-                            val app3 = sortedApps.getOrNull(2)
-                            if (app3 != null) {
-                                val appName = try {
-                                    val appInfo = ctx.packageManager.getApplicationInfo(app3.packageName, 0)
-                                    ctx.packageManager.getApplicationLabel(appInfo).toString()
-                                } catch (e: Exception) {
-                                    app3.packageName
-                                }
-                                val appTime = app3.totalTime / (1000 * 60)
-                                binding.txtTopApp3.text = "3. $appName - ${appTime}m"
-                            }
-                        }
-                    }
+                } catch (t: Throwable) {
+                    binding.txtScreenTime.text = "0h 0m"
+                    binding.txtReelsCount.text = "0"
+                    binding.txtReelsPercentage.text = "0%"
+                    binding.dailyReportSummary.text = "Stats unavailable. Tap Refresh below."
+                    binding.txtTopApp1.text = "1. No usage yet"
+                    binding.txtTopApp2.text = "2. No usage yet"
+                    binding.txtTopApp3.text = "3. No usage yet"
+                    android.util.Log.e("StatsFragment", "Failed to load stats", t)
                 }
             }
         }

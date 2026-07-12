@@ -1,5 +1,77 @@
 # AI Image Blocking - Testing Guide
 
+## Latest UI and Navigation Updates (May 2026)
+
+## Test Coverage Overview
+
+| Feature Area | Coverage | Notes |
+|---|---|---|
+| Smart Blur / AI image blocking | Complete | Tests 1-10 |
+| App Blocker | Expanded | Test 11 |
+| Keyword Blocker | Expanded | Test 12 |
+| Focus Mode | Expanded | Test 13 |
+| Cheat Hours | Expanded | Test 14 |
+| Schedules & Groups | Expanded | Test 15 |
+| Launch Limits | Expanded | Test 16 |
+| Error Reporting | Expanded | Test 17 |
+| Blocks Dashboard | Expanded | Test 18 (see below) |
+
+### Navigation Sanity Check
+1. Open app and verify bottom navigation shows: **Home, Stats, Blocks, Profile**
+2. Confirm **Settings** is available from top-right overflow menu (not bottom nav)
+3. Open left drawer and confirm **About** is not present there
+4. Open top-right overflow and confirm **About** exists there
+5. Tap **Stats** tab then tap **View Reports** button — confirm it opens `ReportsActivity` (Reports is not a bottom-nav tab)
+
+### Blocks Dashboard Sanity Check
+1. Open **Blocks** from bottom navigation
+2. Verify all management cards are visible:
+  - App Blocker
+  - Keyword Blocker
+  - Focus Mode
+  - Cheat Hours
+  - Schedules
+  - Launch Limits
+3. Tap the floating **+** button and verify one all-in-one setup menu appears with those same options
+4. Verify each option opens the expected screen/dialog without crash
+
+### Launch Limits Flow Check
+1. Go to **Stats** → **View Details** → app usage breakdown for any app
+2. Tap **App Opens** and create a launch limit
+3. Return to Blocks dashboard and verify launch limit count updates
+4. Open **Manage Launch Limits** and verify edit/delete works
+
+### Test 18 — Blocks Dashboard Status Cards
+
+**Goal**: Verify Blocks dashboard status cards reflect live enable/disable state.
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Open Blocks tab | All status cards visible |
+| 2 | Enable App Blocker + add a blocked app | App Blocker card shows active state |
+| 3 | Disable App Blocker | App Blocker card shows inactive state |
+| 4 | Enable Keyword Blocker + add a keyword | Keyword Blocker card shows active state |
+| 5 | Enable Focus Mode and start a session | Focus Mode card shows active state |
+| 6 | Tap Schedules card | Opens ManageBlockSchedulesFragment |
+| 7 | Tap Launch Limits card | Opens ManageLaunchLimitsFragment |
+| 8 | Tap FAB + | All-in-one setup menu appears with all 6 options |
+
+### Test 18b — Schedule Group Actions
+
+**Goal**: Verify group schedule create/edit/duplicate/delete is clear and safe.
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Create a unified schedule with 3+ apps | Group rule appears in schedules list |
+| 2 | Tap the group row edit button | Dialog title shows "Manage App Group (N rules)" |
+| 3 | Tap "View group members" | Shows list of app names in the group |
+| 4 | Tap "Duplicate group (N rules)" | Group is duplicated; total rule count increases |
+| 5 | Tap "Delete entire group (N rules)" | Confirmation shows exact count before delete |
+| 6 | Confirm delete | Toast shows "Deleted N schedule rules from batch" |
+| 7 | Verify list updates and service refreshes | No stale state observed |
+
+---
+
 ## Prerequisites
 
 ### 1. Enable Features
@@ -305,6 +377,115 @@ Export available: CSV, TXT
 #### 10.5: Invalid Package Name
 1. (Developer test) Pass null package name
 2. **Expected**: Default thresholds used
+
+---
+
+## Core Blocker & Management Tests
+
+### Test 11: App Blocker Configuration & Management
+
+**Objective**: Verify app blocker setup and management consistency.
+
+**Steps**:
+1. Open **Blocks** tab and enter **App Blocker** config.
+2. Add at least 2 apps to blocked apps list.
+3. Open **Blocks → Schedules** and confirm blocked apps appear in candidate scope.
+4. Remove one blocked app and verify status updates in App Blocker config.
+
+**Expected Results**:
+- Blocked app count is reflected consistently across App Blocker and Schedules manager.
+- Removed app no longer appears as blocked target unless re-added.
+
+### Test 12: Keyword Blocker Setup & Trigger Path
+
+**Objective**: Verify keyword list + feature toggle work with service refresh.
+
+**Steps**:
+1. Add 2 custom keywords in Keyword Blocker config.
+2. Ensure Keyword Blocker feature is enabled.
+3. Open Chrome and enter one blocked keyword in search.
+4. Disable Keyword Blocker and repeat.
+
+**Expected Results**:
+- Enabled state: keyword blocking action triggers.
+- Disabled state: no keyword blocking action triggers.
+
+### Test 13: Focus Mode Session & Enforcement
+
+**Objective**: Verify focus mode can be started and ended reliably.
+
+**Steps**:
+1. Configure Focus Mode with a short duration and one selected app.
+2. Start Focus Mode.
+3. Open selected app during session.
+4. Wait session expiry and retry.
+
+**Expected Results**:
+- During session: app is blocked according to mode.
+- After expiry: blocking stops and state is cleared.
+
+### Test 14: Cheat Hours Behavior
+
+**Objective**: Verify cheat windows allow controlled exceptions.
+
+**Steps**:
+1. Configure a cheat window for an app and keep app blocked.
+2. Enter app during active cheat window.
+3. Retry outside cheat window.
+
+**Expected Results**:
+- Active cheat window: app is temporarily allowed.
+- Outside cheat window: normal block behavior resumes.
+
+### Test 15: Schedules Manager (Individual + Group)
+
+**Objective**: Verify expanded management controls for both single and grouped schedules.
+
+**Steps**:
+1. Create one single app schedule.
+2. Create one unified app group schedule (multi-app).
+3. Create one unified feature schedule.
+4. In **Manage Schedules**, run actions:
+  - Change type
+  - Change recurrence/time
+  - Duplicate
+  - Delete
+5. For grouped schedules, use **View group members**.
+
+**Expected Results**:
+- All actions apply correctly.
+- Group actions affect all members in that group.
+- Confirmation messages show clear scope before delete.
+
+### Test 16: Launch Limits End-to-End
+
+**Objective**: Verify launch limit creation, editing, and deletion across entry points.
+
+**Steps**:
+1. Create launch limit from app usage breakdown.
+2. Edit same rule in **Manage Launch Limits**.
+3. Delete rule and verify it disappears from all screens.
+4. Confirm service refresh occurs (no stale manager state).
+
+**Expected Results**:
+- Rule changes are visible immediately in management screens.
+- Launch count display remains consistent with configured limit.
+
+### Test 17: Error Reporting & Crash Recovery
+
+**Objective**: Validate local-only diagnostics flow and user control.
+
+**Steps**:
+1. Open Settings → Error Reporting and verify toggles.
+2. Trigger a controlled non-fatal error log path.
+3. Verify crash/error data appears in local viewer.
+4. Export report text via share intent.
+5. Clear all reports and verify local data removal.
+
+**Expected Results**:
+- Logs are stored locally only.
+- Export is user-initiated.
+- Delete action removes saved diagnostics/feedback artifacts.
 
 ---
 

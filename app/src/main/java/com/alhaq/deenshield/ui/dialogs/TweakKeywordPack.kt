@@ -13,22 +13,15 @@ import com.alhaq.deenshield.utils.SavedPreferencesLoader
 
 class TweakKeywordPack : BaseDialog() {
 
-    private lateinit var sharedPreferences: SharedPreferences
-
-    @SuppressLint("ApplySharedPref")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialogManageKeywordPacks = DialogKeywordPackageBinding.inflate(layoutInflater)
 
-        // Initialize SharedPreferences
-        sharedPreferences =
-            requireContext().getSharedPreferences("keyword_packs", Context.MODE_PRIVATE)
-        
         // Get SavedPreferencesLoader from parent class or create new one
         val loader = savedPreferencesLoader ?: SavedPreferencesLoader(requireContext())
 
         // Load current preferences into dialog
         dialogManageKeywordPacks.cbAdultKeywords.isChecked =
-            sharedPreferences.getBoolean("adult_blocker", false)
+            loader.isKeywordBlockerAdultPackEnabled()
 
         // Build and show the dialog
         return MaterialAlertDialogBuilder(requireContext())
@@ -36,7 +29,7 @@ class TweakKeywordPack : BaseDialog() {
             .setView(dialogManageKeywordPacks.root)
             .setCancelable(false)
             .setPositiveButton(getString(R.string.save)) { _, _ ->
-                val wasAdultPackEnabled = sharedPreferences.getBoolean("adult_blocker", false)
+                val wasAdultPackEnabled = loader.isKeywordBlockerAdultPackEnabled()
                 val isAdultPackEnabled = dialogManageKeywordPacks.cbAdultKeywords.isChecked
                 
                 // Get current custom keywords
@@ -57,10 +50,7 @@ class TweakKeywordPack : BaseDialog() {
                 }
                 
                 // Save pack state
-                with(sharedPreferences.edit()) {
-                    putBoolean("adult_blocker", isAdultPackEnabled)
-                    commit()
-                }
+                loader.setKeywordBlockerAdultPackEnabled(isAdultPackEnabled)
 
                 // Send broadcast to refresh the KeywordBlockerService
                 sendRefreshRequest(DeenShieldAccessibilityService.INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST)

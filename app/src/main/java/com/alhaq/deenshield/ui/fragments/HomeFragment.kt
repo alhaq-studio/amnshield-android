@@ -29,6 +29,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val premiumManager by lazy { PremiumManager.getInstance(requireContext().applicationContext) }
     private val savedPreferencesLoader by lazy { SavedPreferencesLoader(requireContext()) }
+    private var serviceSnackbar: Snackbar? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -124,7 +125,7 @@ class HomeFragment : Fragment() {
             val isPremiumUser = premiumManager.isPremium()
             
             // Update Focus Mode status - check if a focus session is actually running
-            val focusModeData = com.alhaq.deenshield.utils.SavedPreferencesLoader(ctx).getFocusModeData()
+            val focusModeData = savedPreferencesLoader.getFocusModeData()
             val isFocusModeActive = isPremiumUser && focusModeData.isTurnedOn && isMainServiceEnabled
             updateChipStatus(
                 binding.chipFocusStatus,
@@ -141,8 +142,7 @@ class HomeFragment : Fragment() {
             // Update Keyword Blocker status
             // Check if any keywords are configured (custom keywords OR keyword packs)
             val hasCustomKeywords = savedPreferencesLoader.loadBlockedKeywords().isNotEmpty()
-            val keywordPacksPrefs = ctx.getSharedPreferences("keyword_blocker_packs", android.content.Context.MODE_PRIVATE)
-            val hasAdultPack = keywordPacksPrefs.getBoolean("adult_blocker", false)
+            val hasAdultPack = savedPreferencesLoader.isKeywordBlockerAdultPackEnabled()
             val isKeywordBlockerConfigured = hasCustomKeywords || hasAdultPack
             updateChipStatus(
                 binding.chipKeywordBlockerStatus,
@@ -171,6 +171,22 @@ class HomeFragment : Fragment() {
             val isAntiUninstallEnabled = antiUninstallPrefs.getBoolean("is_anti_uninstall_on", false)
             val hasDeviceAdmin = isDeviceAdminEnabled(ctx)
             updateChipStatus(binding.chipAntiUninstallStatus, isAntiUninstallEnabled && hasDeviceAdmin)
+
+            if (!isMainServiceEnabled) {
+                if (serviceSnackbar == null) {
+                    serviceSnackbar = Snackbar.make(
+                        binding.root,
+                        "DeenShield service is disabled. Please enable it for full protection.",
+                        Snackbar.LENGTH_INDEFINITE
+                    ).setAction("Enable") {
+                        openAccessibilitySettings()
+                    }
+                    serviceSnackbar?.show()
+                }
+            } else {
+                serviceSnackbar?.dismiss()
+                serviceSnackbar = null
+            }
         }
     }
 
@@ -296,6 +312,8 @@ class HomeFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        serviceSnackbar?.dismiss()
+        serviceSnackbar = null
         _binding = null
     }
 }

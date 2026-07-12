@@ -50,9 +50,9 @@ class FocusModeBlocker : BaseBlocker() {
      * @param packageName
      * @return
      */
-    fun doesAppNeedToBeBlocked(packageName: String): FocusModeResult {
+    fun doesAppNeedToBeBlocked(packageName: String, defaultLauncher: String? = null): FocusModeResult {
         // NEVER block essential system apps to prevent system instability
-        if (ESSENTIAL_SYSTEM_APPS.contains(packageName)) {
+        if (ESSENTIAL_SYSTEM_APPS.contains(packageName) || (defaultLauncher != null && packageName == defaultLauncher)) {
             return FocusModeResult(isBlocked = false)
         }
 

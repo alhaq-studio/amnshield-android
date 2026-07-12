@@ -9,7 +9,7 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
 
     private val billingClient: BillingClient = BillingClient.newBuilder(context)
         .setListener(this)
-        .enablePendingPurchases()
+        .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .build()
 
     private var onPurchaseFinished: ((BillingResult) -> Unit)? = null
@@ -43,7 +43,8 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
 
         val params = QueryProductDetailsParams.newBuilder().setProductList(productList).build()
 
-        billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+        billingClient.queryProductDetailsAsync(params) { billingResult, queryResult ->
+            val productDetailsList = queryResult.productDetailsList
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 onProductsQueried(productDetailsList)
             } else {

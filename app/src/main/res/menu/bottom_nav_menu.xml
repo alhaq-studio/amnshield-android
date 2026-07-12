@@ -16,7 +16,7 @@
         android:title="@string/reports" />
 
     <item
-        android:id="@+id/navigation_settings"
-        android:icon="@drawable/ic_deenshield_settings"
-        android:title="@string/settings" />
+        android:id="@+id/navigation_blocks"
+        android:icon="@drawable/baseline_lock_24"
+        android:title="@string/blocks" />
 </menu>

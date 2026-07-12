@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Purple Gradient theme background.
+
+    Deep violet -> royal purple -> luminous purple, angled away from status
+    bar heavy areas to keep text readability stable over surface containers.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:angle="135"
+        android:startColor="@color/purple_start"
+        android:centerColor="@color/purple_center"
+        android:endColor="@color/purple_end"
+        android:type="linear" />
+</shape>

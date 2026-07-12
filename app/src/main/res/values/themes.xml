@@ -208,7 +208,7 @@
         <item name="contentPadding">16dp</item>
     </style>
 
-    <!-- Emerald Dusk Theme -->
+    <!-- Emerald Theme (flat light, high readability) -->
     <style name="Theme.DeenShield.Emerald" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/emerald_primary</item>
         <item name="colorOnPrimary">@color/emerald_onPrimary</item>
@@ -218,11 +218,30 @@
         <item name="colorOnSecondary">@color/emerald_onSecondary</item>
         <item name="colorSecondaryContainer">@color/emerald_secondaryContainer</item>
         <item name="colorOnSecondaryContainer">@color/emerald_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/emerald_tertiary</item>
+        <item name="colorOnTertiary">@color/emerald_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/emerald_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/emerald_onTertiaryContainer</item>
+        <item name="colorError">@color/emerald_error</item>
+        <item name="colorOnError">@color/emerald_onError</item>
+        <item name="colorErrorContainer">@color/emerald_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/emerald_onErrorContainer</item>
         <item name="android:colorBackground">@color/emerald_background</item>
         <item name="colorOnBackground">@color/emerald_onBackground</item>
         <item name="colorSurface">@color/emerald_surface</item>
         <item name="colorOnSurface">@color/emerald_onSurface</item>
+        <item name="colorSurfaceVariant">@color/emerald_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/emerald_onSurfaceVariant</item>
         <item name="colorOutline">@color/emerald_outline</item>
+        <item name="colorOutlineVariant">@color/emerald_outlineVariant</item>
+        <item name="colorSurfaceContainerLowest">@color/emerald_surfaceContainerLowest</item>
+        <item name="colorSurfaceContainerLow">@color/emerald_surfaceContainerLow</item>
+        <item name="colorSurfaceContainer">@color/emerald_surfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/emerald_surfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/emerald_surfaceContainerHighest</item>
+        <item name="colorSurfaceInverse">#1D3129</item>
+        <item name="colorOnSurfaceInverse">#EAF7F1</item>
+        <item name="colorPrimaryInverse">@color/emerald_primaryContainer</item>
         <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
         <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
         <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
@@ -238,11 +257,70 @@
         <item name="colorOnSecondary">@color/sunset_onSecondary</item>
         <item name="colorSecondaryContainer">@color/sunset_secondaryContainer</item>
         <item name="colorOnSecondaryContainer">@color/sunset_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/sunset_tertiary</item>
+        <item name="colorOnTertiary">@color/sunset_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/sunset_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/sunset_onTertiaryContainer</item>
+        <item name="colorError">@color/sunset_error</item>
+        <item name="colorOnError">@color/sunset_onError</item>
+        <item name="colorErrorContainer">@color/sunset_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/sunset_onErrorContainer</item>
         <item name="android:colorBackground">@color/sunset_background</item>
         <item name="colorOnBackground">@color/sunset_onBackground</item>
         <item name="colorSurface">@color/sunset_surface</item>
         <item name="colorOnSurface">@color/sunset_onSurface</item>
+        <item name="colorSurfaceVariant">@color/sunset_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/sunset_onSurfaceVariant</item>
         <item name="colorOutline">@color/sunset_outline</item>
+        <item name="colorOutlineVariant">@color/sunset_outlineVariant</item>
+        <item name="colorSurfaceContainerLowest">@color/sunset_surfaceContainerLowest</item>
+        <item name="colorSurfaceContainerLow">@color/sunset_surfaceContainerLow</item>
+        <item name="colorSurfaceContainer">@color/sunset_surfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/sunset_surfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/sunset_surfaceContainerHighest</item>
+        <item name="colorSurfaceInverse">#4A2D22</item>
+        <item name="colorOnSurfaceInverse">#F7E9E0</item>
+        <item name="colorPrimaryInverse">@color/sunset_primaryContainer</item>
+        <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
+        <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>
+    </style>
+
+    <!-- Purple Gradient Theme -->
+    <style name="Theme.DeenShield.Purple" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/gradient_background_purple</item>
+        <item name="colorPrimary">@color/purple_primary</item>
+        <item name="colorOnPrimary">@color/purple_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/purple_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/purple_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/purple_secondary</item>
+        <item name="colorOnSecondary">@color/purple_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/purple_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/purple_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/purple_tertiary</item>
+        <item name="colorOnTertiary">@color/purple_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/purple_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/purple_onTertiaryContainer</item>
+        <item name="colorError">@color/purple_error</item>
+        <item name="colorOnError">@color/purple_onError</item>
+        <item name="colorErrorContainer">@color/purple_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/purple_onErrorContainer</item>
+        <item name="android:colorBackground">@color/purple_background</item>
+        <item name="colorOnBackground">@color/purple_onBackground</item>
+        <item name="colorSurface">@color/purple_surfaceContainer</item>
+        <item name="colorOnSurface">@color/purple_onSurface</item>
+        <item name="colorSurfaceVariant">@color/purple_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/purple_onSurfaceVariant</item>
+        <item name="colorOutline">@color/purple_outline</item>
+        <item name="colorOutlineVariant">@color/purple_outlineVariant</item>
+        <item name="colorSurfaceContainerLowest">@color/purple_surfaceContainerLowest</item>
+        <item name="colorSurfaceContainerLow">@color/purple_surfaceContainerLow</item>
+        <item name="colorSurfaceContainer">@color/purple_surfaceContainer</item>
+        <item name="colorSurfaceContainerHigh">@color/purple_surfaceContainerHigh</item>
+        <item name="colorSurfaceContainerHighest">@color/purple_surfaceContainerHighest</item>
+        <item name="colorSurfaceInverse">#F0E8FF</item>
+        <item name="colorOnSurfaceInverse">#1C1236</item>
+        <item name="colorPrimaryInverse">@color/purple_primaryContainer</item>
         <item name="materialButtonStyle">@style/Widget.DeenShield.Button</item>
         <item name="materialButtonOutlinedStyle">@style/Widget.DeenShield.Button.Outlined</item>
         <item name="borderlessButtonStyle">@style/Widget.DeenShield.Button.Text</item>

@@ -107,7 +107,8 @@ class SettingsFragment : Fragment() {
 
             binding.txtThemeStatus.text = when {
                 themeStyle == "gradient" -> getString(R.string.modern_gradient)
-                themeStyle == "emerald" -> getString(R.string.emerald_dusk)
+                themeStyle == "purple" -> getString(R.string.purple_gradient)
+                themeStyle == "emerald" -> getString(R.string.emerald_theme)
                 themeStyle == "sunset" -> getString(R.string.sunset_glow)
                 themeMode == AppCompatDelegate.MODE_NIGHT_NO -> getString(R.string.light_mode)
                 themeMode == AppCompatDelegate.MODE_NIGHT_YES -> getString(R.string.dark_mode)
@@ -290,8 +291,39 @@ class SettingsFragment : Fragment() {
     }
 
     private fun shareCrashLogs() {
-        if (activity is MainActivity) {
-            (activity as MainActivity).shareCrashLog(requireActivity())
+        val ctx = requireContext()
+        val errorManager = com.alhaq.deenshield.utils.ErrorReportManager.getInstance(ctx)
+        val report = errorManager.exportReportsAsText()
+        if (report.contains("No crash logs found.") && report.contains("No feedback submitted.")) {
+            Toast.makeText(ctx, "No crash logs found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val attachmentFile = errorManager.createBundledReportFile()
+        if (attachmentFile == null) {
+            Toast.makeText(ctx, "Failed to prepare bundled report", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val attachmentUri = androidx.core.content.FileProvider.getUriForFile(
+            ctx,
+            "${ctx.packageName}.provider",
+            attachmentFile
+        )
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "DeenShield Crash Log")
+            putExtra(Intent.EXTRA_TEXT, "Bundled crash report attached.")
+            putExtra(Intent.EXTRA_CC, arrayOf("support@alhaq-initiative.org", "alhaq.dst@gmail.com"))
+            putExtra(Intent.EXTRA_STREAM, attachmentUri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            selector = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+        }
+
+        try {
+            startActivity(Intent.createChooser(intent, "Share Crash Log"))
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "No email client found", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -519,7 +551,8 @@ class SettingsFragment : Fragment() {
             getString(R.string.dark_mode),
             getString(R.string.system_default),
             getString(R.string.modern_gradient),
-            getString(R.string.emerald_dusk),
+            getString(R.string.purple_gradient),
+            getString(R.string.emerald_theme),
             getString(R.string.sunset_glow)
         )
 
@@ -529,8 +562,9 @@ class SettingsFragment : Fragment() {
 
         var checkedItem = when {
             currentStyle == "gradient" -> 3
-            currentStyle == "emerald" -> 4
-            currentStyle == "sunset" -> 5
+            currentStyle == "purple" -> 4
+            currentStyle == "emerald" -> 5
+            currentStyle == "sunset" -> 6
             currentMode == AppCompatDelegate.MODE_NIGHT_NO -> 0
             currentMode == AppCompatDelegate.MODE_NIGHT_YES -> 1
             else -> 2
@@ -561,15 +595,20 @@ class SettingsFragment : Fragment() {
                         editor.putString("theme_style", "gradient")
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                     }
-                    4 -> { // Emerald Dusk
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                        editor.putString("theme_style", "emerald")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                    4 -> { // Purple Gradient
+                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_YES)
+                        editor.putString("theme_style", "purple")
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                     }
-                    5 -> { // Sunset Glow
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                    5 -> { // Emerald
+                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO)
+                        editor.putString("theme_style", "emerald")
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    }
+                    6 -> { // Sunset Glow (flat warm, slightly dark-ish)
+                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO)
                         editor.putString("theme_style", "sunset")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                     }
                 }
                 editor.apply()
