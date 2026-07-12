@@ -56,7 +56,6 @@ class PackageWand {
             // Other Popular Games
             "com.playrix.gardenscapes", "com.playrix.homescapes",
             "com.outfit7.mytalkingtomfree", "com.outfit7.mytalkingtom2",
-            "com.zhiliaoapp.musically", "sg.bigo.live",
             "com.nintendo.zaga", "com.sega.sonic1px"
         )
         
@@ -435,11 +434,7 @@ class PackageWand {
             "com.bitwarden",
 
             // Other Specialized Productivity Tools
-            "com.notion.mobile",
-            "com.zhiliaoapp.musically",
-            "com.google.android.keep",
-            "com.microsoft.office.onenote",
-            "com.skype.raider"
+            "com.microsoft.office.onenote"
         )
         
         // Helper function to get category name for a package

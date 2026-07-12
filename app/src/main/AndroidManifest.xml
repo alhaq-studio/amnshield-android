@@ -161,7 +161,7 @@
         <!-- BroadcastReceiver for auto-blocking newly installed apps -->
         <receiver
             android:name=".receivers.AppInstallReceiver"
-            android:exported="false"
+            android:exported="true"
             android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_ADDED" />

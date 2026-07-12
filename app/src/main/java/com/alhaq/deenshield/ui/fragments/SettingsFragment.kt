@@ -291,8 +291,39 @@ class SettingsFragment : Fragment() {
     }
 
     private fun shareCrashLogs() {
-        if (activity is MainActivity) {
-            (activity as MainActivity).shareCrashLog(requireActivity())
+        val ctx = requireContext()
+        val errorManager = com.alhaq.deenshield.utils.ErrorReportManager.getInstance(ctx)
+        val report = errorManager.exportReportsAsText()
+        if (report.contains("No crash logs found.") && report.contains("No feedback submitted.")) {
+            Toast.makeText(ctx, "No crash logs found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val attachmentFile = errorManager.createBundledReportFile()
+        if (attachmentFile == null) {
+            Toast.makeText(ctx, "Failed to prepare bundled report", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val attachmentUri = androidx.core.content.FileProvider.getUriForFile(
+            ctx,
+            "${ctx.packageName}.provider",
+            attachmentFile
+        )
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "DeenShield Crash Log")
+            putExtra(Intent.EXTRA_TEXT, "Bundled crash report attached.")
+            putExtra(Intent.EXTRA_CC, arrayOf("support@alhaq-initiative.org", "alhaq.dst@gmail.com"))
+            putExtra(Intent.EXTRA_STREAM, attachmentUri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            selector = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+        }
+
+        try {
+            startActivity(Intent.createChooser(intent, "Share Crash Log"))
+        } catch (e: Exception) {
+            Toast.makeText(ctx, "No email client found", Toast.LENGTH_SHORT).show()
         }
     }
 

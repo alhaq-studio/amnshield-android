@@ -183,6 +183,7 @@ class KeywordBlocker(val service: AccessibilityService) : BaseBlocker() {
                 }
             } catch (_: Exception) {
             } finally {
+                recursionResultNodes.forEach { it.recycle() }
                 recursionResultNodes.clear()
             }
         } else if (!packageName.isNullOrEmpty()) {
@@ -215,6 +216,7 @@ class KeywordBlocker(val service: AccessibilityService) : BaseBlocker() {
                 }
             } catch (_: Exception) {
             } finally {
+                recursionResultNodes.forEach { it.recycle() }
                 recursionResultNodes.clear()
             }
         }
@@ -241,38 +243,64 @@ class KeywordBlocker(val service: AccessibilityService) : BaseBlocker() {
         val displayUrlTextNode =
             ViewBlocker.findElementById(rootNode, idPrefixPart + urlBarInfo.displayUrlBarId)
 
-        if (detectedAdultKeyword == null) {
-            detectedAdultKeyword = searchKeywordsInWebViewTitle(rootNode)
-                ?: containsBlockedKeyword(displayUrlTextNode?.text)
-                ?: return KeywordBlockerResult()
-        }
+        try {
+            if (detectedAdultKeyword == null) {
+                detectedAdultKeyword = searchKeywordsInWebViewTitle(rootNode)
+                    ?: containsBlockedKeyword(displayUrlTextNode?.text)
+                    ?: return KeywordBlockerResult()
+            }
 
-        performSmallUpwardScroll()
-        Thread.sleep(200)
-        displayUrlTextNode?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-        Thread.sleep(200)
+            performSmallUpwardScroll()
+            Thread.sleep(200)
+            displayUrlTextNode?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            Thread.sleep(200)
 
-        val editUrlBarId = urlBarInfo.editUrlBarId ?: urlBarInfo.displayUrlBarId
-        val editUrlBar = ViewBlocker.findElementById(rootNode, idPrefixPart + editUrlBarId)
-            ?: findFirstEditableField(rootNode, packageName)
-            ?: return KeywordBlockerResult(isHomePressRequested = false, resultDetectWord = detectedAdultKeyword)
+            val editUrlBarId = urlBarInfo.editUrlBarId ?: urlBarInfo.displayUrlBarId
+            val editUrlBar = ViewBlocker.findElementById(rootNode, idPrefixPart + editUrlBarId)
+                ?: findFirstEditableField(rootNode, packageName)
 
-        editUrlBar.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
-            putCharSequence(
-                AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                redirectUrl
-            )
-        })
-        Thread.sleep(300)
-        val goBtnNode =
-            ViewBlocker.findElementById(rootNode, idPrefixPart + urlBarInfo.browserSugggestionBoxId)
-                ?: return KeywordBlockerResult(resultDetectWord = detectedAdultKeyword)
-        if (urlBarInfo.isSuggestionEqualToGo) {
-            goBtnNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-        } else {
-            val goNode = goBtnNode.getChild(urlBarInfo.suggestionBoxIndexOfGoBtn)
-                ?: return KeywordBlockerResult(resultDetectWord = detectedAdultKeyword)
-            goNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            if (editUrlBar == null) {
+                return KeywordBlockerResult(isHomePressRequested = false, resultDetectWord = detectedAdultKeyword)
+            }
+
+            try {
+                editUrlBar.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
+                    putCharSequence(
+                        AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                        redirectUrl
+                    )
+                })
+                Thread.sleep(300)
+                
+                val goBtnNode =
+                    ViewBlocker.findElementById(rootNode, idPrefixPart + urlBarInfo.browserSugggestionBoxId)
+                if (goBtnNode == null) {
+                    return KeywordBlockerResult(resultDetectWord = detectedAdultKeyword)
+                }
+                
+                try {
+                    if (urlBarInfo.isSuggestionEqualToGo) {
+                        goBtnNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    } else {
+                        val goNode = goBtnNode.getChild(urlBarInfo.suggestionBoxIndexOfGoBtn)
+                        if (goNode != null) {
+                            try {
+                                goNode.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            } finally {
+                                goNode.recycle()
+                            }
+                        } else {
+                            return KeywordBlockerResult(resultDetectWord = detectedAdultKeyword)
+                        }
+                    }
+                } finally {
+                    goBtnNode.recycle()
+                }
+            } finally {
+                editUrlBar.recycle()
+            }
+        } finally {
+            displayUrlTextNode?.recycle()
         }
 
         return KeywordBlockerResult(resultDetectWord = detectedAdultKeyword)
@@ -287,6 +315,7 @@ class KeywordBlocker(val service: AccessibilityService) : BaseBlocker() {
         } catch (_: Exception) {
             null
         } finally {
+            recursionResultNodes.forEach { it.recycle() }
             recursionResultNodes.clear()
         }
     }
@@ -297,14 +326,24 @@ class KeywordBlocker(val service: AccessibilityService) : BaseBlocker() {
     ): AccessibilityNodeInfo? {
         packageName ?: return null
         val nodesToVisit: ArrayDeque<AccessibilityNodeInfo> = ArrayDeque()
-        nodesToVisit.add(rootNode)
-        while (nodesToVisit.isNotEmpty()) {
-            val node = nodesToVisit.removeFirst()
-            if (node.packageName == packageName && node.className == "android.widget.EditText") {
-                return node
+        nodesToVisit.add(AccessibilityNodeInfo.obtain(rootNode))
+        try {
+            while (nodesToVisit.isNotEmpty()) {
+                val node = nodesToVisit.removeFirst()
+                if (node.packageName == packageName && node.className == "android.widget.EditText") {
+                    return AccessibilityNodeInfo.obtain(node)
+                }
+                for (i in 0 until node.childCount) {
+                    val child = node.getChild(i)
+                    if (child != null) {
+                        nodesToVisit.addLast(child)
+                    }
+                }
+                node.recycle()
             }
-            for (i in 0 until node.childCount) {
-                node.getChild(i)?.let(nodesToVisit::addLast)
+        } finally {
+            while (nodesToVisit.isNotEmpty()) {
+                nodesToVisit.removeFirst().recycle()
             }
         }
         return null
@@ -318,14 +357,17 @@ class KeywordBlocker(val service: AccessibilityService) : BaseBlocker() {
         node ?: return
 
         if (node.className == targetClassName) {
-            recursionResultNodes.add(node)
+            recursionResultNodes.add(AccessibilityNodeInfo.obtain(node))
             if (returnOnFirstResult) return
         }
 
         for (i in 0 until node.childCount) {
             val child = node.getChild(i)
-            findNodesByClassName(child, targetClassName, returnOnFirstResult)
-            if (returnOnFirstResult && recursionResultNodes.isNotEmpty()) return
+            if (child != null) {
+                findNodesByClassName(child, targetClassName, returnOnFirstResult)
+                child.recycle()
+                if (returnOnFirstResult && recursionResultNodes.isNotEmpty()) return
+            }
         }
     }
 

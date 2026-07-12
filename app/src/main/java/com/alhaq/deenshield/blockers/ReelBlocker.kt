@@ -232,10 +232,14 @@ class ReelBlocker : BaseBlocker() {
 
     private fun readNodeText(rootNode: AccessibilityNodeInfo, viewId: String): String? {
         val node = ViewBlocker.findElementById(rootNode, viewId) ?: return null
-        val text = node.text?.toString().orEmpty()
-        if (text.isNotBlank()) return text
-        val description = node.contentDescription?.toString().orEmpty()
-        return description.ifBlank { null }
+        return try {
+            val text = node.text?.toString().orEmpty()
+            if (text.isNotBlank()) return text
+            val description = node.contentDescription?.toString().orEmpty()
+            description.ifBlank { null }
+        } finally {
+            node.recycle()
+        }
     }
 
     fun applyCooldown(viewId: String, endTime: Long) {
@@ -262,7 +266,10 @@ class ReelBlocker : BaseBlocker() {
     }
 
     private fun isViewOpened(rootNode: AccessibilityNodeInfo, viewId: String): Boolean {
-        return ViewBlocker.findElementById(rootNode, viewId) != null
+        val node = ViewBlocker.findElementById(rootNode, viewId)
+        val opened = node != null
+        node?.recycle()
+        return opened
     }
 
     private fun isBlockingDeferredByCountMode(): Boolean {

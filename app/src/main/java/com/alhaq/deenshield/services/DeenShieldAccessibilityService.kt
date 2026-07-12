@@ -143,10 +143,19 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         startBackgroundWorker()
     }
 
+    private fun isSettingsApp(packageName: String?): Boolean {
+        packageName ?: return false
+        return packageName == "com.android.settings" ||
+                packageName == "com.google.android.settings" ||
+                packageName == "com.samsung.android.settings" ||
+                packageName.endsWith(".settings")
+    }
+
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
         val packageName = event.packageName?.toString() ?: return
 
+        var rootNode: AccessibilityNodeInfo? = null
         try {
             if (packageName.equals("com.alhaq.deenshield", ignoreCase = true)) {
                 return
@@ -163,7 +172,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 cachedDefaultLauncher = getDefaultLauncherPackage()
             }
 
-            val rootNode = rootInActiveWindow
+            rootNode = rootInActiveWindow
             val rootPackage = rootNode?.packageName?.toString() ?: packageName
 
             if (rootPackage.equals("com.alhaq.deenshield", ignoreCase = true) ||
@@ -172,7 +181,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
                 return
             }
 
-            if (isAntiUninstallOn && packageName == "com.android.settings" && rootNode != null) {
+            if (isAntiUninstallOn && isSettingsApp(packageName) && rootNode != null) {
                 checkAndBlockDangerousSettingsScreens(rootNode)
             }
 
@@ -223,6 +232,8 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         } catch (t: Throwable) {
             android.util.Log.e("DeenShield", "Accessibility pipeline error", t)
             crashLogger.logNonFatalError("AccessibilityService", "Pipeline error", Exception(t))
+        } finally {
+            rootNode?.recycle()
         }
     }
 
@@ -245,50 +256,54 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
     private fun processDeferredChecks(event: AccessibilityEvent) {
         val packageName = event.packageName?.toString() ?: return
         val rootNode = rootInActiveWindow ?: return
-        val rootPackage = rootNode.packageName?.toString() ?: packageName
+        try {
+            val rootPackage = rootNode.packageName?.toString() ?: packageName
 
-        if (packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
-            rootPackage.equals("com.alhaq.deenshield", ignoreCase = true) ||
-            packageName.equals("com.android.systemui", ignoreCase = true) ||
-            rootPackage.equals("com.android.systemui", ignoreCase = true)
-        ) {
-            return
-        }
-
-        val hasCoreKeywords = savedPreferencesLoader.isKeywordBlockerFeatureEnabled() &&
-            savedPreferencesLoader.loadBlockedKeywords().isNotEmpty()
-        if (hasCoreKeywords) {
-            try {
-                val keywordResult = keywordBlocker.checkIfUserGettingFreaky(rootNode, event)
-                if (keywordResult.resultDetectWord != null) {
-                    blockingStatsManager.recordKeywordBlock(keywordResult.resultDetectWord, packageName)
-                    pressBack()
-                    return
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("DeenShield", "Core Keyword blocker error", e)
+            if (packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
+                rootPackage.equals("com.alhaq.deenshield", ignoreCase = true) ||
+                packageName.equals("com.android.systemui", ignoreCase = true) ||
+                rootPackage.equals("com.android.systemui", ignoreCase = true)
+            ) {
+                return
             }
-        }
 
-        if (premiumManager.isPremium()) {
-            try {
-                refreshReelCountCacheIfNeeded()
-                reelBlocker.reelsScrolledToday = cachedReelsScrolledToday
-
-                val detectedReelSurface = reelBlocker.detectReelSurfaceId(rootNode, packageName)
-                if (detectedReelSurface != null) {
-                    trackReelExposure(packageName, detectedReelSurface, event)
+            val hasCoreKeywords = savedPreferencesLoader.isKeywordBlockerFeatureEnabled() &&
+                savedPreferencesLoader.loadBlockedKeywords().isNotEmpty()
+            if (hasCoreKeywords) {
+                try {
+                    val keywordResult = keywordBlocker.checkIfUserGettingFreaky(rootNode, event)
+                    if (keywordResult.resultDetectWord != null) {
+                        blockingStatsManager.recordKeywordBlock(keywordResult.resultDetectWord, packageName)
+                        pressBack()
+                        return
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("DeenShield", "Core Keyword blocker error", e)
                 }
-
-                val reelBlockerResult = reelBlocker.doesReelNeedToBeBlocked(rootNode, packageName)
-                if (reelBlockerResult != null && reelBlockerResult.isBlocked) {
-                    blockingStatsManager.recordViewBlock(packageName, reelBlockerResult.viewId)
-                    handleReelBlockerResult(reelBlockerResult)
-                    return
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("DeenShield", "Reel blocker error", e)
             }
+
+            if (premiumManager.isPremium()) {
+                try {
+                    refreshReelCountCacheIfNeeded()
+                    reelBlocker.reelsScrolledToday = cachedReelsScrolledToday
+
+                    val detectedReelSurface = reelBlocker.detectReelSurfaceId(rootNode, packageName)
+                    if (detectedReelSurface != null) {
+                        trackReelExposure(packageName, detectedReelSurface, event)
+                    }
+
+                    val reelBlockerResult = reelBlocker.doesReelNeedToBeBlocked(rootNode, packageName)
+                    if (reelBlockerResult != null && reelBlockerResult.isBlocked) {
+                        blockingStatsManager.recordViewBlock(packageName, reelBlockerResult.viewId)
+                        handleReelBlockerResult(reelBlockerResult)
+                        return
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("DeenShield", "Reel blocker error", e)
+                }
+            }
+        } finally {
+            rootNode.recycle()
         }
     }
 
@@ -631,7 +646,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         if (node == null) return
 
         var isDangerousScreen = false
-        traverseAndDetectScreen(node) { detectedType, appPackage ->
+        traverseAndDetectScreen(node, node) { detectedType, appPackage ->
             when (detectedType) {
                 "device_admin" -> if (isAntiUninstallOn && isConfiguringBlocked) isDangerousScreen = true
                 "accessibility_deenshield" -> if (isAntiUninstallOn && isConfiguringBlocked) isDangerousScreen = true
@@ -717,7 +732,11 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            scanNodeForUninstallDialog(node.getChild(i), onAppDetected)
+            val child = node.getChild(i)
+            if (child != null) {
+                scanNodeForUninstallDialog(child, onAppDetected)
+                child.recycle()
+            }
         }
     }
 
@@ -730,23 +749,27 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
     }
 
-    private fun traverseAndDetectScreen(node: AccessibilityNodeInfo?, onScreenDetected: (String, String?) -> Unit) {
-        if (node == null) return
+    private fun traverseAndDetectScreen(
+        node: AccessibilityNodeInfo?, 
+        windowRoot: AccessibilityNodeInfo?, 
+        onScreenDetected: (String, String?) -> Unit
+    ) {
+        if (node == null || windowRoot == null) return
 
         if (node.className != null && node.className == "android.widget.TextView") {
             val nodeText = node.text?.toString()?.lowercase(Locale.ROOT) ?: ""
 
             if ((nodeText.contains("device admin") || nodeText.contains("device administrators")) &&
-                checkForDeenShieldMention(this.rootInActiveWindow)
+                checkForDeenShieldMention(windowRoot)
             ) {
-                if (checkForActionButton(this.rootInActiveWindow)) {
+                if (checkForActionButton(windowRoot)) {
                     onScreenDetected("device_admin", null)
                     return
                 }
             }
 
             if (nodeText.contains("deenshield") && nodeText.contains("accessibility")) {
-                if (checkForToggleContext(this.rootInActiveWindow)) {
+                if (checkForToggleContext(windowRoot)) {
                     onScreenDetected("accessibility_deenshield", null)
                     return
                 }
@@ -755,7 +778,7 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
             if (nodeText.contains("uninstall") || nodeText.contains("remove")) {
                 for (packageName in protectedApps) {
                     val appName = packageName.substringAfterLast(".").lowercase(Locale.ROOT)
-                    if (checkForAppMention(this.rootInActiveWindow, appName, packageName)) {
+                    if (checkForAppMention(windowRoot, appName, packageName)) {
                         onScreenDetected("app_uninstall", packageName)
                         return
                     }
@@ -764,7 +787,11 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            traverseAndDetectScreen(node.getChild(i), onScreenDetected)
+            val child = node.getChild(i)
+            if (child != null) {
+                traverseAndDetectScreen(child, windowRoot, onScreenDetected)
+                child.recycle()
+            }
         }
     }
 
@@ -785,7 +812,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            if (checkForActionButton(node.getChild(i))) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = checkForActionButton(child)
+                child.recycle()
+                if (found) return true
+            }
         }
 
         return false
@@ -807,7 +839,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            if (checkForToggleContext(node.getChild(i))) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = checkForToggleContext(child)
+                child.recycle()
+                if (found) return true
+            }
         }
 
         return false
@@ -828,7 +865,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            if (checkForAppMention(node.getChild(i), appName, packageName)) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = checkForAppMention(child, appName, packageName)
+                child.recycle()
+                if (found) return true
+            }
         }
 
         return false
@@ -845,7 +887,12 @@ class DeenShieldAccessibilityService : BaseBlockingService() {
         }
 
         for (i in 0 until node.childCount) {
-            if (checkForDeenShieldMention(node.getChild(i))) return true
+            val child = node.getChild(i)
+            if (child != null) {
+                val found = checkForDeenShieldMention(child)
+                child.recycle()
+                if (found) return true
+            }
         }
 
         return false

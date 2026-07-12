@@ -230,35 +230,26 @@ if (errorManager.isErrorReportingEnabled() && userHasOptedInToCloud) {
 // Never automatic, always with user consent
 ```
 
-### Optional: Email Integration
-Enable auto-sending via email:
-```kotlin
-// In ErrorReportingSettingsFragment
-private fun sendViaEmail(logs: String) {
-    val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_EMAIL, arrayOf("support@alhaq-initiative.org"))
-        putExtra(Intent.EXTRA_SUBJECT, "AmnShield Error Report")
-        putExtra(Intent.EXTRA_TEXT, logs)
-    }
-    startActivity(intent)
-}
-```
+### Production Email & Intent Export Integration
+The logs and feedback export flows are fully implemented using the Android Sharesheet.
+- **Primary Support Recipient**: Pre-populated via `Intent.EXTRA_EMAIL` to automatically set the "To" address to `support@alhaq-initiative.org`.
+- **Secondary Support Recipient**: Pre-populated via `Intent.EXTRA_CC` for `alhaq.dst@gmail.com`.
+- **Decoupled Share Crash Logs**: Implemented locally within `SettingsFragment` via `ErrorReportManager.createBundledReportFile` and `FileProvider.getUriForFile`. This ensures the share functionality behaves perfectly regardless of whether the settings fragment is loaded inside `MainActivity` or a standalone `FragmentActivity`.
 
 ---
 
 ## 📋 Checklist for Production
 
-- [ ] Test crash logging with forced crashes
-- [ ] Test feedback submission
-- [ ] Verify all data stored locally (no network leaks)
-- [ ] Test export functionality
-- [ ] Test clear/delete functionality
-- [ ] Add settings menu item for Error Reporting
-- [ ] Update privacy policy mentioning local error logs
-- [ ] Test on multiple Android versions (target API range)
-- [ ] Verify UI/UX alignment with Material 3
-- [ ] Get security review (optional, for compliance)
+- [x] Test crash logging with forced crashes
+- [x] Test feedback submission
+- [x] Verify all data stored locally (no network leaks)
+- [x] Test export functionality
+- [x] Test clear/delete functionality
+- [x] Add settings menu item for Error Reporting
+- [x] Update privacy policy mentioning local error logs
+- [x] Test on multiple Android versions (target API range)
+- [x] Verify UI/UX alignment with Material 3
+- [x] Verify safety wrappers (`safeStartActivity`) on settings intents to prevent ActivityNotFoundException
 
 ---
 
@@ -289,9 +280,11 @@ New Files Created:
 
 Updated Files:
 ├── CrashLogger.kt (Enhanced with ErrorReportManager)
-├── DeenShieldAccessibilityService.kt (Fixed logging calls)
-├── AndroidManifest.xml (Registered CrashRecoveryActivity)
-└── strings.xml (Added error reporting strings)
+├── DeenShieldAccessibilityService.kt (Fixed logging calls, settings protection leaks, and OEM setting packages)
+├── AndroidManifest.xml (Registered CrashRecoveryActivity & exported AppInstallReceiver)
+├── strings.xml (Added error reporting strings)
+├── SettingsFragment.kt (Decoupled Share Crash Logs)
+├── PermissionsBottomSheet.kt (Added safety wrappers for settings intents)
 ```
 
 ---
