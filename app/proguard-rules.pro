@@ -52,8 +52,8 @@
 -keep public class * extends android.app.Fragment
 
 # Keep accessibility service
--keep class com.alhaq.deenshield.services.** { *; }
--keepclassmembers class com.alhaq.deenshield.services.** { *; }
+-keep class com.alhaq.amnshield.services.** { *; }
+-keepclassmembers class com.alhaq.amnshield.services.** { *; }
 
 # Keep VPN service
 -keep class * extends android.net.VpnService { *; }
@@ -66,7 +66,7 @@
 -keep class * extends android.appwidget.AppWidgetProvider { *; }
 
 # Keep view binding classes
--keep class com.alhaq.deenshield.databinding.** { *; }
+-keep class com.alhaq.amnshield.databinding.** { *; }
 
 # ==================== Google Play Services ====================
 # Google Sign-In
@@ -89,10 +89,10 @@
 -keep class * implements com.google.gson.JsonDeserializer
 
 # Keep data classes for Gson serialization
--keep class com.alhaq.deenshield.models.** { *; }
--keepclassmembers class com.alhaq.deenshield.models.** { *; }
--keep class com.alhaq.deenshield.blockers.** { *; }
--keepclassmembers class com.alhaq.deenshield.blockers.** { 
+-keep class com.alhaq.amnshield.models.** { *; }
+-keepclassmembers class com.alhaq.amnshield.models.** { *; }
+-keep class com.alhaq.amnshield.blockers.** { *; }
+-keepclassmembers class com.alhaq.amnshield.blockers.** { 
     <fields>;
     <init>(...);
 }
@@ -143,20 +143,20 @@
 }
 
 # ==================== Keep Application Class ====================
--keep class com.alhaq.deenshield.DeenShield { *; }
+-keep class com.alhaq.amnshield.DeenShield { *; }
 
 # ==================== Premium & Billing ====================
--keep class com.alhaq.deenshield.premium.** { *; }
--keepclassmembers class com.alhaq.deenshield.premium.** { *; }
+-keep class com.alhaq.amnshield.premium.** { *; }
+-keepclassmembers class com.alhaq.amnshield.premium.** { *; }
 
 # ==================== Smart Features & Network ====================
--keep class com.alhaq.deenshield.smart.** { *; }
--keep class com.alhaq.deenshield.network.** { *; }
--keepclassmembers class com.alhaq.deenshield.network.** { *; }
+-keep class com.alhaq.amnshield.smart.** { *; }
+-keep class com.alhaq.amnshield.network.** { *; }
+-keepclassmembers class com.alhaq.amnshield.network.** { *; }
 
 # ==================== Utils & Managers ====================
--keep class com.alhaq.deenshield.utils.** { *; }
--keepclassmembers class com.alhaq.deenshield.utils.** { 
+-keep class com.alhaq.amnshield.utils.** { *; }
+-keepclassmembers class com.alhaq.amnshield.utils.** { 
     public *;
 }
 

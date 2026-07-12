@@ -132,7 +132,7 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.alhaq.deenshield.reels.WIDGET_REFRESH" />
+                <action android:name="com.alhaq.amnshield.reels.WIDGET_REFRESH" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -145,7 +145,7 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.alhaq.deenshield.screentime.WIDGET_REFRESH" />
+                <action android:name="com.alhaq.amnshield.screentime.WIDGET_REFRESH" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

@@ -28,7 +28,7 @@
         android:textStyle="bold"
         tools:text="TextView" />
 
-    <com.alhaq.deenshield.views.HorizontalNumberPicker
+    <com.alhaq.amnshield.views.HorizontalNumberPicker
         android:id="@+id/mins_picker"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -37,7 +37,7 @@
         android:gravity="center"
         android:visibility="gone">
 
-    </com.alhaq.deenshield.views.HorizontalNumberPicker>
+    </com.alhaq.amnshield.views.HorizontalNumberPicker>
 
     <TextView
         android:id="@+id/proceed_seconds"

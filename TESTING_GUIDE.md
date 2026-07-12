@@ -509,7 +509,7 @@ adb logcat -c && adb logcat -s DeenShield-AI
 adb shell dumpsys accessibility | grep DeenShield
 
 # Check if Smart Blur is enabled
-adb shell "run-as com.alhaq.deenshield cat /data/data/com.alhaq.deenshield/shared_prefs/smart_features.xml" | grep blur_enabled
+adb shell "run-as com.alhaq.amnshield cat /data/data/com.alhaq.amnshield/shared_prefs/smart_features.xml" | grep blur_enabled
 ```
 
 ### Trigger Test Event

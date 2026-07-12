@@ -18,35 +18,35 @@
         android:layout_marginTop="8dp"
         android:text="@string/permissions_disclosure" />
 
-    <com.alhaq.deenshield.permissions.PermissionItemView
+    <com.alhaq.amnshield.permissions.PermissionItemView
         android:id="@+id/accessibility_permission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         app:permissionTitle="@string/accessibility_service" />
 
-    <com.alhaq.deenshield.permissions.PermissionItemView
+    <com.alhaq.amnshield.permissions.PermissionItemView
         android:id="@+id/device_admin_permission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         app:permissionTitle="@string/device_admin" />
 
-    <com.alhaq.deenshield.permissions.PermissionItemView
+    <com.alhaq.amnshield.permissions.PermissionItemView
         android:id="@+id/overlay_permission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         app:permissionTitle="@string/display_over_other_apps" />
 
-    <com.alhaq.deenshield.permissions.PermissionItemView
+    <com.alhaq.amnshield.permissions.PermissionItemView
         android:id="@+id/usage_stats_permission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         app:permissionTitle="@string/usage_stats" />
 
-    <com.alhaq.deenshield.permissions.PermissionItemView
+    <com.alhaq.amnshield.permissions.PermissionItemView
         android:id="@+id/notification_permission"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
