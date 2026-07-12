@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.192.0/http/server.ts"
 
-const LEMON_SQUEEZY_SECRET = Deno.env.get("LEMON_SQUEEZY_WEBHOOK_SECRET") ?? "";
-const PRIVATE_KEY_PEM = Deno.env.get("ECDSA_PRIVATE_KEY_PEM") ?? "";
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const LEMON_SQUEEZY_SECRET = (Deno.env.get("LEMON_SQUEEZY_WEBHOOK_SECRET") ?? "").replace(/^["']|["']$/g, "");
+const PRIVATE_KEY_PEM = (Deno.env.get("ECDSA_PRIVATE_KEY_PEM") ?? "").replace(/^["']|["']$/g, "");
+const RESEND_API_KEY = (Deno.env.get("RESEND_API_KEY") ?? "").replace(/^["']|["']$/g, "");
 
 // Helper: Verify Lemon Squeezy Webhook Signature
 async function verifyLemonSqueezySignature(req: Request, rawBody: string): Promise<boolean> {
@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
           "Authorization": `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: "AmnShield Team <noreply@yourdomain.com>",
+          from: "AmnShield Team <noreply@alhaq.uk>",
           to: [email],
           subject: "Your AmnShield Premium License Key",
           html: `
