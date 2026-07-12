@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:789500018505:android:09e878be015be75818a498",
         "android_client_info": {
-          "package_name": "com.alhaq.amnshield"
+          "package_name": "com.alhaq.deenshield"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "789500018505-62k9beshg0d9tqa6onlvr34gqaibr7rs.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.alhaq.amnshield",
+            "package_name": "com.alhaq.deenshield",
             "certificate_hash": "5b217618c05a9fabfccc3bdc08a871fdaf40fab9"
           }
         },
@@ -26,7 +26,7 @@
           "client_id": "789500018505-9p8g3vp04abtn5vu7g6tcen4uf7ag4bo.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.alhaq.amnshield",
+            "package_name": "com.alhaq.deenshield",
             "certificate_hash": "ba23d2cfb6596ef7205a345daca383a7bbb90af4"
           }
         },
@@ -55,7 +55,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:789500018505:android:3904230887b5395718a498",
         "android_client_info": {
-          "package_name": "com.alhaq.amnshield.debug"
+          "package_name": "com.alhaq.deenshield.debug"
         }
       },
       "oauth_client": [
@@ -63,7 +63,7 @@
           "client_id": "789500018505-ii82bu77vmb763bas6abf0l41a8dkloe.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.alhaq.amnshield.debug",
+            "package_name": "com.alhaq.deenshield.debug",
             "certificate_hash": "e7f4bc8cc7860b19bb2a44bbff2087b8aa84ecff"
           }
         },
@@ -92,7 +92,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:789500018505:android:3904230887b5395718a498",
         "android_client_info": {
-          "package_name": "com.alhaq.amnshield.staging"
+          "package_name": "com.alhaq.deenshield.staging"
         }
       },
       "oauth_client": [
@@ -100,7 +100,7 @@
           "client_id": "789500018505-ii82bu77vmb763bas6abf0l41a8dkloe.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.alhaq.amnshield.staging",
+            "package_name": "com.alhaq.deenshield.staging",
             "certificate_hash": "e7f4bc8cc7860b19bb2a44bbff2087b8aa84ecff"
           }
         },
