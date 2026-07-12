@@ -225,7 +225,7 @@ class ProfileFragment : Fragment() {
                 } else {
                     when (which) {
                         0 -> {
-                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://alhaq.studio/amnshield-premium"))
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://alhaq.uk/amnshield-premium"))
                             startActivity(browserIntent)
                         }
                         1 -> {
