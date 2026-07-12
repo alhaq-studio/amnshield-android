@@ -55,12 +55,8 @@
     <string name="select_export_location">Select export location</string>
     <string name="select_import_file">Select keyword pack file</string>
     <string name="todays_stats">Today\'s Stats</string>
-    <string name="you_scrolled_2_d_reels">You scrolled %2$d reels</string>
-    <string name="your_average_attention_span_was_2_d_mins">Your average attention span was %2$d mins</string>
     <string name="view_more">View More</string>
     
-    <string name="number_of_reels_scrolled">Number of Reels Scrolled</string>
-    <string name="average_attention_span">Average Attention Span</string>
     <string name="apps">Apps:</string>
     <string name="remove">Remove</string>
     <string name="write_down_a_keyword">Write down a keyword</string>
@@ -69,7 +65,6 @@
     <string name="select_apps_to_unblock">Select Apps to unblock</string>
     <string name="disable_proceed_button">Disable Proceed Button </string>
     <string name="display_time_elapsed">Display Time Elapsed</string>
-    <string name="display_number_of_reels_scrolled">Display number of reels scrolled</string>
     <string name="specify_duration_of_focus_mode_in_mins">Specify duration of focus mode in mins</string>
     <string name="block_adult_keywords">Block Adult Keywords</string>
     <string name="password">Password</string>
@@ -159,12 +154,7 @@
     <string name="specify_cheat_hours">Specify Cheat Hours</string>
     <string name="remaining_time_anti_uninstall">You still have %1$d days to go before unlocking anti-uninstall</string>
     <string name="add_a_new_keyword">Add a new keyword</string>
-    <string name="you_scrolled_reels">You scrolled %1$d reels</string>
-    <string name="you_had_an_attention_span_of_seconds_video">You had an attention span of %1$.2f seconds/video</string>
     <string name="failed_to_launch_system_digital_wellbeing">Failed to launch system digital wellbeing</string>
-    <string name="reel_count">Reel count</string>
-    <string name="short_videos_scrolled">short videos scrolled</string>
-    <string name="seconds_video">seconds/video</string>
     <string name="app_s_selected">%1$d app(s) selected</string>
     <string name="please_specify_start_time_first">Please Specify Start Time first</string>
     <string name="please_type_a_title">Please type a title</string>
@@ -190,9 +180,9 @@
     <string name="device_admin_perm">AmnShield uses Device Admin permission to enhance security and block uninstalling AmnShield until a specific period. All data remains securely stored on your device and is never shared externally.</string>
     <string name="prevent_uninstallation_attempts_until_a_set_condition_is_met">Prevent uninstallation attempts until a set condition is met</string>
 
-    <string name="device_perm_draw_over_other_apps">AmnShield uses the \"Display over other apps\" permission to show a small floating overlay on the screen. This overlay tracks the number of reels watched and the time spent, helping users be more aware of their usage in real time.</string>
+    <string name="device_perm_draw_over_other_apps">AmnShield uses the \"Display over other apps\" permission to show a small floating overlay on the screen. This overlay displays the time spent on distracting apps, helping you stay mindful of your digital usage in real time.</string>
     <string name="show_time_elapsed_on_phone">Show time elapsed on phone</string>
-    <string name="calculate_how_many_reels_tiktok_short_videos_you_scroll_per_day">Calculate how many reels/ tiktok/ short videos you scroll per day</string>
+    <string name="calculate_how_many_reels_tiktok_short_videos_you_scroll_per_day">Display an on-screen timer showing time spent in distracting apps</string>
     <string name="plan_a_robbery">Plan a robbery</string>
     <string name="please_provide_display_over_other_apps_permission_to_access_this_feature">Please provide display over other apps permission to access this feature</string>
     <string name="find_amnshield_and_press_enable">Find AmnShield and press enable</string>
@@ -252,9 +242,6 @@
     <string name="today_screen_time">Today\'s Screen Time</string>
     <string name="total_time_today">Total time spent today</string>
     <string name="view_detailed_stats">View Detailed Statistics</string>
-    <string name="reels_today">Reels Watched Today</string>
-    <string name="vs_yesterday">vs yesterday</string>
-    <string name="view_reels_metrics">View Reels Metrics</string>
     <string name="most_used_apps">Most Used Apps</string>
     
     <!-- Settings Screen -->

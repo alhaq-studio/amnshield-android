@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.alhaq.deenshield"
+        applicationId = "com.alhaq.amnshield"
         minSdk = 26
         targetSdk = 36
         versionCode = 125

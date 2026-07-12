@@ -423,8 +423,6 @@ class UsageTrackerConfigFragment : BaseFeatureFragment() {
             selectOverlayAppsLauncher.launch(intent, activityOptions)
         }
 
-        }
-
         return binding.root
     }
 

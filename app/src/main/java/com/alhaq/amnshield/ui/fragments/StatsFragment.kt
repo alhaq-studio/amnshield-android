@@ -14,7 +14,6 @@ import com.alhaq.amnshield.databinding.FragmentStatsBinding
 import com.alhaq.amnshield.premium.PremiumManager
 import com.alhaq.amnshield.ui.activity.FragmentActivity
 import com.alhaq.amnshield.ui.activity.ReportsActivity
-import com.alhaq.amnshield.ui.activity.UsageMetricsActivity
 import com.alhaq.amnshield.ui.fragments.usage.AllAppsUsageFragment
 import com.alhaq.amnshield.utils.BlockingStatsManager
 import com.alhaq.amnshield.utils.UsageStatsHelper
@@ -67,8 +66,6 @@ class StatsFragment : Fragment() {
                 com.alhaq.amnshield.R.anim.fade_out
             )
             startActivity(intent, options.toBundle())
-        }
-
         }
 
         binding.btnViewReports.setOnClickListener {

@@ -33,7 +33,6 @@ class TweakViewBlockerWarning(
 
         // Show additional checkbox options
         binding.cbBackWithoutWarning.visibility = View.VISIBLE
-        binding.cbReelInbox.visibility = View.VISIBLE
 
         binding.cbProceedBtn.setOnCheckedChangeListener { _, isChecked ->
             val viewsToToggle = listOf(
@@ -82,12 +81,6 @@ class TweakViewBlockerWarning(
         binding.cbProceedBtn.isChecked = previousData.isProceedDisabled
         binding.cbBackWithoutWarning.isChecked = previousData.isWarningDialogHidden
 
-        // Load additional Reel data
-        val addReelData: SharedPreferences =
-            requireContext().getSharedPreferences("config_reels", Context.MODE_PRIVATE)
-        binding.cbReelInbox.isChecked =
-            addReelData.getBoolean("is_reel_inbox", false)
-
         binding.root.layoutTransition = LayoutTransition().apply {
             enableTransitionType(LayoutTransition.CHANGING)
             setDuration(300) // Set animation duration in ms
@@ -111,15 +104,6 @@ class TweakViewBlockerWarning(
                         proceedDelay
                     )
                 )
-
-                // Save Reel data to SharedPreferences
-                with(addReelData.edit()) {
-                    putBoolean(
-                        "is_reel_inbox",
-                        binding.cbReelInbox.isChecked
-                    )
-                    commit() // Apply changes immediately
-                }
 
                 // Send broadcast to refresh ViewBlockerService
                 sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_VIEW_BLOCKER)
