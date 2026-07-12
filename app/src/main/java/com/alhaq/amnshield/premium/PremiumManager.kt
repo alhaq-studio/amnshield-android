@@ -1,6 +1,7 @@
 package com.alhaq.amnshield.premium
 
 import android.content.Context
+import com.alhaq.amnshield.BuildConfig
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
 
 class PremiumManager private constructor(context: Context) {
@@ -19,7 +20,12 @@ class PremiumManager private constructor(context: Context) {
      * Check if user has premium or special access
      */
     fun isPremium(): Boolean {
-        return preferencesLoader.isPremiumUser() || isSpecialUser() || isCompassionateAccessActive()
+        val hasLocalPremium = if (BuildConfig.IS_PLAYSTORE) {
+            preferencesLoader.isPremiumUser()
+        } else {
+            isLicenseKeyValid()
+        }
+        return hasLocalPremium || isSpecialUser() || isCompassionateAccessActive()
     }
 
     fun isCompassionateAccessActive(): Boolean {
@@ -35,13 +41,28 @@ class PremiumManager private constructor(context: Context) {
     }
 
     /**
+     * Check if the offline license key is valid
+     */
+    fun isLicenseKeyValid(): Boolean {
+        val key = preferencesLoader.getLicenseKey() ?: return false
+        val email = preferencesLoader.getLicenseEmail() ?: return false
+        val payload = LicenseValidator.verifyLicense(key) ?: return false
+        return payload.email == email && payload.expires > System.currentTimeMillis()
+    }
+
+    /**
      * Get the current user type
      */
     fun getUserType(): UserType {
+        val isPremiumActive = if (BuildConfig.IS_PLAYSTORE) {
+            preferencesLoader.isPremiumUser()
+        } else {
+            isLicenseKeyValid()
+        }
         return when {
             isSpecialUser() -> UserType.SPECIAL
             isCompassionateAccessActive() -> UserType.COMPASSIONATE
-            preferencesLoader.isPremiumUser() -> UserType.PREMIUM
+            isPremiumActive -> UserType.PREMIUM
             else -> UserType.FREE
         }
     }
@@ -63,6 +84,23 @@ class PremiumManager private constructor(context: Context) {
      */
     fun updatePremiumStatus(active: Boolean) {
         preferencesLoader.setPremiumUser(active)
+    }
+
+    /**
+     * Redeem offline license key
+     */
+    fun redeemLicenseKey(licenseString: String): Boolean {
+        if (BuildConfig.IS_PLAYSTORE) return false
+        val payload = LicenseValidator.verifyLicense(licenseString) ?: return false
+        preferencesLoader.saveLicenseKey(payload.email, licenseString)
+        return true
+    }
+
+    /**
+     * Remove offline license key
+     */
+    fun removeLicenseKey() {
+        preferencesLoader.clearLicenseKey()
     }
 
     /**

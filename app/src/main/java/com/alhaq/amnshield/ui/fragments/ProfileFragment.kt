@@ -16,6 +16,7 @@ import com.alhaq.amnshield.premium.PremiumManager
 import com.alhaq.amnshield.ui.activity.FragmentActivity
 import com.alhaq.amnshield.utils.GoogleSignInHelper
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.net.Uri
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -186,34 +187,95 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showPremiumOptionsDialog() {
-        val options = arrayOf(
-            getString(R.string.upgrade_to_premium),
-            getString(R.string.profile_compassionate_access_option),
-            getString(R.string.profile_special_access_option),
-            getString(R.string.cancel)
-        )
+        val options = if (com.alhaq.amnshield.BuildConfig.IS_PLAYSTORE) {
+            arrayOf(
+                getString(R.string.upgrade_to_premium),
+                getString(R.string.profile_compassionate_access_option),
+                getString(R.string.profile_special_access_option),
+                getString(R.string.cancel)
+            )
+        } else {
+            arrayOf(
+                "Purchase Premium License",
+                "Redeem License Key",
+                getString(R.string.profile_special_access_option),
+                getString(R.string.cancel)
+            )
+        }
         
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.profile_premium_access_title)
             .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        // Navigate to premium features/purchase
-                        val intent = Intent(requireContext(), FragmentActivity::class.java)
-                        intent.putExtra("feature_type", "premium_features")
-                        startActivity(intent)
+                if (com.alhaq.amnshield.BuildConfig.IS_PLAYSTORE) {
+                    when (which) {
+                        0 -> {
+                            val intent = Intent(requireContext(), FragmentActivity::class.java)
+                            intent.putExtra("feature_type", "premium_features")
+                            startActivity(intent)
+                        }
+                        1 -> {
+                            val intent = Intent(requireContext(), FragmentActivity::class.java)
+                            intent.putExtra("feature_type", "premium_features")
+                            startActivity(intent)
+                        }
+                        2 -> {
+                            showSpecialAccessDialog()
+                        }
                     }
-                    1 -> {
-                        val intent = Intent(requireContext(), FragmentActivity::class.java)
-                        intent.putExtra("feature_type", "premium_features")
-                        startActivity(intent)
+                } else {
+                    when (which) {
+                        0 -> {
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://alhaq.studio/amnshield-premium"))
+                            startActivity(browserIntent)
+                        }
+                        1 -> {
+                            showLicenseRedemptionDialog()
+                        }
+                        2 -> {
+                            showSpecialAccessDialog()
+                        }
                     }
-                    2 -> {
-                        showSpecialAccessDialog()
-                    }
-                    // 3 is cancel, do nothing
                 }
             }
+            .show()
+    }
+
+    private fun showLicenseRedemptionDialog() {
+        val input = android.widget.EditText(requireContext()).apply {
+            hint = "Paste your license key here"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            minLines = 3
+        }
+        
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Redeem License Key")
+            .setMessage("Paste the license key you received after purchasing AmnShield Premium via Lemon Squeezy.")
+            .setView(input)
+            .setPositiveButton("Activate") { _, _ ->
+                val licenseKey = input.text.toString().trim()
+                if (premiumManager.redeemLicenseKey(licenseKey)) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Premium Access Activated Successfully!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    loadProfileData()
+                    
+                    // Refresh MainActivity
+                    activity?.let { act ->
+                        if (act is com.alhaq.amnshield.ui.activity.MainActivity) {
+                            // Request refresh
+                        }
+                    }
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "Invalid or Expired License Key",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
 

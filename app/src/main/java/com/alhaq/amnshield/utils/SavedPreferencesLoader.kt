@@ -602,6 +602,28 @@ class SavedPreferencesLoader(private val context: Context) {
         getPremiumPrefs().edit().putBoolean("is_premium", enabled).apply()
     }
 
+    fun getLicenseKey(): String? {
+        return getPremiumPrefs().getString("license_key", null)
+    }
+
+    fun getLicenseEmail(): String? {
+        return getPremiumPrefs().getString("license_email", null)
+    }
+
+    fun saveLicenseKey(email: String, licenseKey: String) {
+        getPremiumPrefs().edit()
+            .putString("license_email", email)
+            .putString("license_key", licenseKey)
+            .apply()
+    }
+
+    fun clearLicenseKey() {
+        getPremiumPrefs().edit()
+            .remove("license_email")
+            .remove("license_key")
+            .apply()
+    }
+
     fun getLastPremiumReminder(): Long {
         return getPremiumPrefs().getLong("last_premium_reminder", 0L)
     }

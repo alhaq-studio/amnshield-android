@@ -82,12 +82,15 @@ android {
     productFlavors {
         create("playstore") {
             dimension = "distribution"
+            buildConfigField("Boolean", "IS_PLAYSTORE", "true")
         }
         create("fdroid") {
             dimension = "distribution"
+            buildConfigField("Boolean", "IS_PLAYSTORE", "false")
         }
         create("universal") {
             dimension = "distribution"
+            buildConfigField("Boolean", "IS_PLAYSTORE", "false")
         }
     }
     
