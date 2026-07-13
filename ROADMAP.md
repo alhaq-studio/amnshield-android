@@ -9,6 +9,12 @@ Last updated: 2026-07-13
   - Redirected all timed settings buttons to the unified `ManageBlockSchedulesFragment` for a clean, consistent UX.
   - Implemented automatic data migration in `SavedPreferencesLoader` to transition existing users' cheat and auto-focus hours seamlessly.
   - Resolved the bug where auto-focus schedules set in the UI were ignored by the background Accessibility Service.
+- **Release Distribution Strategy & CI Workflow (July 2026)**
+  - Clarified that `universal` and `fdroid` are the two GitHub Releases APKs; `playstore` goes to Play Console only.
+  - Created `release.yml` GitHub Actions workflow: triggers on version tags (`v*.*.*`), signs APKs using keystore stored as GitHub Secret, and auto-publishes `universal` + `fdroid` release APKs to GitHub Releases.
+  - Pre-release tags (`-alpha`, `-beta`, `-rc`) auto-flagged as pre-release on GitHub.
+  - Created `README.md` with product flavor guide, correct build commands, Android Studio setup, stale build recovery, and release strategy table.
+  - Added **"Building the App"** section to `TESTING_GUIDE.md` documenting flavor-qualified Gradle tasks and stale build fix.
 - **Monetization & Licensing Track (July 2026)**
   - Configured custom build-flavor partitioning via `IS_PLAYSTORE` BuildConfig flags.
   - Implemented offline-first ECDSA cryptographic license validator on client builds.

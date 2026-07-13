@@ -72,6 +72,57 @@
 
 ---
 
+## Building the App
+
+> **Important**: AmnShield uses **product flavors** (`playstore`, `fdroid`, `universal`). The plain
+> `assembleDebug` task is no longer valid — always use a flavor-qualified task name.
+> Using the bare task will silently serve a stale cached APK from before flavors were introduced.
+
+### Debug Builds (for testing)
+
+```powershell
+# Build all three flavors at once
+.\gradlew assemblePlaystoreDebug assembleFdroidDebug assembleUniversalDebug
+
+# Or build individually
+.\gradlew assemblePlaystoreDebug   # Google Play Store flavor
+.\gradlew assembleFdroidDebug      # F-Droid / offline license flavor
+.\gradlew assembleUniversalDebug   # Universal / sideload flavor
+```
+
+APKs are output to:
+- `app/build/outputs/apk/playstore/debug/app-playstore-debug.apk`
+- `app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk`
+- `app/build/outputs/apk/universal/debug/app-universal-debug.apk`
+
+### Release Builds
+
+```powershell
+.\gradlew assemblePlaystoreRelease
+.\gradlew assembleFdroidRelease
+.\gradlew assembleUniversalRelease
+```
+
+### Android Studio
+
+In the **Build Variants** panel (bottom-left), set the Active Build Variant to e.g.
+`playstoreDebug` before hitting **Run**. If it shows just `debug`, you will get the
+wrong (stale) output.
+
+### If the Build Looks Stale / Shows Old UI
+
+Nuke the Gradle build cache entirely and rebuild:
+
+```powershell
+.\gradlew clean --no-daemon
+.\gradlew assemblePlaystoreDebug assembleFdroidDebug assembleUniversalDebug --no-daemon
+```
+
+The `--no-daemon` flag forces a fresh JVM instead of a cached Gradle daemon that may be
+pinned to an older Gradle version.
+
+---
+
 ## Prerequisites
 
 ### 1. Enable Features

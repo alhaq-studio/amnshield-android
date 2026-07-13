@@ -1,0 +1,127 @@
+﻿name: Release
+
+# Triggers when you push a version tag: git tag v1.2.3 && git push origin v1.2.3
+# Pre-release tags (-alpha, -beta, -rc) are auto-flagged as pre-release on GitHub.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  # ── Job 1: Unit Tests ──────────────────────────────────────────────────────
+  # The release WILL NOT proceed if any test fails.
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Unit Tests (all flavors)
+        run: ./gradlew testPlaystoreDebugUnitTest testFdroidDebugUnitTest testUniversalDebugUnitTest
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: app/build/reports/tests/
+
+  # ── Job 2: Build & Publish Release ─────────────────────────────────────────
+  # Only runs automatically after Job 1 (tests) passes.
+  # Publishes universal + fdroid signed APKs to GitHub Releases.
+  # The playstore APK is NOT published here — submit it via Play Console.
+  release:
+    name: Build & Publish Release APKs
+    runs-on: ubuntu-latest
+    needs: test   # Hard gate: this job is cancelled if tests fail
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # ── Signing keystore ────────────────────────────────────────────────────
+      # Store your keystore as a base64 secret in GitHub:
+      #   Windows: [Convert]::ToBase64String([IO.File]::ReadAllBytes("key.jks")) | Set-Clipboard
+      #   macOS:   base64 -i key.jks | pbcopy
+      # Add as repo secret: Settings -> Secrets and variables -> Actions -> KEYSTORE_BASE64
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > $RUNNER_TEMP/release.jks
+
+      - name: Create keystore.properties
+        run: |
+          cat > keystore.properties <<EOF
+          storeFile=$RUNNER_TEMP/release.jks
+          storePassword=${{ secrets.KEYSTORE_STORE_PASSWORD }}
+          keyAlias=${{ secrets.KEYSTORE_KEY_ALIAS }}
+          keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}
+          EOF
+
+      # ── Build signed release APKs ───────────────────────────────────────────
+      - name: Build Universal Release APK
+        run: ./gradlew assembleUniversalRelease
+
+      - name: Build F-Droid Release APK
+        run: ./gradlew assembleFdroidRelease
+
+      # ── Rename APKs with version tag ────────────────────────────────────────
+      - name: Rename APKs
+        run: |
+          TAG="${{ github.ref_name }}"
+          cp app/build/outputs/apk/universal/release/app-universal-release.apk \
+             AmnShield-${TAG}-universal.apk
+          cp app/build/outputs/apk/fdroid/release/app-fdroid-release.apk \
+             AmnShield-${TAG}-fdroid.apk
+
+      # ── Publish to GitHub Releases ──────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "AmnShield ${{ github.ref_name }}"
+          body: |
+            ## AmnShield ${{ github.ref_name }}
+
+            > ✅ All unit tests passed before this release was published.
+
+            ### Download
+
+            | APK | Who should use this? |
+            |-----|----------------------|
+            | `AmnShield-${{ github.ref_name }}-universal.apk` | Most Android users — sideloading on standard phones with Google Play Services |
+            | `AmnShield-${{ github.ref_name }}-fdroid.apk` | De-Googled phones (GrapheneOS, CalyxOS, LineageOS without GMS) — no Google dependencies |
+
+            ### Installing
+            1. Download the APK for your device type above.
+            2. Enable **Install from unknown sources** in your Android settings.
+            3. Open the downloaded APK to install.
+
+            ### Notes
+            - The **Play Store** flavor is distributed exclusively through the Google Play Console — not available here.
+            - See [TESTING_GUIDE.md](https://github.com/${{ github.repository }}/blob/main/TESTING_GUIDE.md) for full feature documentation.
+          files: |
+            AmnShield-${{ github.ref_name }}-universal.apk
+            AmnShield-${{ github.ref_name }}-fdroid.apk
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') || contains(github.ref_name, '-alpha') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
