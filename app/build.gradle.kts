@@ -138,7 +138,4 @@ dependencies {
     add("playstoreImplementation", libs.billing.ktx)
     add("universalImplementation", libs.play.services.auth)
     add("universalImplementation", libs.billing.ktx)
-    
-    implementation(libs.androidx.documentfile)
-
 }

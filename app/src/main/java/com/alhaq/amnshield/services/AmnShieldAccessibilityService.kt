@@ -102,6 +102,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         premiumManager = PremiumManager.getInstance(this)
         crashLogger = CrashLogger(this)
 
+        savedPreferencesLoader.migrateLegacySchedulesIfNeeded()
         setupAppBlocker()
         setupFocusMode()
         setupKeywordBlocker()
@@ -215,7 +216,12 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 }
             }
 
-            val eventCopy = AccessibilityEvent.obtain(event)
+            val eventCopy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                AccessibilityEvent(event)
+            } else {
+                @Suppress("DEPRECATION")
+                AccessibilityEvent.obtain(event)
+            }
             val sendResult = eventChannel.trySend(eventCopy)
             if (sendResult.isFailure) {
                 eventCopy.recycle()
@@ -357,7 +363,6 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         appBlockerWarningConfig = savedPreferencesLoader.loadAppBlockerWarningInfo()
         appBlocker.blockedApps = savedPreferencesLoader.loadBlockedApps().toHashSet()
         appBlocker.restoreCooldowns(savedPreferencesLoader.loadAppBlockerCooldownData())
-        appBlocker.refreshCheatHoursData(savedPreferencesLoader.loadAppBlockerCheatHoursList())
         appBlocker.refreshScheduleRules(savedPreferencesLoader.loadAppBlockerScheduleRules())
         savedPreferencesLoader.saveAppBlockerCooldownData(appBlocker.getCooldownSnapshot())
     }
@@ -404,7 +409,6 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         val viewBlockerPrefs = getSharedPreferences("view_blocker", Context.MODE_PRIVATE)
         val reelBlockerPrefs = getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
         val configReelsPrefs = getSharedPreferences("config_reels", Context.MODE_PRIVATE)
-        val cheatHoursPrefs = getSharedPreferences("cheat_hours", Context.MODE_PRIVATE)
 
         reelBlocker.isEnabled = savedPreferencesLoader.isReelBlockerEnabled(
             viewBlockerPrefs.getBoolean("is_enabled", false)
@@ -413,8 +417,6 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         reelBlocker.isFirstReelInFeedAllowed = configReelsPrefs.getBoolean("is_reel_first", false)
         reelBlocker.modeType = savedPreferencesLoader.getReelBlockerMode(ReelBlocker.MODE_BLOCK_ALL)
         reelBlocker.dailyReelLimit = savedPreferencesLoader.getReelBlockerDailyLimit(200)
-        reelBlocker.cheatMinuteStartTime = cheatHoursPrefs.getInt("view_blocker_start_time", -1)
-        reelBlocker.cheatMinutesEndTime = cheatHoursPrefs.getInt("view_blocker_end_time", -1)
 
         reelBlocker.isYoutubeEnabled = reelBlockerPrefs.getBoolean("is_youtube_enabled", true)
         reelBlocker.isInstagramEnabled = reelBlockerPrefs.getBoolean("is_instagram_enabled", true)
@@ -607,35 +609,55 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         }
     }
 
-    private fun scanNodeForUninstallDialog(node: AccessibilityNodeInfo?, onAppDetected: (String?) -> Unit) {
-        if (node == null) return
-
-        val nodeText = node.text?.toString()?.lowercase(Locale.ROOT) ?: ""
-        val nodeContentDesc = node.contentDescription?.toString()?.lowercase(Locale.ROOT) ?: ""
-
-        val hasUninstallKeyword = nodeText.contains("uninstall") ||
-            nodeText.contains("remove") ||
-            nodeText.contains("delete") ||
-            nodeContentDesc.contains("uninstall")
-
-        if (hasUninstallKeyword) {
-            for (packageName in protectedApps) {
-                val appName = getAppName(packageName)
-                if (nodeText.contains(appName.lowercase(Locale.ROOT)) ||
-                    nodeText.contains(packageName) ||
-                    nodeContentDesc.contains(appName.lowercase(Locale.ROOT))
-                ) {
-                    onAppDetected(packageName)
-                    return
+    private fun scanNodeForUninstallDialog(root: AccessibilityNodeInfo?, onAppDetected: (String?) -> Unit) {
+        root ?: return
+        val stack = java.util.ArrayDeque<AccessibilityNodeInfo>()
+        stack.push(root)
+        
+        var found = false
+        while (!stack.isEmpty() && !found) {
+            val current = stack.pop()
+            
+            val nodeText = current.text?.toString()?.lowercase(Locale.ROOT) ?: ""
+            val nodeContentDesc = current.contentDescription?.toString()?.lowercase(Locale.ROOT) ?: ""
+            
+            val hasUninstallKeyword = nodeText.contains("uninstall") ||
+                nodeText.contains("remove") ||
+                nodeText.contains("delete") ||
+                nodeContentDesc.contains("uninstall")
+            
+            if (hasUninstallKeyword) {
+                for (packageName in protectedApps) {
+                    val appName = getAppName(packageName)
+                    if (nodeText.contains(appName.lowercase(Locale.ROOT)) ||
+                        nodeText.contains(packageName) ||
+                        nodeContentDesc.contains(appName.lowercase(Locale.ROOT))
+                    ) {
+                        onAppDetected(packageName)
+                        found = true
+                        break
+                    }
                 }
             }
+            
+            if (!found) {
+                for (i in 0 until current.childCount) {
+                    val child = current.getChild(i)
+                    if (child != null) {
+                        stack.push(child)
+                    }
+                }
+            }
+            
+            if (current != root) {
+                current.recycle()
+            }
         }
-
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i)
-            if (child != null) {
-                scanNodeForUninstallDialog(child, onAppDetected)
-                child.recycle()
+        
+        while (!stack.isEmpty()) {
+            val item = stack.pop()
+            if (item != root) {
+                item.recycle()
             }
         }
     }
@@ -650,152 +672,248 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
     }
 
     private fun traverseAndDetectScreen(
-        node: AccessibilityNodeInfo?, 
+        root: AccessibilityNodeInfo?, 
         windowRoot: AccessibilityNodeInfo?, 
         onScreenDetected: (String, String?) -> Unit
     ) {
-        if (node == null || windowRoot == null) return
-
-        if (node.className != null && node.className == "android.widget.TextView") {
-            val nodeText = node.text?.toString()?.lowercase(Locale.ROOT) ?: ""
-
-            if ((nodeText.contains("device admin") || nodeText.contains("device administrators")) &&
-                checkForAmnShieldMention(windowRoot)
-            ) {
-                if (checkForActionButton(windowRoot)) {
-                    onScreenDetected("device_admin", null)
-                    return
-                }
-            }
-
-            if (nodeText.contains("amnshield") && nodeText.contains("accessibility")) {
-                if (checkForToggleContext(windowRoot)) {
-                    onScreenDetected("accessibility_amnshield", null)
-                    return
-                }
-            }
-
-            if (nodeText.contains("uninstall") || nodeText.contains("remove")) {
-                for (packageName in protectedApps) {
-                    val appName = packageName.substringAfterLast(".").lowercase(Locale.ROOT)
-                    if (checkForAppMention(windowRoot, appName, packageName)) {
-                        onScreenDetected("app_uninstall", packageName)
+        if (root == null || windowRoot == null) return
+        val stack = java.util.ArrayDeque<AccessibilityNodeInfo>()
+        stack.push(root)
+        
+        while (!stack.isEmpty()) {
+            val current = stack.pop()
+            
+            if (current.className != null && current.className == "android.widget.TextView") {
+                val nodeText = current.text?.toString()?.lowercase(Locale.ROOT) ?: ""
+                
+                if ((nodeText.contains("device admin") || nodeText.contains("device administrators")) &&
+                    checkForAmnShieldMention(windowRoot)
+                ) {
+                    if (checkForActionButton(windowRoot)) {
+                        onScreenDetected("device_admin", null)
+                        if (current != root) current.recycle()
+                        while (!stack.isEmpty()) {
+                            val item = stack.pop()
+                            if (item != root) item.recycle()
+                        }
                         return
                     }
                 }
+                
+                if (nodeText.contains("amnshield") && nodeText.contains("accessibility")) {
+                    if (checkForToggleContext(windowRoot)) {
+                        onScreenDetected("accessibility_amnshield", null)
+                        if (current != root) current.recycle()
+                        while (!stack.isEmpty()) {
+                            val item = stack.pop()
+                            if (item != root) item.recycle()
+                        }
+                        return
+                    }
+                }
+                
+                if (nodeText.contains("uninstall") || nodeText.contains("remove")) {
+                    for (packageName in protectedApps) {
+                        val appName = packageName.substringAfterLast(".").lowercase(Locale.ROOT)
+                        if (checkForAppMention(windowRoot, appName, packageName)) {
+                            onScreenDetected("app_uninstall", packageName)
+                            if (current != root) current.recycle()
+                            while (!stack.isEmpty()) {
+                                val item = stack.pop()
+                                if (item != root) item.recycle()
+                            }
+                            return
+                        }
+                    }
+                }
             }
-        }
-
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i)
-            if (child != null) {
-                traverseAndDetectScreen(child, windowRoot, onScreenDetected)
-                child.recycle()
+            
+            for (i in 0 until current.childCount) {
+                val child = current.getChild(i)
+                if (child != null) {
+                    stack.push(child)
+                }
+            }
+            
+            if (current != root) {
+                current.recycle()
             }
         }
     }
 
-    private fun checkForActionButton(node: AccessibilityNodeInfo?): Boolean {
-        if (node == null) return false
-
-        if (node.className != null &&
-            (node.className.toString().contains("Button") || node.isClickable)
-        ) {
-            val nodeText = node.text?.toString()?.lowercase(Locale.ROOT) ?: ""
-            if (nodeText.contains("deactivate") ||
-                nodeText.contains("activate") ||
-                nodeText.contains("remove") ||
-                nodeText.contains("turn off")
+    private fun checkForActionButton(root: AccessibilityNodeInfo?): Boolean {
+        root ?: return false
+        val stack = java.util.ArrayDeque<AccessibilityNodeInfo>()
+        stack.push(root)
+        
+        var found = false
+        while (!stack.isEmpty() && !found) {
+            val current = stack.pop()
+            
+            if (current.className != null &&
+                (current.className.toString().contains("Button") || current.isClickable)
             ) {
-                return true
+                val nodeText = current.text?.toString()?.lowercase(Locale.ROOT) ?: ""
+                if (nodeText.contains("deactivate") ||
+                    nodeText.contains("activate") ||
+                    nodeText.contains("remove") ||
+                    nodeText.contains("turn off")
+                ) {
+                    found = true
+                }
+            }
+            
+            if (!found) {
+                for (i in 0 until current.childCount) {
+                    val child = current.getChild(i)
+                    if (child != null) {
+                        stack.push(child)
+                    }
+                }
+            }
+            
+            if (current != root) {
+                current.recycle()
             }
         }
-
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i)
-            if (child != null) {
-                val found = checkForActionButton(child)
-                child.recycle()
-                if (found) return true
+        
+        while (!stack.isEmpty()) {
+            val item = stack.pop()
+            if (item != root) {
+                item.recycle()
             }
         }
-
-        return false
+        
+        return found
     }
 
-    private fun checkForToggleContext(node: AccessibilityNodeInfo?): Boolean {
-        if (node == null) return false
-
-        if (node.className != null && node.className.toString().contains("Switch")) {
-            return true
-        }
-
-        val nodeText = node.text?.toString()?.lowercase(Locale.ROOT) ?: ""
-        if (nodeText.contains("use service") ||
-            nodeText.contains("turn off") ||
-            nodeText.contains("turn on")
-        ) {
-            return true
-        }
-
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i)
-            if (child != null) {
-                val found = checkForToggleContext(child)
-                child.recycle()
-                if (found) return true
+    private fun checkForToggleContext(root: AccessibilityNodeInfo?): Boolean {
+        root ?: return false
+        val stack = java.util.ArrayDeque<AccessibilityNodeInfo>()
+        stack.push(root)
+        
+        var found = false
+        while (!stack.isEmpty() && !found) {
+            val current = stack.pop()
+            
+            if (current.className != null && current.className.toString().contains("Switch")) {
+                found = true
+            } else {
+                val nodeText = current.text?.toString()?.lowercase(Locale.ROOT) ?: ""
+                if (nodeText.contains("use service") ||
+                    nodeText.contains("turn off") ||
+                    nodeText.contains("turn on")
+                ) {
+                    found = true
+                }
+            }
+            
+            if (!found) {
+                for (i in 0 until current.childCount) {
+                    val child = current.getChild(i)
+                    if (child != null) {
+                        stack.push(child)
+                    }
+                }
+            }
+            
+            if (current != root) {
+                current.recycle()
             }
         }
-
-        return false
+        
+        while (!stack.isEmpty()) {
+            val item = stack.pop()
+            if (item != root) {
+                item.recycle()
+            }
+        }
+        
+        return found
     }
 
-    private fun checkForAppMention(node: AccessibilityNodeInfo?, appName: String, packageName: String): Boolean {
-        if (node == null) return false
-
-        val nodeText = node.text?.toString()?.lowercase(Locale.ROOT) ?: ""
-        val nodeContentDescription = node.contentDescription?.toString()?.lowercase(Locale.ROOT) ?: ""
-
-        if (nodeText.contains(appName) ||
-            nodeText.contains(packageName) ||
-            nodeContentDescription.contains(appName) ||
-            nodeContentDescription.contains(packageName)
-        ) {
-            return true
-        }
-
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i)
-            if (child != null) {
-                val found = checkForAppMention(child, appName, packageName)
-                child.recycle()
-                if (found) return true
+    private fun checkForAppMention(root: AccessibilityNodeInfo?, appName: String, packageName: String): Boolean {
+        root ?: return false
+        val stack = java.util.ArrayDeque<AccessibilityNodeInfo>()
+        stack.push(root)
+        
+        var found = false
+        while (!stack.isEmpty() && !found) {
+            val current = stack.pop()
+            
+            val nodeText = current.text?.toString()?.lowercase(Locale.ROOT) ?: ""
+            val nodeContentDescription = current.contentDescription?.toString()?.lowercase(Locale.ROOT) ?: ""
+            
+            if (nodeText.contains(appName) ||
+                nodeText.contains(packageName) ||
+                nodeContentDescription.contains(appName) ||
+                nodeContentDescription.contains(packageName)
+            ) {
+                found = true
+            }
+            
+            if (!found) {
+                for (i in 0 until current.childCount) {
+                    val child = current.getChild(i)
+                    if (child != null) {
+                        stack.push(child)
+                    }
+                }
+            }
+            
+            if (current != root) {
+                current.recycle()
             }
         }
-
-        return false
+        
+        while (!stack.isEmpty()) {
+            val item = stack.pop()
+            if (item != root) {
+                item.recycle()
+            }
+        }
+        
+        return found
     }
 
-    private fun checkForAmnShieldMention(node: AccessibilityNodeInfo?): Boolean {
-        if (node == null) return false
-
-        if (node.className != null && node.className == "android.widget.TextView") {
-            val nodeText = node.text?.toString()?.lowercase(Locale.ROOT) ?: ""
-            if (nodeText.contains("amnshield")) {
-                return true
+    private fun checkForAmnShieldMention(root: AccessibilityNodeInfo?): Boolean {
+        root ?: return false
+        val stack = java.util.ArrayDeque<AccessibilityNodeInfo>()
+        stack.push(root)
+        
+        var found = false
+        while (!stack.isEmpty() && !found) {
+            val current = stack.pop()
+            
+            if (current.className != null && current.className == "android.widget.TextView") {
+                val nodeText = current.text?.toString()?.lowercase(Locale.ROOT) ?: ""
+                if (nodeText.contains("amnshield")) {
+                    found = true
+                }
+            }
+            
+            if (!found) {
+                for (i in 0 until current.childCount) {
+                    val child = current.getChild(i)
+                    if (child != null) {
+                        stack.push(child)
+                    }
+                }
+            }
+            
+            if (current != root) {
+                current.recycle()
             }
         }
-
-        for (i in 0 until node.childCount) {
-            val child = node.getChild(i)
-            if (child != null) {
-                val found = checkForAmnShieldMention(child)
-                child.recycle()
-                if (found) return true
+        
+        while (!stack.isEmpty()) {
+            val item = stack.pop()
+            if (item != root) {
+                item.recycle()
             }
         }
-
-        return false
+        
+        return found
     }
 
     private fun shouldBlockRemoval(): Boolean {

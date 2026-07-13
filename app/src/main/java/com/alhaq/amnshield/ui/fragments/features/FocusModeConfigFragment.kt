@@ -10,7 +10,8 @@ import com.alhaq.amnshield.R
 import com.alhaq.amnshield.databinding.FragmentFocusModeConfigBinding
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.ui.activity.SelectAppsActivity
-import com.alhaq.amnshield.ui.activity.TimedActionActivity
+import com.alhaq.amnshield.ui.activity.FragmentActivity
+import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
 import com.alhaq.amnshield.ui.dialogs.StartFocusMode
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
 import com.alhaq.amnshield.premium.PremiumManager
@@ -42,14 +43,7 @@ class FocusModeConfigFragment : BaseFeatureFragment() {
         }
     }
 
-    private val autoFocusLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            // Auto-focus schedule added
-            loadAutoFocusSchedules()
-        }
-    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -98,9 +92,10 @@ class FocusModeConfigFragment : BaseFeatureFragment() {
         }
 
         binding.btnAutoFocus.setOnClickListener {
-            val intent = Intent(requireContext(), TimedActionActivity::class.java)
-            intent.putExtra("selected_mode", TimedActionActivity.MODE_AUTO_FOCUS)
-            autoFocusLauncher.launch(intent, activityOptions)
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+            }
+            startActivity(intent)
         }
 
         binding.btnStartFocusMode.setOnClickListener {
@@ -129,7 +124,6 @@ class FocusModeConfigFragment : BaseFeatureFragment() {
     private fun loadConfiguration() {
         val selectedApps = savedPreferencesLoader.getFocusModeSelectedApps()
         updateSelectedAppsCount(selectedApps.size)
-        loadAutoFocusSchedules()
     }
 
     private fun updateSelectedAppsCount(count: Int) {
@@ -137,8 +131,7 @@ class FocusModeConfigFragment : BaseFeatureFragment() {
     }
 
     private fun loadAutoFocusSchedules() {
-        // Auto-focus schedules are managed through the TimedActionActivity
-        // No need to display them here - they're listed in the TimedActionActivity when user taps "Setup Auto-Focus"
+        // No-op - auto focus schedules are unified under schedules
     }
 
     override fun onDestroyView() {

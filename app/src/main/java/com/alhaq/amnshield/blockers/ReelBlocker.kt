@@ -83,8 +83,6 @@ class ReelBlocker : BaseBlocker() {
     // Browser shorts detection (off by default to avoid surprising existing users).
     var isBrowserShortsEnabled = false
 
-    var cheatMinuteStartTime: Int? = null
-    var cheatMinutesEndTime: Int? = null
     private var allowanceDate = TimeTools.getCurrentDate()
     private val firstReelAllowanceConsumed = hashSetOf<String>()
 
@@ -99,7 +97,7 @@ class ReelBlocker : BaseBlocker() {
         rootNode: AccessibilityNodeInfo,
         packageName: String
     ): ReelBlockerResult? {
-        if (!isEnabled || isCheatHourActive()) {
+        if (!isEnabled) {
             return null
         }
 
@@ -180,7 +178,7 @@ class ReelBlocker : BaseBlocker() {
     }
 
     fun detectReelSurfaceId(rootNode: AccessibilityNodeInfo, packageName: String): String? {
-        if (!isEnabled || isCheatHourActive()) {
+        if (!isEnabled) {
             return null
         }
 
@@ -293,19 +291,7 @@ class ReelBlocker : BaseBlocker() {
         }
     }
 
-    private fun isCheatHourActive(): Boolean {
-        if (cheatMinuteStartTime == null || cheatMinutesEndTime == null ||
-            cheatMinuteStartTime == -1 || cheatMinutesEndTime == -1
-        ) {
-            return false
-        }
 
-        return ScheduleUtils.isDailyWindowActive(
-            cheatMinuteStartTime!!,
-            cheatMinutesEndTime!!,
-            System.currentTimeMillis()
-        )
-    }
 
     data class ReelBlockerResult(
         val isBlocked: Boolean = false,

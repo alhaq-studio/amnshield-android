@@ -5,16 +5,12 @@ import com.alhaq.amnshield.data.blockers.AppBlockScheduleRule
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
 import com.alhaq.amnshield.utils.ScheduleUtils
 import com.alhaq.amnshield.utils.TimeTools
-import com.alhaq.amnshield.ui.activity.TimedActionActivity
 import java.util.Calendar
 
 class AppBlocker : BaseBlocker() {
 
     // package-name -> end-time-in-millis (grace period / temporary bypass)
     private var cooldownAppsList: MutableMap<String, Long> = mutableMapOf()
-
-    // package-name -> [(start-time, end-time), ...] (legacy cheat hours)
-    private var cheatHours: MutableMap<String, List<Pair<Int, Int>>> = mutableMapOf()
 
     private var scheduleRules: List<AppBlockScheduleRule> = emptyList()
 
@@ -45,12 +41,6 @@ class AppBlocker : BaseBlocker() {
         )
         if (activeCheatEnd != null) {
             return AppBlockerResult(isBlocked = false, cheatHoursEndTime = activeCheatEnd)
-        }
-
-        // 3. Check for legacy cheat hours (bypass)
-        val endCheatMillis = getLegacyCheatEndTimeInMillis(packageName)
-        if (endCheatMillis != null) {
-            return AppBlockerResult(isBlocked = false, cheatHoursEndTime = endCheatMillis)
         }
 
         // 4. Check for Cooldown/Bypass (grace period)
@@ -118,28 +108,7 @@ class AppBlocker : BaseBlocker() {
         return HashMap(cooldownAppsList)
     }
 
-    private fun getLegacyCheatEndTimeInMillis(packageName: String): Long? {
-        val rules = cheatHours[packageName] ?: return null
-        val nowMillis = System.currentTimeMillis()
 
-        rules.forEach { (startMinutes, endMinutes) ->
-            val endTime = ScheduleUtils.getDailyWindowEndTime(startMinutes, endMinutes, nowMillis)
-            if (endTime != null) return endTime
-        }
-        return null
-    }
-
-    fun refreshCheatHoursData(cheatList: List<TimedActionActivity.AutoTimedActionItem>) {
-        cheatHours.clear()
-        cheatList.forEach { item ->
-            val startTime = item.startTimeInMins
-            val endTime = item.endTimeInMins
-            item.packages.forEach { pkg ->
-                val list = cheatHours.getOrPut(pkg) { mutableListOf() } as MutableList
-                list.add(Pair(startTime, endTime))
-            }
-        }
-    }
 
     fun refreshScheduleRules(rules: List<AppBlockScheduleRule>) {
         scheduleRules = rules

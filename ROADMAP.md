@@ -1,8 +1,14 @@
 # AmnShield Roadmap
 
-Last updated: 2026-07-12
+Last updated: 2026-07-13
 
 ## Recently Completed
+- **Scheduling System Consolidation (July 2026)**
+  - Consolidated legacy timed scheduling systems (Cheat Hours, Auto-Focus, and Reel Blocker slider ranges) into the unified schedules framework.
+  - Retired the redundant `TimedActionActivity`, `AutoTimedActionItem` data model, and custom slider dialogs.
+  - Redirected all timed settings buttons to the unified `ManageBlockSchedulesFragment` for a clean, consistent UX.
+  - Implemented automatic data migration in `SavedPreferencesLoader` to transition existing users' cheat and auto-focus hours seamlessly.
+  - Resolved the bug where auto-focus schedules set in the UI were ignored by the background Accessibility Service.
 - **Monetization & Licensing Track (July 2026)**
   - Configured custom build-flavor partitioning via `IS_PLAYSTORE` BuildConfig flags.
   - Implemented offline-first ECDSA cryptographic license validator on client builds.

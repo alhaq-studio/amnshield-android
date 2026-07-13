@@ -17,12 +17,10 @@ import com.alhaq.amnshield.R
 import com.alhaq.amnshield.blockers.ReelBlocker
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.ui.activity.SelectAppsActivity
-import com.alhaq.amnshield.ui.activity.TimedActionActivity
 import com.alhaq.amnshield.ui.activity.ManageKeywordsActivity
 import com.alhaq.amnshield.ui.activity.FragmentActivity
 import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
 import com.alhaq.amnshield.ui.dialogs.TweakAppBlockerWarning
-import com.alhaq.amnshield.ui.dialogs.TweakViewBlockerCheatHours
 import com.alhaq.amnshield.ui.dialogs.TweakViewBlockerWarning
 import com.alhaq.amnshield.ui.dialogs.TweakUsageTracker
 import com.alhaq.amnshield.ui.dialogs.TweakKeywordBlocker
@@ -52,15 +50,6 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
                 sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
                 updateSelectedAppsCount(it.size)
             }
-        }
-    }
-
-    private val cheatHoursLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
-            Toast.makeText(requireContext(), "Cheat hours updated", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -118,9 +107,10 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
         }
 
         binding.btnCheatHours.setOnClickListener {
-            val intent = Intent(requireContext(), TimedActionActivity::class.java)
-            intent.putExtra("selected_mode", TimedActionActivity.MODE_APP_BLOCKER_CHEAT_HOURS)
-            cheatHoursLauncher.launch(intent, activityOptions)
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+            }
+            startActivity(intent)
         }
 
         binding.btnBlockSchedules.setOnClickListener {
@@ -334,10 +324,10 @@ class ReelBlockerConfigFragment : BaseFeatureFragment() {
         }
 
         binding.btnCheatHours.setOnClickListener {
-            TweakViewBlockerCheatHours(savedPreferencesLoader).show(
-                childFragmentManager,
-                "tweak_reel_blocker_cheat_hours"
-            )
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+            }
+            startActivity(intent)
         }
 
         return binding.root

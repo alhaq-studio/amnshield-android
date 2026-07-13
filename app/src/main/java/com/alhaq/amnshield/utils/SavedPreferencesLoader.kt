@@ -9,8 +9,9 @@ import com.alhaq.amnshield.blockers.FocusModeBlocker
 import com.alhaq.amnshield.data.blockers.AppBlockScheduleRule
 import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
 import com.alhaq.amnshield.ui.activity.MainActivity
-import com.alhaq.amnshield.ui.activity.TimedActionActivity
 import java.util.Calendar
+import java.util.UUID
+import java.util.ArrayList
 
 class SavedPreferencesLoader(private val context: Context) {
 
@@ -194,54 +195,101 @@ class SavedPreferencesLoader(private val context: Context) {
             context.getSharedPreferences("app_preferences", Context.MODE_PRIVATE)
         sharedPreferences.edit().putStringSet("blocked_keywords", pinnedApps).apply()
     }
-    fun saveAppBlockerCheatHoursList(cheatHoursList: MutableList<TimedActionActivity.AutoTimedActionItem>) {
-        val sharedPreferences = context.getSharedPreferences("cheat_hours", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        val gson = Gson()
+    private data class LegacyAutoTimedActionItem(
+        val title: String = "",
+        val startTimeInMins: Int = 0,
+        val endTimeInMins: Int = 0,
+        val packages: ArrayList<String> = ArrayList()
+    )
 
-        val json = gson.toJson(cheatHoursList)
+    fun migrateLegacySchedulesIfNeeded() {
+        val migrationPrefs = context.getSharedPreferences("schedules_migration", Context.MODE_PRIVATE)
+        if (migrationPrefs.getBoolean("migrated_v2", false)) {
+            return
+        }
 
-        editor.putString("cheatHoursList", json)
-        editor.apply()
-    }
+        // 1. Migrate App Blocker Cheat Hours
+        val cheatHoursPrefs = context.getSharedPreferences("cheat_hours", Context.MODE_PRIVATE)
+        val legacyCheatJson = cheatHoursPrefs.getString("cheatHoursList", null)
+        if (!legacyCheatJson.isNullOrEmpty()) {
+            try {
+                val legacyType = object : TypeToken<List<LegacyAutoTimedActionItem>>() {}.type
+                val legacyList = Gson().fromJson<List<LegacyAutoTimedActionItem>>(legacyCheatJson, legacyType) ?: emptyList()
+                val currentRules = loadAppBlockerScheduleRules()
+                legacyList.forEach { item ->
+                    item.packages.forEach { pkg ->
+                        val rule = AppBlockScheduleRule(
+                            id = UUID.randomUUID().toString(),
+                            title = item.title,
+                            packageName = pkg,
+                            type = AppBlockScheduleRule.RuleType.CHEAT,
+                            recurrence = AppBlockScheduleRule.Recurrence.DAILY,
+                            startMinute = item.startTimeInMins,
+                            endMinute = item.endTimeInMins
+                        )
+                        currentRules.add(rule)
+                    }
+                }
+                saveAppBlockerScheduleRules(currentRules)
+            } catch (e: Exception) {
+                Log.e("SavedPreferencesLoader", "Error migrating app blocker cheat hours", e)
+            }
+        }
 
-    fun loadAppBlockerCheatHoursList(): MutableList<TimedActionActivity.AutoTimedActionItem> {
-        val sharedPreferences = context.getSharedPreferences("cheat_hours", Context.MODE_PRIVATE)
-        val gson = Gson()
+        // 2. Migrate Focus Mode Auto-Focus Hours
+        val focusHoursPrefs = context.getSharedPreferences("auto_focus_hours", Context.MODE_PRIVATE)
+        val legacyFocusJson = focusHoursPrefs.getString("auto_focus_list", null)
+        if (!legacyFocusJson.isNullOrEmpty()) {
+            try {
+                val legacyType = object : TypeToken<List<LegacyAutoTimedActionItem>>() {}.type
+                val legacyList = Gson().fromJson<List<LegacyAutoTimedActionItem>>(legacyFocusJson, legacyType) ?: emptyList()
+                val currentUnifiedRules = loadUnifiedFeatureScheduleRules()
+                legacyList.forEach { item ->
+                    val rule = UnifiedFeatureScheduleRule(
+                        id = UUID.randomUUID().toString(),
+                        title = item.title,
+                        type = UnifiedFeatureScheduleRule.RuleType.BLOCK,
+                        recurrence = UnifiedFeatureScheduleRule.Recurrence.DAILY,
+                        targets = setOf(UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE),
+                        startMinute = item.startTimeInMins,
+                        endMinute = item.endTimeInMins
+                    )
+                    currentUnifiedRules.add(rule)
+                }
+                saveUnifiedFeatureScheduleRules(currentUnifiedRules)
+            } catch (e: Exception) {
+                Log.e("SavedPreferencesLoader", "Error migrating focus mode auto-focus hours", e)
+            }
+        }
 
-        val json = sharedPreferences.getString("cheatHoursList", null)
+        // 3. Migrate Reel Blocker Cheat Hours
+        val reelBlockerStartTime = cheatHoursPrefs.getInt("view_blocker_start_time", -1)
+        val reelBlockerEndTime = cheatHoursPrefs.getInt("view_blocker_end_time", -1)
+        if (reelBlockerStartTime != -1 && reelBlockerEndTime != -1) {
+            try {
+                val currentUnifiedRules = loadUnifiedFeatureScheduleRules()
+                val rule = UnifiedFeatureScheduleRule(
+                    id = UUID.randomUUID().toString(),
+                    title = "Reel Blocker Cheat Hours",
+                    type = UnifiedFeatureScheduleRule.RuleType.CHEAT,
+                    recurrence = UnifiedFeatureScheduleRule.Recurrence.DAILY,
+                    targets = setOf(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER),
+                    startMinute = reelBlockerStartTime,
+                    endMinute = reelBlockerEndTime
+                )
+                currentUnifiedRules.add(rule)
+                saveUnifiedFeatureScheduleRules(currentUnifiedRules)
+            } catch (e: Exception) {
+                Log.e("SavedPreferencesLoader", "Error migrating reel blocker cheat hours", e)
+            }
+        }
 
-        if (json.isNullOrEmpty()) return mutableListOf()
+        // 4. Mark migration as complete
+        migrationPrefs.edit().putBoolean("migrated_v2", true).apply()
 
-        val type =
-            object : TypeToken<MutableList<TimedActionActivity.AutoTimedActionItem>>() {}.type
-        return gson.fromJson(json, type)
-    }
-
-    fun saveAutoFocusHoursList(cheatHoursList: MutableList<TimedActionActivity.AutoTimedActionItem>) {
-        val sharedPreferences =
-            context.getSharedPreferences("auto_focus_hours", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        val gson = Gson()
-
-        val json = gson.toJson(cheatHoursList)
-
-        editor.putString("auto_focus_list", json)
-        editor.apply()
-    }
-
-    fun loadAutoFocusHoursList(): MutableList<TimedActionActivity.AutoTimedActionItem> {
-        val sharedPreferences =
-            context.getSharedPreferences("auto_focus_hours", Context.MODE_PRIVATE)
-        val gson = Gson()
-
-        val json = sharedPreferences.getString("auto_focus_list", null)
-
-        if (json.isNullOrEmpty()) return mutableListOf()
-
-        val type =
-            object : TypeToken<MutableList<TimedActionActivity.AutoTimedActionItem>>() {}.type
-        return gson.fromJson(json, type)
+        // 5. Clean up old preferences keys/files
+        cheatHoursPrefs.edit().remove("cheatHoursList").remove("view_blocker_start_time").remove("view_blocker_end_time").apply()
+        focusHoursPrefs.edit().remove("auto_focus_list").apply()
     }
 
     fun saveAppBlockerWarningInfo(warningData: MainActivity.WarningData) {

@@ -426,16 +426,16 @@ Export available: CSV, TXT
 
 ### Test 14: Cheat Hours Behavior
 
-**Objective**: Verify cheat windows allow controlled exceptions.
+**Objective**: Verify cheat windows allow controlled exceptions configured via Schedules.
 
 **Steps**:
-1. Configure a cheat window for an app and keep app blocked.
-2. Enter app during active cheat window.
-3. Retry outside cheat window.
+1. Open the Schedules manager and create an App Schedule of type CHEAT for a blocked app.
+2. Enter the app during the active cheat schedule window.
+3. Verify access outside the active cheat schedule window (normal block behavior resumes).
 
 **Expected Results**:
-- Active cheat window: app is temporarily allowed.
-- Outside cheat window: normal block behavior resumes.
+- During active cheat schedule: app is temporarily allowed.
+- Outside cheat schedule: normal block behavior resumes.
 
 ### Test 15: Schedules Manager (Individual + Group)
 

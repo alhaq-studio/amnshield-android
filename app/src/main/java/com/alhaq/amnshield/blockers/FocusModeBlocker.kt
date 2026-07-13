@@ -1,10 +1,6 @@
 package com.alhaq.amnshield.blockers
 
-import android.os.SystemClock
 import com.alhaq.amnshield.Constants
-import com.alhaq.amnshield.ui.activity.TimedActionActivity
-import com.alhaq.amnshield.utils.TimeTools
-import java.util.Calendar
 
 class FocusModeBlocker : BaseBlocker() {
 
@@ -18,10 +14,8 @@ class FocusModeBlocker : BaseBlocker() {
             "com.android.launcher3",
             "com.sec.android.app.launcher",
             "com.huawei.android.launcher",
-            "com.xiaomi.launcher",
-            "com.oppo.launcher",
-            "com.oneplus.launcher",
-            "com.miui.home",
+            "com.miui.mihome2",
+            "com.mi.android.globallauncher",
             "com.android.dialer",
             "com.android.phone",
             "com.android.contacts",
@@ -34,9 +28,6 @@ class FocusModeBlocker : BaseBlocker() {
             "com.alhaq.amnshield" // AmnShield itself
         )
     }
-
-    // package-name -> [(start-time, end-time), ...]
-    private var autoFocusHours: MutableMap<String, List<Pair<Int, Int>>> = mutableMapOf()
 
     var focusModeData = FocusModeData()
 
@@ -83,69 +74,7 @@ class FocusModeBlocker : BaseBlocker() {
             }
         }
 
-        // check if app is under auto-focus mode
-        val endAutoFocus = getEndTimeInMillis(packageName)
-        if (endAutoFocus != null) {
-            return FocusModeResult(isBlocked = true, focusModeEndTime = endAutoFocus)
-        }
-
         return FocusModeResult(isBlocked = false)
-    }
-
-    /**
-     * Check if the package is currently under auto focus hours
-     *
-     * @param packageName The app's package name.
-     * @return Returns null if the app is not under auto focus hours, or the timestamp (uptimeMillis) when it ends .
-     */
-    private fun getEndTimeInMillis(packageName: String): Long? {
-        if (autoFocusHours[packageName] == null) return null
-
-        val currentTime = Calendar.getInstance()
-        val currentHour = currentTime.get(Calendar.HOUR_OF_DAY)
-        val currentMinute = currentTime.get(Calendar.MINUTE)
-
-        val currentMinutes = TimeTools.convertToMinutesFromMidnight(currentHour, currentMinute)
-        val uptimeNow = SystemClock.uptimeMillis()
-
-        autoFocusHours[packageName]?.forEach { (startMinutes, endMinutes) ->
-            if ((startMinutes <= endMinutes && currentMinutes in startMinutes until endMinutes) ||
-                (startMinutes > endMinutes && (currentMinutes >= startMinutes || currentMinutes < endMinutes))
-            ) {
-
-                // Convert endMinutes to uptimeMillis
-                val diffMinutes = endMinutes - currentMinutes
-                val endTimeMillis = uptimeNow + (diffMinutes * 60 * 1000)
-
-                return endTimeMillis
-            }
-        }
-        return null
-    }
-
-
-    fun refreshCheatHoursData(focusData: List<TimedActionActivity.AutoTimedActionItem>) {
-        autoFocusHours.clear()
-        focusData.forEach { item ->
-            val startTime = item.startTimeInMins
-            val endTime = item.endTimeInMins
-            val packageNames: ArrayList<String> = item.packages
-
-            packageNames.forEach { packageName ->
-
-                if (autoFocusHours.containsKey(packageName)) {
-                    val cheatHourTimeData = autoFocusHours[packageName].orEmpty()
-                    val cheatHourNewTimeData: MutableList<Pair<Int, Int>> =
-                        cheatHourTimeData.toMutableList()
-
-                    cheatHourNewTimeData.add(Pair(startTime, endTime))
-                    autoFocusHours[packageName] = cheatHourNewTimeData
-                } else {
-                    autoFocusHours[packageName] = listOf(Pair(startTime, endTime))
-                }
-            }
-        }
-
     }
 
     /**

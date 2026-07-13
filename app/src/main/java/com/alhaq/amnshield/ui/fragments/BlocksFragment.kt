@@ -11,10 +11,10 @@ import com.alhaq.amnshield.databinding.FragmentBlocksBinding
 import com.alhaq.amnshield.premium.PremiumManager
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.ui.activity.FragmentActivity
-import com.alhaq.amnshield.ui.activity.TimedActionActivity
 import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
 import com.alhaq.amnshield.ui.fragments.ManageLaunchLimitsFragment
 import com.alhaq.amnshield.ui.fragments.features.BaseFeatureFragment
+import com.alhaq.amnshield.data.blockers.AppBlockScheduleRule
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
@@ -73,8 +73,9 @@ class BlocksFragment : BaseFeatureFragment() {
         val focusActive = premiumEnabled && focusData.isTurnedOn && serviceEnabled
         updateStatus(binding.chipFocusModeStatus, focusActive, if (focusActive) getString(R.string.on) else getString(R.string.off))
 
-        val cheatCount = blocksLoader.loadAppBlockerCheatHoursList().size
-        val scheduleCount = blocksLoader.loadAppBlockerScheduleRules().size
+        val allSchedules = blocksLoader.loadAppBlockerScheduleRules()
+        val cheatCount = allSchedules.count { it.type == AppBlockScheduleRule.RuleType.CHEAT }
+        val scheduleCount = allSchedules.count { it.type == AppBlockScheduleRule.RuleType.BLOCK }
         val launchLimitCount = blocksLoader.loadAppLaunchLimitRules().size
 
         updateCountStatus(binding.chipCheatHoursStatus, cheatCount, "${cheatCount} windows")
@@ -147,7 +148,6 @@ class BlocksFragment : BaseFeatureFragment() {
             getString(R.string.app_blocker),
             getString(R.string.keyword_blocker),
             getString(R.string.focus_mode),
-            getString(R.string.manage_cheat_hours),
             getString(R.string.manage_block_schedules),
             getString(R.string.manage_launch_limits)
         )
@@ -159,9 +159,8 @@ class BlocksFragment : BaseFeatureFragment() {
                     0 -> openFeatureConfig("app_blocker", requiresPremium = true)
                     1 -> openFeatureConfig("keyword_blocker", requiresPremium = false)
                     2 -> openFeatureConfig("focus_mode", requiresPremium = true)
-                    3 -> openCheatHours()
-                    4 -> openSchedules()
-                    5 -> openLaunchLimits()
+                    3 -> openSchedules()
+                    4 -> openLaunchLimits()
                 }
             }
             .setNegativeButton(android.R.string.cancel, null)
@@ -181,14 +180,7 @@ class BlocksFragment : BaseFeatureFragment() {
     }
 
     private fun openCheatHours() {
-        if (!premiumManager.isPremium()) {
-            showPremiumUpsell()
-            return
-        }
-        val intent = Intent(requireContext(), TimedActionActivity::class.java).apply {
-            putExtra("selected_mode", TimedActionActivity.MODE_APP_BLOCKER_CHEAT_HOURS)
-        }
-        startActivity(intent, activityOptions.toBundle())
+        openSchedules()
     }
 
     private fun openSchedules() {

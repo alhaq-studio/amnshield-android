@@ -36,3 +36,4 @@ google-services.json
 # ── OS noise ───────────────────────────────────────────────────────────────
 Thumbs.db
 Desktop.ini
+*.log
