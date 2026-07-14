@@ -25,6 +25,10 @@ android {
                 storePassword = keystoreProperties.getProperty("storePassword")
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = true
             }
         }
     }
@@ -33,8 +37,8 @@ android {
         applicationId = "com.alhaq.deenshield"
         minSdk = 26
         targetSdk = 36
-        versionCode = 125
-        versionName = "0.14.6.2026"
+        versionCode = 126
+        versionName = "0.15.0.2026"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         // Fix for 16 KB page size devices (Android 15+)
