@@ -37,8 +37,8 @@ android {
         applicationId = "com.alhaq.deenshield"
         minSdk = 26
         targetSdk = 36
-        versionCode = 127
-        versionName = "0.15.7.2026"
+        versionCode = 126
+        versionName = "0.15.0.2026"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         // Fix for 16 KB page size devices (Android 15+)
@@ -88,7 +88,6 @@ android {
         create("playstore") {
             dimension = "distribution"
             buildConfigField("Boolean", "IS_PLAYSTORE", "true")
-            applicationIdSuffix = ""
         }
         create("fdroid") {
             dimension = "distribution"
