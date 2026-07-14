@@ -3,6 +3,7 @@ import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
 }
 
@@ -103,6 +104,7 @@ android {
         viewBinding = true
         buildConfig = true
         aidl = true
+        compose = true
     }
     lint {
         baseline = file("lint-baseline.xml")
@@ -138,4 +140,16 @@ dependencies {
     add("playstoreImplementation", libs.billing.ktx)
     add("universalImplementation", libs.play.services.auth)
     add("universalImplementation", libs.billing.ktx)
+
+    // Jetpack Compose Dependencies
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }
