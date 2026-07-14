@@ -18,6 +18,7 @@
 keystore.properties
 deenshield-release-key.jks
 upload_certificate.pem
+Signing Report-DeenShield.txt
 
 # ── Node / JS (Firebase Admin SDK, tooling, etc.) ──────────────────────────
 node_modules/
@@ -38,3 +39,4 @@ google-services.json
 Thumbs.db
 Desktop.ini
 *.log
+.idea
