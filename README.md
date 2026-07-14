@@ -130,37 +130,7 @@ push a version tag. It builds, signs, and publishes both APKs to GitHub Releases
 git tag v1.2.3
 git push origin v1.2.3
 ```
-
-The workflow auto-marks a release as **pre-release** if the tag contains `-alpha`,
-`-beta`, or `-rc` (e.g. `v1.2.3-beta`).
-
-#### Required GitHub Secrets
-
-Set these in **Settings → Secrets → Actions** on your repository:
-
-| Secret | Value |
-|---|---|
-| `KEYSTORE_BASE64` | Base64-encoded `.jks` keystore file |
-| `KEYSTORE_STORE_PASSWORD` | Keystore store password |
-| `KEYSTORE_KEY_ALIAS` | Key alias |
-| `KEYSTORE_KEY_PASSWORD` | Key password |
-
-Encode your keystore on Windows:
-```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("deenshield-release-key.jks")) | Set-Clipboard
-```
-
-### Manual Release Builds
-
-Requires a `keystore.properties` file at the project root:
-
-```properties
-storeFile=path/to/keystore.jks
-storePassword=your_store_password
-keyAlias=your_key_alias
-keyPassword=your_key_password
-```
-
+For Self Build:
 ```powershell
 # GitHub Releases (the two public APKs)
 .\gradlew assembleUniversalRelease
