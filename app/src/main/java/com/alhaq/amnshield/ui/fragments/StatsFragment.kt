@@ -5,16 +5,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.ActivityOptionsCompat
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.alhaq.amnshield.R
-import com.alhaq.amnshield.databinding.FragmentStatsBinding
 import com.alhaq.amnshield.premium.PremiumManager
 import com.alhaq.amnshield.ui.activity.FragmentActivity
 import com.alhaq.amnshield.ui.activity.ReportsActivity
 import com.alhaq.amnshield.ui.fragments.usage.AllAppsUsageFragment
+import com.alhaq.amnshield.ui.screens.AppUsageItem
+import com.alhaq.amnshield.ui.screens.StatsScreen
+import com.alhaq.amnshield.ui.theme.AmnShieldTheme
 import com.alhaq.amnshield.utils.BlockingStatsManager
 import com.alhaq.amnshield.utils.UsageStatsHelper
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
@@ -27,23 +31,56 @@ import java.util.Locale
 
 class StatsFragment : Fragment() {
 
-    private var _binding: FragmentStatsBinding? = null
-    private val binding get() = _binding!!
     private val premiumManager by lazy { PremiumManager.getInstance(requireContext()) }
     private val savedPreferencesLoader by lazy { SavedPreferencesLoader(requireContext()) }
+
+    // Compose States
+    private val totalScreenTimeState = mutableStateOf("0h 0m")
+    private val distractionsBlockedState = mutableStateOf(0)
+    private val focusTimeState = mutableStateOf("0m")
+    private val topAppsState = mutableStateListOf<AppUsageItem>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentStatsBinding.inflate(inflater, container, false)
-        return binding.root
+        return ComposeView(requireContext()).apply {
+            setContent {
+                AmnShieldTheme {
+                    StatsScreen(
+                        totalScreenTime = totalScreenTimeState.value,
+                        distractionsBlocked = distractionsBlockedState.value,
+                        focusTime = focusTimeState.value,
+                        topApps = topAppsState,
+                        onRefresh = { loadStats() },
+                        onViewDetailedUsage = {
+                            val intent = Intent(requireContext(), FragmentActivity::class.java)
+                            intent.putExtra("fragment", AllAppsUsageFragment.FRAGMENT_ID)
+                            val options = ActivityOptionsCompat.makeCustomAnimation(
+                                requireContext(),
+                                R.anim.fade_in,
+                                R.anim.fade_out
+                            )
+                            startActivity(intent, options.toBundle())
+                        },
+                        onViewReelsMetrics = {
+                            val intent = Intent(requireContext(), ReportsActivity::class.java)
+                            val options = ActivityOptionsCompat.makeCustomAnimation(
+                                requireContext(),
+                                R.anim.fade_in,
+                                R.anim.fade_out
+                            )
+                            startActivity(intent, options.toBundle())
+                        }
+                    )
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupClickListeners()
         loadStats()
     }
 
@@ -52,49 +89,18 @@ class StatsFragment : Fragment() {
         loadStats()
     }
 
-    private fun setupClickListeners() {
-        binding.btnRefreshStats.setOnClickListener {
-            loadStats()
-        }
-
-        binding.btnViewDetails.setOnClickListener {
-            val intent = Intent(requireContext(), FragmentActivity::class.java)
-            intent.putExtra("fragment", AllAppsUsageFragment.FRAGMENT_ID)
-            val options = ActivityOptionsCompat.makeCustomAnimation(
-                requireContext(),
-                com.alhaq.amnshield.R.anim.fade_in,
-                com.alhaq.amnshield.R.anim.fade_out
-            )
-            startActivity(intent, options.toBundle())
-        }
-
-        binding.btnViewReports.setOnClickListener {
-            val intent = Intent(requireContext(), ReportsActivity::class.java)
-            val options = ActivityOptionsCompat.makeCustomAnimation(
-                requireContext(),
-                com.alhaq.amnshield.R.anim.fade_in,
-                com.alhaq.amnshield.R.anim.fade_out
-            )
-            startActivity(intent, options.toBundle())
-        }
-    }
-
     private fun showPremiumUpsell() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.premium_required_title)
             .setMessage(getString(R.string.premium_required_message))
             .setPositiveButton(R.string.premium_view_plans) { _, _ ->
-                openPremiumScreen()
+                val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                    putExtra("feature_type", "premium_features")
+                }
+                startActivity(intent)
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
-    }
-
-    private fun openPremiumScreen() {
-        val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-            putExtra("feature_type", "premium_features")
-        }
-        startActivity(intent)
     }
 
     private fun loadStats() {
@@ -112,91 +118,48 @@ class StatsFragment : Fragment() {
                         val startTime = calendar.timeInMillis
                         val endTime = System.currentTimeMillis()
 
-                        // Get usage stats using getForegroundStatsByTimestamps
                         val statsList = usageStatsHelper.getForegroundStatsByTimestamps(startTime, endTime)
                         val totalTime = statsList.sumOf { it.totalTime }
 
-                        // Get top 3 apps
-                        val sortedApps = statsList.sortedByDescending { it.totalTime }.take(3)
+                        val sortedApps = statsList.sortedByDescending { it.totalTime }.take(5)
 
                         withContext(Dispatchers.Main) {
                             // Update screen time
                             val hours = totalTime / (1000 * 60 * 60)
                             val minutes = (totalTime % (1000 * 60 * 60)) / (1000 * 60)
-                            binding.txtScreenTime.text = "${hours}h ${minutes}m"
+                            totalScreenTimeState.value = "${hours}h ${minutes}m"
 
-                            // Update daily report summary with live blocking stats
+                            // Update blocking stats
                             val blockStats = BlockingStatsManager.getInstance(ctx).getTodayStats()
                             val totalBlocks = blockStats.appBlocksCount + blockStats.keywordBlocksCount + blockStats.viewBlocksCount
-                            val summaryParts = mutableListOf<String>()
-                            if (totalBlocks > 0) summaryParts.add("$totalBlocks blocks")
-                            if (blockStats.focusSessionsCount > 0) summaryParts.add("${blockStats.focusSessionsCount} focus sessions")
-                            if (blockStats.totalFocusMinutes > 0) summaryParts.add("${formatMinutes(blockStats.totalFocusMinutes)} focus time")
-                            binding.dailyReportSummary.text = if (summaryParts.isNotEmpty()) {
-                                summaryParts.joinToString(" · ")
-                            } else {
-                                "No activity recorded yet today."
-                            }
+                            distractionsBlockedState.value = totalBlocks
+                            focusTimeState.value = formatMinutes(blockStats.totalFocusMinutes)
 
-                            // Update top apps
-                            binding.txtTopApp1.text = "1. No usage yet"
-                            binding.txtTopApp2.text = "2. No usage yet"
-                            binding.txtTopApp3.text = "3. No usage yet"
-
-                            if (sortedApps.isNotEmpty()) {
-                                val app1 = sortedApps.getOrNull(0)
-                                if (app1 != null) {
-                                    val appName = try {
-                                        val appInfo = ctx.packageManager.getApplicationInfo(app1.packageName, 0)
-                                        ctx.packageManager.getApplicationLabel(appInfo).toString()
-                                    } catch (e: Exception) {
-                                        app1.packageName
-                                    }
-                                    val appTime = app1.totalTime / (1000 * 60)
-                                    binding.txtTopApp1.text = "1. $appName - ${appTime}m"
+                            // Update top apps list
+                            topAppsState.clear()
+                            for (appStat in sortedApps) {
+                                val appName = try {
+                                    val appInfo = ctx.packageManager.getApplicationInfo(appStat.packageName, 0)
+                                    ctx.packageManager.getApplicationLabel(appInfo).toString()
+                                } catch (e: Exception) {
+                                    appStat.packageName
                                 }
-
-                                val app2 = sortedApps.getOrNull(1)
-                                if (app2 != null) {
-                                    val appName = try {
-                                        val appInfo = ctx.packageManager.getApplicationInfo(app2.packageName, 0)
-                                        ctx.packageManager.getApplicationLabel(appInfo).toString()
-                                    } catch (e: Exception) {
-                                        app2.packageName
-                                    }
-                                    val appTime = app2.totalTime / (1000 * 60)
-                                    binding.txtTopApp2.text = "2. $appName - ${appTime}m"
-                                }
-
-                                val app3 = sortedApps.getOrNull(2)
-                                if (app3 != null) {
-                                    val appName = try {
-                                        val appInfo = ctx.packageManager.getApplicationInfo(app3.packageName, 0)
-                                        ctx.packageManager.getApplicationLabel(appInfo).toString()
-                                    } catch (e: Exception) {
-                                        app3.packageName
-                                    }
-                                    val appTime = app3.totalTime / (1000 * 60)
-                                    binding.txtTopApp3.text = "3. $appName - ${appTime}m"
-                                }
+                                val appTime = appStat.totalTime / (1000 * 60)
+                                val appTimeFormatted = if (appTime >= 60) "${appTime / 60}h ${appTime % 60}m" else "${appTime}m"
+                                val progress = (appTime.toFloat() / 120f).coerceIn(0f, 1f)
+                                topAppsState.add(AppUsageItem(appName, appTimeFormatted, progress))
                             }
                         }
                     }
                 } catch (t: Throwable) {
-                    binding.txtScreenTime.text = "0h 0m"
-                    binding.dailyReportSummary.text = "Stats unavailable. Tap Refresh below."
-                    binding.txtTopApp1.text = "1. No usage yet"
-                    binding.txtTopApp2.text = "2. No usage yet"
-                    binding.txtTopApp3.text = "3. No usage yet"
+                    totalScreenTimeState.value = "0h 0m"
+                    distractionsBlockedState.value = 0
+                    focusTimeState.value = "0m"
+                    topAppsState.clear()
                     android.util.Log.e("StatsFragment", "Failed to load stats", t)
                 }
             }
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 
     private fun formatMinutes(totalMinutes: Long): String {

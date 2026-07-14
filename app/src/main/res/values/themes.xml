@@ -178,22 +178,23 @@
     </style>
 
     <style name="Widget.AmnShield.NavigationDrawer" parent="Widget.Material3.NavigationView">
-        <item name="android:background">?attr/colorSurfaceContainerLow</item>
+        <item name="android:background">?attr/colorSurface</item>
         <item name="itemIconTint">@color/nav_item_tint</item>
         <item name="itemTextColor">@color/nav_item_tint</item>
         <item name="itemBackground">@drawable/bg_nav_drawer_item</item>
         <item name="itemIconPadding">12dp</item>
         <item name="itemHorizontalPadding">16dp</item>
         <item name="itemVerticalPadding">4dp</item>
-        <item name="android:elevation">8dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="drawerLayoutCornerSize">16dp</item>
     </style>
 
     <style name="Widget.AmnShield.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
-        <item name="android:background">?attr/colorSurfaceContainerLow</item>
+        <item name="android:background">?attr/colorSurface</item>
         <item name="itemIconTint">@color/bottom_nav_item_tint</item>
         <item name="itemTextColor">@color/bottom_nav_item_tint</item>
         <item name="itemRippleColor">?attr/colorSecondaryContainer</item>
-        <item name="android:elevation">8dp</item>
+        <item name="android:elevation">0dp</item>
     </style>
 
     <!-- Fallbacks for Material3 button variants on older Material Components releases -->
