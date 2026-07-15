@@ -35,7 +35,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Social Media Blocker"
+                    android:text="Website/URL Blocker"
                     android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -119,7 +119,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_toStartOf="@id/switch_social_media_blocker"
-                        android:text="Enable Social Media Blocker"
+                        android:text="Enable Website/URL Blocker"
                         android:textStyle="bold" />
 
                     <com.google.android.material.materialswitch.MaterialSwitch
@@ -131,7 +131,7 @@
                 </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Blocked Social Apps Card -->
+            <!-- Quick Block Social Sites Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -148,27 +148,12 @@
                     android:orientation="vertical"
                     android:padding="@dimen/padding_large">
 
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            style="@style/TextAppearance.Material3.TitleLarge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentStart="true"
-                            android:text="Blocked Social Apps"
-                            android:textStyle="bold" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_manage_apps"
-                            style="@style/Widget.Material3.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:text="Manage Apps"
-                            android:textColor="?attr/colorPrimary" />
-                    </RelativeLayout>
+                    <TextView
+                        style="@style/TextAppearance.Material3.TitleLarge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Quick Block Social Sites"
+                        android:textStyle="bold" />
 
                     <TextView
                         style="@style/TextAppearance.Material3.BodySmall"
@@ -176,14 +161,108 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:layout_marginBottom="16dp"
-                        android:text="Select specific social media apps to block."
+                        android:text="Instantly block popular social media platforms."
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
-                    <LinearLayout
-                        android:id="@+id/layout_blocked_apps_list"
+                    <!-- Instagram & Facebook -->
+                    <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical" />
+                        android:paddingVertical="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:text="Instagram &amp; Facebook"
+                            style="@style/TextAppearance.Material3.BodyLarge" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_block_meta"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true" />
+                    </RelativeLayout>
+
+                    <!-- TikTok -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingVertical="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:text="TikTok"
+                            style="@style/TextAppearance.Material3.BodyLarge" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_block_tiktok"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true" />
+                    </RelativeLayout>
+
+                    <!-- X / Twitter -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingVertical="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:text="X / Twitter"
+                            style="@style/TextAppearance.Material3.BodyLarge" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_block_twitter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true" />
+                    </RelativeLayout>
+
+                    <!-- YouTube -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingVertical="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:text="YouTube"
+                            style="@style/TextAppearance.Material3.BodyLarge" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_block_youtube"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true" />
+                    </RelativeLayout>
+
+                    <!-- Snapchat -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingVertical="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_centerVertical="true"
+                            android:text="Snapchat"
+                            style="@style/TextAppearance.Material3.BodyLarge" />
+                        <com.google.android.material.materialswitch.MaterialSwitch
+                            android:id="@+id/switch_block_snapchat"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true" />
+                    </RelativeLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -208,7 +287,7 @@
                         style="@style/TextAppearance.Material3.TitleLarge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Blocked Social Websites"
+                        android:text="Blocked Websites/URLs"
                         android:textStyle="bold" />
 
                     <TextView
@@ -217,7 +296,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:layout_marginBottom="16dp"
-                        android:text="Add specific social media domains or URLs you want to block."
+                        android:text="Add specific domains or URLs you want to block."
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <!-- Input Row -->

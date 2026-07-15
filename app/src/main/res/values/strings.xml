@@ -28,10 +28,10 @@
     <string name="enable_app_blocker">Enable App Blocker</string>
     <string name="enable_keyword_blocker">Enable Keyword Blocker</string>
     <string name="enable_usage_tracker">Enable Usage Tracker</string>
-    <string name="social_media_blocker">Social Media Blocker</string>
-    <string name="enable_social_media_blocker">Enable Social Media Blocker</string>
+    <string name="social_media_blocker">Website/URL Blocker</string>
+    <string name="enable_social_media_blocker">Enable Website/URL Blocker</string>
     <string name="blocked_social_apps">Blocked Social Apps</string>
-    <string name="blocked_social_websites">Blocked Social Websites</string>
+    <string name="blocked_social_websites">Blocked Websites/URLs</string>
     <string name="manage_apps">Manage Apps</string>
     <string name="manage_cheat_hours">Manage Cheat Hours</string>
     <string name="warning_app_blocker_settings">Enable App Blocker Accessibility Service to manage app blocking</string>

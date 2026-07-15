@@ -2,42 +2,25 @@ package com.alhaq.amnshield.ui.fragments.features
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import com.alhaq.amnshield.R
 import com.alhaq.amnshield.databinding.FragmentSocialMediaBlockerConfigBinding
 import com.alhaq.amnshield.databinding.ItemSocialBlockCardBinding
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
-import com.alhaq.amnshield.ui.activity.SelectAppsActivity
 import com.alhaq.amnshield.premium.PremiumManager
-import java.util.ArrayList
 import java.util.Locale
 
 /**
- * Configuration screen for managing blocked social media apps and websites.
+ * Configuration screen for managing blocked websites/URLs.
  */
 class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
 
     private var _binding: FragmentSocialMediaBlockerConfigBinding? = null
     private val binding get() = _binding!!
-
-    private val selectAppsLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val selectedApps = result.data?.getStringArrayListExtra("SELECTED_APPS")
-            selectedApps?.let {
-                savedPreferencesLoader.saveBlockedSocialApps(it.toSet())
-                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
-                refreshAppsList()
-            }
-        }
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -93,15 +76,8 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
             sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
         }
 
-        // Manage apps button
-        binding.btnManageApps.setOnClickListener {
-            val intent = Intent(requireContext(), SelectAppsActivity::class.java)
-            intent.putStringArrayListExtra(
-                "PRE_SELECTED_APPS",
-                ArrayList(savedPreferencesLoader.loadBlockedSocialApps())
-            )
-            selectAppsLauncher.launch(intent, activityOptions)
-        }
+        // Setup prefilled social blocking toggles
+        setupSocialToggles()
 
         // Add website button
         binding.btnAddWebsite.setOnClickListener {
@@ -130,42 +106,98 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
             refreshWebsitesList()
         }
 
-        refreshAppsList()
         refreshWebsitesList()
     }
 
-    private fun refreshAppsList() {
-        binding.layoutBlockedAppsList.removeAllViews()
-        val blockedApps = savedPreferencesLoader.loadBlockedSocialApps()
-        val pm = requireContext().packageManager
+    private fun setupSocialToggles() {
+        val currentWebsites = savedPreferencesLoader.loadBlockedSocialWebsites()
 
-        for (packageName in blockedApps) {
-            val itemBinding = ItemSocialBlockCardBinding.inflate(layoutInflater, binding.layoutBlockedAppsList, false)
-            
-            // Get user-friendly app label
-            val appLabel = try {
-                val appInfo = pm.getApplicationInfo(packageName, 0)
-                pm.getApplicationLabel(appInfo).toString()
-            } catch (e: PackageManager.NameNotFoundException) {
-                packageName
+        // 1. Meta (Facebook / Instagram)
+        binding.switchBlockMeta.isChecked = currentWebsites.contains("instagram.com") && currentWebsites.contains("facebook.com")
+        binding.switchBlockMeta.setOnCheckedChangeListener { _, isChecked ->
+            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val domains = listOf("instagram.com", "facebook.com", "m.instagram.com", "m.facebook.com")
+            if (isChecked) {
+                updatedWebsites.addAll(domains)
+            } else {
+                updatedWebsites.removeAll(domains)
             }
+            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+            refreshWebsitesList()
+        }
 
-            itemBinding.txtTitle.text = appLabel
-            itemBinding.btnDelete.setOnClickListener {
-                val updatedApps = savedPreferencesLoader.loadBlockedSocialApps().toMutableSet()
-                updatedApps.remove(packageName)
-                savedPreferencesLoader.saveBlockedSocialApps(updatedApps)
-                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
-                refreshAppsList()
+        // 2. TikTok
+        binding.switchBlockTiktok.isChecked = currentWebsites.contains("tiktok.com")
+        binding.switchBlockTiktok.setOnCheckedChangeListener { _, isChecked ->
+            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val domains = listOf("tiktok.com", "m.tiktok.com")
+            if (isChecked) {
+                updatedWebsites.addAll(domains)
+            } else {
+                updatedWebsites.removeAll(domains)
             }
+            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+            refreshWebsitesList()
+        }
 
-            binding.layoutBlockedAppsList.addView(itemBinding.root)
+        // 3. X / Twitter
+        binding.switchBlockTwitter.isChecked = currentWebsites.contains("twitter.com") && currentWebsites.contains("x.com")
+        binding.switchBlockTwitter.setOnCheckedChangeListener { _, isChecked ->
+            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val domains = listOf("twitter.com", "x.com", "mobile.twitter.com")
+            if (isChecked) {
+                updatedWebsites.addAll(domains)
+            } else {
+                updatedWebsites.removeAll(domains)
+            }
+            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+            refreshWebsitesList()
+        }
+
+        // 4. YouTube
+        binding.switchBlockYoutube.isChecked = currentWebsites.contains("youtube.com")
+        binding.switchBlockYoutube.setOnCheckedChangeListener { _, isChecked ->
+            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val domains = listOf("youtube.com", "m.youtube.com", "youtu.be")
+            if (isChecked) {
+                updatedWebsites.addAll(domains)
+            } else {
+                updatedWebsites.removeAll(domains)
+            }
+            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+            refreshWebsitesList()
+        }
+
+        // 5. Snapchat
+        binding.switchBlockSnapchat.isChecked = currentWebsites.contains("snapchat.com")
+        binding.switchBlockSnapchat.setOnCheckedChangeListener { _, isChecked ->
+            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val domains = listOf("snapchat.com")
+            if (isChecked) {
+                updatedWebsites.addAll(domains)
+            } else {
+                updatedWebsites.removeAll(domains)
+            }
+            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+            refreshWebsitesList()
         }
     }
 
     private fun refreshWebsitesList() {
         binding.layoutBlockedWebsitesList.removeAllViews()
         val blockedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites()
+
+        // Sync switch states based on current loaded list (so manual additions/deletions update toggles)
+        binding.switchBlockMeta.isChecked = blockedWebsites.contains("instagram.com") && blockedWebsites.contains("facebook.com")
+        binding.switchBlockTiktok.isChecked = blockedWebsites.contains("tiktok.com")
+        binding.switchBlockTwitter.isChecked = blockedWebsites.contains("twitter.com") && blockedWebsites.contains("x.com")
+        binding.switchBlockYoutube.isChecked = blockedWebsites.contains("youtube.com")
+        binding.switchBlockSnapchat.isChecked = blockedWebsites.contains("snapchat.com")
 
         for (website in blockedWebsites) {
             val itemBinding = ItemSocialBlockCardBinding.inflate(layoutInflater, binding.layoutBlockedWebsitesList, false)

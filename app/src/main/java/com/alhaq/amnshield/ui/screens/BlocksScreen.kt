@@ -149,8 +149,8 @@ fun BlocksScreen(
 
                     BlockItemRow(
                         icon = Icons.Outlined.PublicOff,
-                        title = "Website & Social Blocker",
-                        summary = "Block websites and custom domains",
+                        title = "Website/URL Blocker",
+                        summary = "Block websites and custom URLs",
                         statusText = if (state.isWebFilterEnabled) "ON" else "OFF",
                         onChecked = onNavigateToWebBlocker,
                         iconColor = Color(0xFFEC4899)
