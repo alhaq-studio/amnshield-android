@@ -37,7 +37,7 @@ fun CreateRuleScreen(
 ) {
     var ruleName by remember { mutableStateOf("") }
     var targetType by remember { mutableStateOf(initialType) } // "Block Schedule", "Launch Limit", "Cheat Window"
-    var targetBlockerType by remember { mutableStateOf("App Blocker") } // "App Blocker", "Keyword Blocker", "Website Blocker", "Reels Blocker", "Notification Shielder"
+    val selectedBlockerTypes = remember { mutableStateListOf("App Blocker") }
     
     // Feature configurations
     val selectedApps = remember { mutableStateListOf<String>("com.instagram.android", "com.google.android.youtube") }
@@ -56,6 +56,8 @@ fun CreateRuleScreen(
     var newStartTime by remember { mutableStateOf("09:00") }
     var newEndTime by remember { mutableStateOf("17:00") }
     val newSelectedDays = remember { mutableStateListOf("Mon", "Tue", "Wed", "Thu", "Fri") }
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
     
     var limitValueStr by remember { mutableStateOf("5") }
 
@@ -179,7 +181,7 @@ fun CreateRuleScreen(
                 // Protection Feature Selection
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "2. Select Blocker Feature to Apply Window",
+                        "2. Select Blocker Feature(s) to Apply Window",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -201,11 +203,19 @@ fun CreateRuleScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         features.forEach { (typeKey, label, icon) ->
-                            val isSelected = targetBlockerType == typeKey
+                            val isSelected = selectedBlockerTypes.contains(typeKey)
                             Card(
                                 modifier = Modifier
                                     .width(135.dp)
-                                    .clickable { targetBlockerType = typeKey }
+                                    .clickable {
+                                        if (isSelected) {
+                                            if (selectedBlockerTypes.size > 1) {
+                                                selectedBlockerTypes.remove(typeKey)
+                                            }
+                                        } else {
+                                            selectedBlockerTypes.add(typeKey)
+                                        }
+                                    }
                                     .testTag("feature_tab_${typeKey.replace(" ", "_")}"),
                                 colors = CardDefaults.cardColors(
                                     containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
@@ -258,317 +268,333 @@ fun CreateRuleScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        when (targetBlockerType) {
-                            "App Blocker" -> {
-                                Text(
-                                    "App Selection Picker",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    "Select which applications will be restricted during this active schedule window.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                
-                                val defaultAppsList = listOf(
-                                    "Instagram" to "com.instagram.android",
-                                    "YouTube" to "com.google.android.youtube",
-                                    "X (Twitter)" to "com.twitter.android",
-                                    "TikTok" to "com.zhiliaoapp.musically",
-                                    "Snapchat" to "com.snapchat.android",
-                                    "Facebook" to "com.facebook.katana",
-                                    "Call of Duty" to "com.activision.callofduty"
-                                )
-                                
-                                // Show checkable app list
-                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    defaultAppsList.forEach { (appName, pkg) ->
-                                        val isChecked = selectedApps.contains(pkg)
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .clickable {
-                                                    if (isChecked) selectedApps.remove(pkg) else selectedApps.add(pkg)
-                                                }
-                                                .padding(vertical = 6.dp, horizontal = 8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Checkbox(
-                                                checked = isChecked,
-                                                onCheckedChange = { checked ->
-                                                    if (checked) selectedApps.add(pkg) else selectedApps.remove(pkg)
-                                                }
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Column {
-                                                Text(appName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                                Text(pkg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        var separatorNeeded = false
+
+                        if (selectedBlockerTypes.contains("App Blocker")) {
+                            Text(
+                                "App Selection Picker",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "Select which applications will be restricted during this active schedule window.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            
+                            val defaultAppsList = listOf(
+                                "Instagram" to "com.instagram.android",
+                                "YouTube" to "com.google.android.youtube",
+                                "X (Twitter)" to "com.twitter.android",
+                                "TikTok" to "com.zhiliaoapp.musically",
+                                "Snapchat" to "com.snapchat.android",
+                                "Facebook" to "com.facebook.katana",
+                                "Call of Duty" to "com.activision.callofduty"
+                            )
+                            
+                            // Show checkable app list
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                defaultAppsList.forEach { (appName, pkg) ->
+                                    val isChecked = selectedApps.contains(pkg)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable {
+                                                if (isChecked) selectedApps.remove(pkg) else selectedApps.add(pkg)
                                             }
-                                        }
-                                    }
-                                }
-                                
-                                // Custom app entry
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    OutlinedTextField(
-                                        value = customAppInput,
-                                        onValueChange = { customAppInput = it },
-                                        placeholder = { Text("Add custom package (e.g. com.reddit)") },
-                                        singleLine = true,
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(8.dp),
-                                        textStyle = MaterialTheme.typography.bodySmall
-                                    )
-                                    Button(
-                                        onClick = {
-                                            if (customAppInput.isNotBlank()) {
-                                                if (!selectedApps.contains(customAppInput)) {
-                                                    selectedApps.add(customAppInput)
-                                                }
-                                                customAppInput = ""
-                                            }
-                                        },
-                                        shape = RoundedCornerShape(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 12.dp)
+                                            .padding(vertical = 6.dp, horizontal = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text("Add")
+                                        Checkbox(
+                                            checked = isChecked,
+                                            onCheckedChange = { checked ->
+                                                if (checked) selectedApps.add(pkg) else selectedApps.remove(pkg)
+                                            }
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Column {
+                                            Text(appName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                                            Text(pkg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
                                     }
                                 }
                             }
                             
-                            "Keyword Blocker" -> {
-                                Text(
-                                    "Keyword Block Rules",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                            // Custom app entry
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = customAppInput,
+                                    onValueChange = { customAppInput = it },
+                                    placeholder = { Text("Add custom package (e.g. com.reddit)") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(8.dp),
+                                    textStyle = MaterialTheme.typography.bodySmall
                                 )
-                                Text(
-                                    "All content containing these keywords will be filtered and blocked instantly under this active window.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                                // Flow-like row of selected keyword chips
-                                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                                    Row(
-                                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        selectedKeywords.forEach { keyword ->
-                                            InputChip(
-                                                selected = true,
-                                                onClick = { selectedKeywords.remove(keyword) },
-                                                label = { Text(keyword) },
-                                                trailingIcon = {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Close,
-                                                        contentDescription = "Remove",
-                                                        modifier = Modifier.size(12.dp)
-                                                    )
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                                
-                                // Add Custom Keyword
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    OutlinedTextField(
-                                        value = customKeywordInput,
-                                        onValueChange = { customKeywordInput = it },
-                                        placeholder = { Text("e.g. gambling, shopping, bet") },
-                                        singleLine = true,
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    Button(
-                                        onClick = {
-                                            if (customKeywordInput.isNotBlank()) {
-                                                if (!selectedKeywords.contains(customKeywordInput)) {
-                                                    selectedKeywords.add(customKeywordInput)
-                                                }
-                                                customKeywordInput = ""
+                                Button(
+                                    onClick = {
+                                        if (customAppInput.isNotBlank()) {
+                                            if (!selectedApps.contains(customAppInput)) {
+                                                selectedApps.add(customAppInput)
                                             }
-                                        },
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Text("Add")
-                                    }
+                                            customAppInput = ""
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp)
+                                ) {
+                                    Text("Add")
                                 }
-                                
-                                // Quick suggestion tags
-                                Text("Suggested Filters", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            }
+                            separatorNeeded = true
+                        }
+
+                        if (selectedBlockerTypes.contains("Keyword Blocker")) {
+                            if (separatorNeeded) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            }
+                            Text(
+                                "Keyword Block Rules",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "All content containing these keywords will be filtered and blocked instantly under this active window.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            // Flow-like row of selected keyword chips
+                            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                                 Row(
                                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    val presets = listOf("gaming", "crypto", "dating", "casino", "tiktok")
-                                    presets.forEach { preset ->
-                                        AssistChip(
-                                            onClick = {
-                                                if (!selectedKeywords.contains(preset)) selectedKeywords.add(preset)
-                                            },
-                                            label = { Text(preset) }
+                                    selectedKeywords.forEach { keyword ->
+                                        InputChip(
+                                            selected = true,
+                                            onClick = { selectedKeywords.remove(keyword) },
+                                            label = { Text(keyword) },
+                                            trailingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.Close,
+                                                    contentDescription = "Remove",
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                            }
                                         )
                                     }
                                 }
                             }
                             
-                            "Website Blocker" -> {
-                                Text(
-                                    "Restricted Website Domains",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                            // Add Custom Keyword
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = customKeywordInput,
+                                    onValueChange = { customKeywordInput = it },
+                                    placeholder = { Text("e.g. gambling, shopping, bet") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(8.dp)
                                 )
-                                Text(
-                                    "Specify websites that should be completely blocked in any browser during this schedule window.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                                // Current list
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    selectedWebsites.forEach { domain ->
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                Icon(Icons.Outlined.Language, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                Text(domain, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                                Button(
+                                    onClick = {
+                                        if (customKeywordInput.isNotBlank()) {
+                                            if (!selectedKeywords.contains(customKeywordInput)) {
+                                                selectedKeywords.add(customKeywordInput)
                                             }
-                                            IconButton(onClick = { selectedWebsites.remove(domain) }, modifier = Modifier.size(24.dp)) {
-                                                Icon(Icons.Default.Close, contentDescription = "Delete", modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.error)
-                                            }
+                                            customKeywordInput = ""
                                         }
-                                    }
-                                }
-                                
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    },
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    OutlinedTextField(
-                                        value = customWebsiteInput,
-                                        onValueChange = { customWebsiteInput = it },
-                                        placeholder = { Text("e.g. distraction.com") },
-                                        singleLine = true,
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    Button(
+                                    Text("Add")
+                                }
+                            }
+                            
+                            // Quick suggestion tags
+                            Text("Suggested Filters", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                val presets = listOf("gaming", "crypto", "dating", "casino", "tiktok")
+                                presets.forEach { preset ->
+                                    AssistChip(
                                         onClick = {
-                                            if (customWebsiteInput.isNotBlank()) {
-                                                if (!selectedWebsites.contains(customWebsiteInput)) {
-                                                    selectedWebsites.add(customWebsiteInput)
-                                                }
-                                                customWebsiteInput = ""
-                                            }
+                                            if (!selectedKeywords.contains(preset)) selectedKeywords.add(preset)
                                         },
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Text("Add")
-                                    }
+                                        label = { Text(preset) }
+                                    )
                                 }
                             }
-                            
-                            "Reels Blocker" -> {
-                                Text(
-                                    "Target Short-Video Platforms",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    "We will aggressively interrupt and exit full-screen Reels scrolling on checked apps.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            separatorNeeded = true
+                        }
 
-                                val platforms = listOf("Instagram Reels", "YouTube Shorts", "TikTok", "Facebook Reels")
-                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    platforms.forEach { platform ->
-                                        val isChecked = selectedPlatforms.contains(platform)
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .clickable {
-                                                    if (isChecked) selectedPlatforms.remove(platform) else selectedPlatforms.add(platform)
-                                                }
-                                                .padding(vertical = 8.dp, horizontal = 12.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                        ) {
-                                            Checkbox(
-                                                checked = isChecked,
-                                                onCheckedChange = { checked ->
-                                                    if (checked) selectedPlatforms.add(platform) else selectedPlatforms.remove(platform)
-                                                }
-                                            )
-                                            Text(platform, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        if (selectedBlockerTypes.contains("Website Blocker")) {
+                            if (separatorNeeded) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            }
+                            Text(
+                                "Restricted Website Domains",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "Specify websites that should be completely blocked in any browser during this schedule window.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            // Current list
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                selectedWebsites.forEach { domain ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Icon(Icons.Outlined.Language, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(domain, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                                        }
+                                        IconButton(onClick = { selectedWebsites.remove(domain) }, modifier = Modifier.size(24.dp)) {
+                                            Icon(Icons.Default.Close, contentDescription = "Delete", modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.error)
                                         }
                                     }
                                 }
                             }
                             
-                            "Notification Shielder" -> {
-                                Text(
-                                    "Notification Distraction Shielder",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                OutlinedTextField(
+                                    value = customWebsiteInput,
+                                    onValueChange = { customWebsiteInput = it },
+                                    placeholder = { Text("e.g. distraction.com") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(8.dp)
                                 )
-                                Text(
-                                    "Dodge the temptation loop. Shield notification banners and hide notifications during this active window.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
-                                        .padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                Button(
+                                    onClick = {
+                                        if (customWebsiteInput.isNotBlank()) {
+                                            if (!selectedWebsites.contains(customWebsiteInput)) {
+                                                selectedWebsites.add(customWebsiteInput)
+                                            }
+                                            customWebsiteInput = ""
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Column {
-                                        Text(
-                                            "Auto-Mute Distractions Active",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            fontWeight = FontWeight.Bold
+                                    Text("Add")
+                                }
+                            }
+                            separatorNeeded = true
+                        }
+
+                        if (selectedBlockerTypes.contains("Reels Blocker")) {
+                            if (separatorNeeded) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            }
+                            Text(
+                                "Target Short-Video Platforms",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "We will aggressively interrupt and exit full-screen Reels scrolling on checked apps.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            val platforms = listOf("Instagram Reels", "YouTube Shorts", "TikTok", "Facebook Reels")
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                platforms.forEach { platform ->
+                                    val isChecked = selectedPlatforms.contains(platform)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable {
+                                                if (isChecked) selectedPlatforms.remove(platform) else selectedPlatforms.add(platform)
+                                            }
+                                            .padding(vertical = 8.dp, horizontal = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Checkbox(
+                                            checked = isChecked,
+                                            onCheckedChange = { checked ->
+                                                if (checked) selectedPlatforms.add(platform) else selectedPlatforms.remove(platform)
+                                            }
                                         )
-                                        Text(
-                                            "Incoming notifications are silenced, hidden from drawer, and logged in wellbeing report.",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Text(platform, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                                     }
+                                }
+                            }
+                            separatorNeeded = true
+                        }
+
+                        if (selectedBlockerTypes.contains("Notification Shielder")) {
+                            if (separatorNeeded) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            }
+                            Text(
+                                "Notification Distraction Shielder",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "Dodge the temptation loop. Shield notification banners and hide notifications during this active window.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column {
+                                    Text(
+                                        "Auto-Mute Distractions Active",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        "Incoming notifications are silenced, hidden from drawer, and logged in wellbeing report.",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
@@ -765,9 +791,11 @@ fun CreateRuleScreen(
                         conflict
                     }
 
-                    val existingConflictingRules = remember(periodsList.toList(), targetBlockerType, targetType) {
-                        state.scheduleRules.filter {
-                            it.isActive && it.targetBlockerType == targetBlockerType && it.restrictionType == targetType
+                    val existingConflictingRules = remember(periodsList.toList(), selectedBlockerTypes.toList(), targetType) {
+                        state.scheduleRules.filter { rule ->
+                            rule.isActive && rule.restrictionType == targetType &&
+                            (rule.selectedBlockers.any { selectedBlockerTypes.contains(it) } ||
+                             selectedBlockerTypes.contains(rule.targetBlockerType))
                         }
                     }
 
@@ -819,7 +847,7 @@ fun CreateRuleScreen(
                                         append("Some time windows in this rule overlap. ")
                                     }
                                     if (hasExternalConflict) {
-                                        append("This overlaps with an existing rule for $targetBlockerType. ")
+                                        append("This overlaps with an existing rule for ${selectedBlockerTypes.joinToString(" / ")}. ")
                                     }
                                     append("We will automatically resolve and correct these overlaps on save to prevent any breaks!")
                                 }
@@ -914,23 +942,77 @@ fun CreateRuleScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                OutlinedTextField(
-                                    value = newStartTime,
-                                    onValueChange = { newStartTime = it },
-                                    label = { Text("Start Time") },
-                                    placeholder = { Text("09:00") },
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(8.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { showStartPicker = true }
+                                ) {
+                                    OutlinedTextField(
+                                        value = newStartTime,
+                                        onValueChange = {},
+                                        label = { Text("Start Time") },
+                                        readOnly = true,
+                                        enabled = false,
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                        ),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { showEndPicker = true }
+                                ) {
+                                    OutlinedTextField(
+                                        value = newEndTime,
+                                        onValueChange = {},
+                                        label = { Text("End Time") },
+                                        readOnly = true,
+                                        enabled = false,
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                        ),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                }
+                            }
+
+                            if (showStartPicker) {
+                                val parts = newStartTime.split(":")
+                                val h = parts.getOrNull(0)?.toIntOrNull() ?: 9
+                                val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                                CreateRuleTimePickerDialog(
+                                    title = "Select Start Time",
+                                    initialHour = h,
+                                    initialMinute = m,
+                                    onDismiss = { showStartPicker = false },
+                                    onConfirm = { hour, minute ->
+                                        newStartTime = String.format("%02d:%02d", hour, minute)
+                                        showStartPicker = false
+                                    }
                                 )
-                                OutlinedTextField(
-                                    value = newEndTime,
-                                    onValueChange = { newEndTime = it },
-                                    label = { Text("End Time") },
-                                    placeholder = { Text("17:00") },
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(8.dp)
+                            }
+
+                            if (showEndPicker) {
+                                val parts = newEndTime.split(":")
+                                val h = parts.getOrNull(0)?.toIntOrNull() ?: 17
+                                val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                                CreateRuleTimePickerDialog(
+                                    title = "Select End Time",
+                                    initialHour = h,
+                                    initialMinute = m,
+                                    onDismiss = { showEndPicker = false },
+                                    onConfirm = { hour, minute ->
+                                        newEndTime = String.format("%02d:%02d", hour, minute)
+                                        showEndPicker = false
+                                    }
                                 )
                             }
                             
@@ -1032,8 +1114,10 @@ fun CreateRuleScreen(
                                 val allToMerge = mutableListOf<SchedulePeriod>()
                                 allToMerge.addAll(finalPeriods)
                                 
-                                val existingConflictingRulesOnSave = state.scheduleRules.filter {
-                                    it.isActive && it.targetBlockerType == targetBlockerType && it.restrictionType == targetType
+                                val existingConflictingRulesOnSave = state.scheduleRules.filter { rule ->
+                                    rule.isActive && rule.restrictionType == targetType &&
+                                    (rule.selectedBlockers.any { selectedBlockerTypes.contains(it) } ||
+                                     selectedBlockerTypes.contains(rule.targetBlockerType))
                                 }
                                 
                                 for (rule in existingConflictingRulesOnSave) {
@@ -1047,13 +1131,17 @@ fun CreateRuleScreen(
                                 
                                 val limitValue = limitValueStr.toIntOrNull() ?: 5
                                 
-                                val appOrCategoryDisplay = when (targetBlockerType) {
-                                    "App Blocker" -> if (selectedApps.isNotEmpty()) "${selectedApps.size} Apps" else "All Apps"
-                                    "Keyword Blocker" -> if (selectedKeywords.isNotEmpty()) "${selectedKeywords.size} Keywords" else "Keywords Active"
-                                    "Website Blocker" -> if (selectedWebsites.isNotEmpty()) "${selectedWebsites.size} Domains" else "Websites Active"
-                                    "Reels Blocker" -> if (selectedPlatforms.isNotEmpty()) selectedPlatforms.joinToString(", ") else "All Reels"
-                                    "Notification Shielder" -> "Mute Distractions"
-                                    else -> targetBlockerType
+                                val appOrCategoryDisplay = if (selectedBlockerTypes.size == 1) {
+                                    when (selectedBlockerTypes.first()) {
+                                        "App Blocker" -> if (selectedApps.isNotEmpty()) "${selectedApps.size} Apps" else "All Apps"
+                                        "Keyword Blocker" -> if (selectedKeywords.isNotEmpty()) "${selectedKeywords.size} Keywords" else "Keywords Active"
+                                        "Website Blocker" -> if (selectedWebsites.isNotEmpty()) "${selectedWebsites.size} Domains" else "Websites Active"
+                                        "Reels Blocker" -> if (selectedPlatforms.isNotEmpty()) selectedPlatforms.joinToString(", ") else "All Reels"
+                                        "Notification Shielder" -> "Mute Distractions"
+                                        else -> selectedBlockerTypes.first()
+                                    }
+                                } else {
+                                    selectedBlockerTypes.joinToString(" • ")
                                 }
 
                                 val newRule = ScheduleRule(
@@ -1067,11 +1155,12 @@ fun CreateRuleScreen(
                                     limitValue = limitValue,
                                     isActive = true,
                                     periods = fullyMergedPeriods,
-                                    targetBlockerType = targetBlockerType,
+                                    targetBlockerType = selectedBlockerTypes.firstOrNull() ?: "App Blocker",
                                     selectedApps = selectedApps.toList(),
                                     selectedKeywords = selectedKeywords.toList(),
                                     selectedWebsites = selectedWebsites.toList(),
-                                    selectedPlatforms = selectedPlatforms.toList()
+                                    selectedPlatforms = selectedPlatforms.toList(),
+                                    selectedBlockers = selectedBlockerTypes.toList()
                                 )
                                 
                                 onSaveRule(newRule)
@@ -1095,4 +1184,40 @@ fun CreateRuleScreen(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateRuleTimePickerDialog(
+    title: String,
+    initialHour: Int = 9,
+    initialMinute: Int = 0,
+    onDismiss: () -> Unit,
+    onConfirm: (hour: Int, minute: Int) -> Unit
+) {
+    val state = rememberTimePickerState(initialHour = initialHour, initialMinute = initialMinute, is24Hour = true)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = { onConfirm(state.hour, state.minute) }) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        title = {
+            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                TimePicker(state = state)
+            }
+        }
+    )
 }

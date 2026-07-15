@@ -1,8 +1,10 @@
 package com.alhaq.amnshield.utils
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.util.Log
+import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.blockers.ReelBlocker
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -94,10 +96,14 @@ class SavedPreferencesLoader(private val context: Context) {
         return sharedPreferences.getBoolean("is_enabled", defaultValue)
     }
 
-    fun setReelBlockerEnabled(enabled: Boolean) {
+    fun setReelBlockerEnabled(enabled: Boolean, updateManual: Boolean = true) {
         val sharedPreferences =
             context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
-        sharedPreferences.edit().putBoolean("is_enabled", enabled).apply()
+        val editor = sharedPreferences.edit().putBoolean("is_enabled", enabled)
+        if (updateManual) {
+            editor.putBoolean("is_enabled_manual", enabled)
+        }
+        editor.apply()
     }
 
     fun getReelBlockerMode(defaultMode: Int = ReelBlocker.MODE_BLOCK_ALL): Int {
@@ -681,13 +687,6 @@ class SavedPreferencesLoader(private val context: Context) {
         getPremiumPrefs().edit().putLong("last_premium_reminder", timestamp).apply()
     }
 
-    fun getSpecialAccessId(): String {
-        return getPremiumPrefs().getString("special_access_id", "") ?: ""
-    }
-
-    fun setSpecialAccessId(accessId: String) {
-        getPremiumPrefs().edit().putString("special_access_id", accessId).apply()
-    }
 
     private fun getCompassionateAccessPrefs(): android.content.SharedPreferences {
         return context.getSharedPreferences("compassionate_access", Context.MODE_PRIVATE)
@@ -741,16 +740,24 @@ class SavedPreferencesLoader(private val context: Context) {
         return getFeatureTogglesPrefs().getBoolean("app_blocker_enabled", default)
     }
 
-    fun setAppBlockerFeatureEnabled(enabled: Boolean) {
-        getFeatureTogglesPrefs().edit().putBoolean("app_blocker_enabled", enabled).apply()
+    fun setAppBlockerFeatureEnabled(enabled: Boolean, updateManual: Boolean = true) {
+        val editor = getFeatureTogglesPrefs().edit().putBoolean("app_blocker_enabled", enabled)
+        if (updateManual) {
+            editor.putBoolean("app_blocker_enabled_manual", enabled)
+        }
+        editor.apply()
     }
 
     fun isKeywordBlockerFeatureEnabled(default: Boolean = true): Boolean {
         return getFeatureTogglesPrefs().getBoolean("keyword_blocker_enabled", default)
     }
 
-    fun setKeywordBlockerFeatureEnabled(enabled: Boolean) {
-        getFeatureTogglesPrefs().edit().putBoolean("keyword_blocker_enabled", enabled).apply()
+    fun setKeywordBlockerFeatureEnabled(enabled: Boolean, updateManual: Boolean = true) {
+        val editor = getFeatureTogglesPrefs().edit().putBoolean("keyword_blocker_enabled", enabled)
+        if (updateManual) {
+            editor.putBoolean("keyword_blocker_enabled_manual", enabled)
+        }
+        editor.apply()
     }
 
     fun isUsageTrackerFeatureEnabled(default: Boolean = true): Boolean {
@@ -765,8 +772,12 @@ class SavedPreferencesLoader(private val context: Context) {
         return getFeatureTogglesPrefs().getBoolean("focus_mode_enabled", default)
     }
 
-    fun setFocusModeFeatureEnabled(enabled: Boolean) {
-        getFeatureTogglesPrefs().edit().putBoolean("focus_mode_enabled", enabled).apply()
+    fun setFocusModeFeatureEnabled(enabled: Boolean, updateManual: Boolean = true) {
+        val editor = getFeatureTogglesPrefs().edit().putBoolean("focus_mode_enabled", enabled)
+        if (updateManual) {
+            editor.putBoolean("focus_mode_enabled_manual", enabled)
+        }
+        editor.apply()
     }
 
     // ==================== App Launch Limit Rules ====================
@@ -927,46 +938,117 @@ class SavedPreferencesLoader(private val context: Context) {
         sharedPreferences.edit().putBoolean("adult_blocker", enabled).apply()
     }
 
-    fun isSocialMediaBlockerEnabled(defaultValue: Boolean = false): Boolean {
-        val sharedPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
-        return sharedPreferences.getBoolean("is_enabled", defaultValue)
+    fun isWebsiteBlockerEnabled(defaultValue: Boolean = false): Boolean {
+        val sharedPreferences = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
+        if (sharedPreferences.contains("is_enabled")) {
+            return sharedPreferences.getBoolean("is_enabled", defaultValue)
+        }
+        val legacyPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
+        return legacyPreferences.getBoolean("is_enabled", defaultValue)
     }
 
-    fun setSocialMediaBlockerEnabled(enabled: Boolean) {
-        val sharedPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
-        sharedPreferences.edit().putBoolean("is_enabled", enabled).apply()
+    fun setWebsiteBlockerEnabled(enabled: Boolean, updateManual: Boolean = true) {
+        val sharedPreferences = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit().putBoolean("is_enabled", enabled)
+        if (updateManual) {
+            editor.putBoolean("is_enabled_manual", enabled)
+        }
+        editor.apply()
+
+        // Keep legacy in sync
+        context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean("is_enabled", enabled)
+            .apply()
     }
 
-    fun loadBlockedSocialApps(): Set<String> {
-        val sharedPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
-        val hasKey = sharedPreferences.contains("blocked_apps")
+    fun getManualFeatureState(target: com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget): Boolean {
+        return when (target) {
+            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER -> {
+                val prefs = getFeatureTogglesPrefs()
+                if (prefs.contains("app_blocker_enabled_manual")) {
+                    prefs.getBoolean("app_blocker_enabled_manual", true)
+                } else {
+                    prefs.getBoolean("app_blocker_enabled", true)
+                }
+            }
+            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER -> {
+                val prefs = getFeatureTogglesPrefs()
+                if (prefs.contains("keyword_blocker_enabled_manual")) {
+                    prefs.getBoolean("keyword_blocker_enabled_manual", true)
+                } else {
+                    prefs.getBoolean("keyword_blocker_enabled", true)
+                }
+            }
+            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER -> {
+                val prefs = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
+                if (prefs.contains("is_enabled_manual")) {
+                    prefs.getBoolean("is_enabled_manual", false)
+                } else {
+                    prefs.getBoolean("is_enabled", false)
+                }
+            }
+            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE -> {
+                val prefs = getFeatureTogglesPrefs()
+                if (prefs.contains("focus_mode_enabled_manual")) {
+                    prefs.getBoolean("focus_mode_enabled_manual", true)
+                } else {
+                    prefs.getBoolean("focus_mode_enabled", true)
+                }
+            }
+            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER -> {
+                val prefs = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
+                val legacyPrefs = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
+                val activePrefs = if (prefs.contains("is_enabled_manual") || prefs.contains("is_enabled")) prefs else legacyPrefs
+                if (activePrefs.contains("is_enabled_manual")) {
+                    activePrefs.getBoolean("is_enabled_manual", false)
+                } else {
+                    activePrefs.getBoolean("is_enabled", false)
+                }
+            }
+        }
+    }
+
+    fun loadBlockedWebsitesApps(): Set<String> {
+        val sharedPreferences = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
+        val legacyPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
+        val activePrefs = if (sharedPreferences.contains("blocked_apps")) sharedPreferences else legacyPreferences
+        val hasKey = activePrefs.contains("blocked_apps")
         if (!hasKey) {
             val defaults = setOf("com.instagram.android", "com.sec.android.app.sbrowser")
             sharedPreferences.edit().putStringSet("blocked_apps", defaults).apply()
             return defaults
         }
-        return sharedPreferences.getStringSet("blocked_apps", emptySet()) ?: emptySet()
+        return activePrefs.getStringSet("blocked_apps", emptySet()) ?: emptySet()
     }
 
-    fun saveBlockedSocialApps(apps: Set<String>) {
-        val sharedPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
+    fun saveBlockedWebsitesApps(apps: Set<String>) {
+        val sharedPreferences = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
         sharedPreferences.edit().putStringSet("blocked_apps", apps).apply()
+        // Sync to legacy
+        val legacyPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
+        legacyPreferences.edit().putStringSet("blocked_apps", apps).apply()
     }
 
-    fun loadBlockedSocialWebsites(): Set<String> {
-        val sharedPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
-        val hasKey = sharedPreferences.contains("blocked_websites")
+    fun loadBlockedWebsites(): Set<String> {
+        val sharedPreferences = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
+        val legacyPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
+        val activePrefs = if (sharedPreferences.contains("blocked_websites")) sharedPreferences else legacyPreferences
+        val hasKey = activePrefs.contains("blocked_websites")
         if (!hasKey) {
             val defaults = setOf("facebook.com", "fb.com", "fb.watch")
             sharedPreferences.edit().putStringSet("blocked_websites", defaults).apply()
             return defaults
         }
-        return sharedPreferences.getStringSet("blocked_websites", emptySet()) ?: emptySet()
+        return activePrefs.getStringSet("blocked_websites", emptySet()) ?: emptySet()
     }
 
-    fun saveBlockedSocialWebsites(websites: Set<String>) {
-        val sharedPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
+    fun saveBlockedWebsites(websites: Set<String>) {
+        val sharedPreferences = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
         sharedPreferences.edit().putStringSet("blocked_websites", websites).apply()
+        // Sync to legacy
+        val legacyPreferences = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
+        legacyPreferences.edit().putStringSet("blocked_websites", websites).apply()
     }
 
     /**
@@ -1015,5 +1097,53 @@ class SavedPreferencesLoader(private val context: Context) {
         checkAndResetReelsStatsDaily(sharedPreferences)
         val current = sharedPreferences.getLong("reels_watch_time_seconds_today", 0L)
         sharedPreferences.edit().putLong("reels_watch_time_seconds_today", current + seconds).apply()
+    }
+
+    // ==================== PIN Security & App Lock ====================
+    fun isPinSecurityEnabled(): Boolean {
+        return context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            .getBoolean("pin_protection_enabled", false)
+    }
+
+    fun setPinSecurityEnabled(enabled: Boolean) {
+        context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            .edit().putBoolean("pin_protection_enabled", enabled).apply()
+    }
+
+    fun getPinCode(): String {
+        return context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            .getString("profile_pin", "") ?: ""
+    }
+
+    fun setPinCode(pin: String) {
+        context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            .edit().putString("profile_pin", pin).apply()
+    }
+
+    fun isAppLockEnabled(): Boolean {
+        return context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            .getBoolean("pin_app_lock", false)
+    }
+
+    fun setAppLockEnabled(enabled: Boolean) {
+        context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            .edit().putBoolean("pin_app_lock", enabled).apply()
+    }
+
+    fun isBypassPinLockEnabled(): Boolean {
+        return context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            .getBoolean("pin_bypass_lock", false)
+    }
+
+    fun setBypassPinLockEnabled(enabled: Boolean) {
+        val antiUninstallPrefs = context.getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
+        antiUninstallPrefs.edit().putBoolean("is_configuring_blocked", enabled).apply()
+
+        context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+            .edit().putBoolean("pin_bypass_lock", enabled).apply()
+
+        val intent = Intent(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_ANTI_UNINSTALL)
+            .setPackage(context.packageName)
+        context.sendBroadcast(intent)
     }
 }

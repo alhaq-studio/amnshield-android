@@ -42,6 +42,7 @@ class PremiumFeaturesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
         updatePremiumState()
+        binding.btnRedeemLicense.visibility = if (com.alhaq.amnshield.BuildConfig.IS_PLAYSTORE) View.GONE else View.VISIBLE
 
         billingClientWrapper = BillingClientWrapper(requireContext())
         billingClientWrapper.startConnection {
@@ -73,8 +74,9 @@ class PremiumFeaturesFragment : Fragment() {
         binding.btnCompassionateAccess.setOnClickListener {
             showCompassionateAccessDialog()
         }
-        binding.btnSpecialAccess.setOnClickListener {
-            showSpecialAccessDialog()
+
+        binding.btnRedeemLicense.setOnClickListener {
+            showLicenseRedemptionDialog()
         }
     }
 
@@ -130,7 +132,6 @@ class PremiumFeaturesFragment : Fragment() {
 
         val activeMessage = when (userType) {
             PremiumManager.UserType.PREMIUM -> getString(R.string.premium_active_message)
-            PremiumManager.UserType.SPECIAL -> getString(R.string.special_access_active_description)
             PremiumManager.UserType.COMPASSIONATE -> {
                 val expiry = preferencesLoader.getCompassionateAccessExpiry()
                 if (expiry > 0L) {
@@ -260,23 +261,34 @@ class PremiumFeaturesFragment : Fragment() {
         }
     }
 
-    private fun showSpecialAccessDialog() {
+
+
+    private fun showLicenseRedemptionDialog() {
         val input = EditText(requireContext()).apply {
-            hint = getString(R.string.special_access_hint)
-            inputType = InputType.TYPE_CLASS_TEXT
+            hint = "Paste your license key here"
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            minLines = 3
         }
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.special_access_title)
-            .setMessage(getString(R.string.special_access_message))
+            .setTitle("Redeem License Key")
+            .setMessage("Paste the license key you received after purchasing AmnShield Premium via Lemon Squeezy.")
             .setView(input)
-            .setPositiveButton(R.string.special_access_activate) { _, _ ->
-                val accessId = input.text?.toString().orEmpty()
-                if (premiumManager.setSpecialAccessId(accessId)) {
+            .setPositiveButton("Activate") { _, _ ->
+                val licenseKey = input.text.toString().trim()
+                if (premiumManager.redeemLicenseKey(licenseKey)) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Premium Access Activated Successfully!",
+                        Toast.LENGTH_LONG
+                    ).show()
                     updatePremiumState()
-                    Toast.makeText(requireContext(), R.string.special_access_success, Toast.LENGTH_LONG).show()
                 } else {
-                    Toast.makeText(requireContext(), R.string.special_access_invalid, Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Invalid or Expired License Key",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
             .setNegativeButton(R.string.cancel, null)

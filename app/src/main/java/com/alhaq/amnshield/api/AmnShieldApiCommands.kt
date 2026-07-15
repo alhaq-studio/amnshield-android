@@ -107,16 +107,16 @@ object AmnShieldApiCommands {
                 ApiCommand.SET_SOCIAL_MEDIA_BLOCKER -> {
                     if (target.isNotEmpty()) {
                         if (target.contains(".") && (target.startsWith("com.") || target.startsWith("org.") || target.startsWith("net."))) {
-                            val apps = loader.loadBlockedSocialApps().toMutableSet()
+                            val apps = loader.loadBlockedWebsitesApps().toMutableSet()
                             if (enable) apps.add(target) else apps.remove(target)
-                            loader.saveBlockedSocialApps(apps)
+                            loader.saveBlockedWebsitesApps(apps)
                         } else {
-                            val sites = loader.loadBlockedSocialWebsites().toMutableSet()
+                            val sites = loader.loadBlockedWebsites().toMutableSet()
                             if (enable) sites.add(target) else sites.remove(target)
-                            loader.saveBlockedSocialWebsites(sites)
+                            loader.saveBlockedWebsites(sites)
                         }
                     } else {
-                        loader.setSocialMediaBlockerEnabled(enable)
+                        loader.setWebsiteBlockerEnabled(enable)
                     }
                     broadcast(context, "amnshield.refresh.appblocker")
                     true
@@ -216,7 +216,7 @@ object AmnShieldApiCommands {
                         "app_blocker_enabled" to loader.isAppBlockerFeatureEnabled(),
                         "keyword_blocker_enabled" to loader.isKeywordBlockerFeatureEnabled(),
                         "reel_blocker_enabled" to loader.isReelBlockerEnabled(),
-                        "social_media_blocker_enabled" to loader.isSocialMediaBlockerEnabled(),
+                        "social_media_blocker_enabled" to loader.isWebsiteBlockerEnabled(),
                         "focus_active" to (focusData.isTurnedOn && focusData.endTime > System.currentTimeMillis())
                     )
                 }

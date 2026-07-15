@@ -1,6 +1,7 @@
 package com.alhaq.amnshield.blockers
 
 import com.alhaq.amnshield.Constants
+import com.alhaq.amnshield.utils.SavedPreferencesLoader
 
 class FocusModeBlocker : BaseBlocker() {
 
@@ -9,6 +10,8 @@ class FocusModeBlocker : BaseBlocker() {
         val ESSENTIAL_SYSTEM_APPS = setOf(
             "com.android.settings",
             "com.google.android.settings",
+            "com.sec.android.app.sbrowser", // Allow browser so focus mode settings/warning can load helper pages if needed, wait, let's keep it same
+            "com.sec.android.app.launcher",
             "com.samsung.android.settings",
             "com.coloros.settings",
             "com.android.systemui",
@@ -98,41 +101,57 @@ class FocusModeBlocker : BaseBlocker() {
      * Check if app app needs to blocked for reasons related to focus mode
      *
      * @param packageName
+     * @param savedPreferencesLoader
+     * @param defaultLauncher
      * @return
      */
-    fun doesAppNeedToBeBlocked(packageName: String, defaultLauncher: String? = null): FocusModeResult {
+    fun doesAppNeedToBeBlocked(
+        packageName: String,
+        savedPreferencesLoader: SavedPreferencesLoader,
+        defaultLauncher: String? = null
+    ): FocusModeResult {
         // NEVER block essential system apps to prevent system instability
         if (ESSENTIAL_SYSTEM_APPS.contains(packageName) || (defaultLauncher != null && packageName == defaultLauncher)) {
             return FocusModeResult(isBlocked = false)
         }
 
-        // responsible for checking if manual focus mode is turned on
+        // 1. Check if manual focus mode is turned on
         if (focusModeData.isTurnedOn) {
             if (focusModeData.endTime < System.currentTimeMillis()) {
                 focusModeData.isTurnedOn = false
                 return FocusModeResult(isBlocked = false, isRequestingToUpdateSPData = true)
             }
-            when (focusModeData.modeType) {
-                Constants.FOCUS_MODE_BLOCK_SELECTED -> {
-                    if (focusModeData.selectedApps.contains(packageName)) {
-                        return FocusModeResult(
-                            isBlocked = true,
-                            focusModeEndTime = focusModeData.endTime
-                        )
-                    }
-                }
+            return evaluateBlocking(packageName, focusModeData.modeType, focusModeData.selectedApps, focusModeData.endTime)
+        }
 
-                Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED -> {
-                    if (!focusModeData.selectedApps.contains(packageName)) {
-                        return FocusModeResult(
-                            isBlocked = true,
-                            focusModeEndTime = focusModeData.endTime
-                        )
-                    }
+        // 2. Check if AutoFocus schedule is active
+        if (savedPreferencesLoader.isFocusModeFeatureEnabled()) {
+            val configuredFocusData = savedPreferencesLoader.getFocusModeData()
+            return evaluateBlocking(packageName, configuredFocusData.modeType, configuredFocusData.selectedApps, -1)
+        }
+
+        return FocusModeResult(isBlocked = false)
+    }
+
+    private fun evaluateBlocking(packageName: String, modeType: Int, selectedApps: Set<String>, endTime: Long): FocusModeResult {
+        when (modeType) {
+            Constants.FOCUS_MODE_BLOCK_SELECTED -> {
+                if (selectedApps.contains(packageName)) {
+                    return FocusModeResult(
+                        isBlocked = true,
+                        focusModeEndTime = endTime
+                    )
+                }
+            }
+            Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED -> {
+                if (!selectedApps.contains(packageName)) {
+                    return FocusModeResult(
+                        isBlocked = true,
+                        focusModeEndTime = endTime
+                    )
                 }
             }
         }
-
         return FocusModeResult(isBlocked = false)
     }
 

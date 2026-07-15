@@ -8,19 +8,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import com.alhaq.amnshield.R
-import com.alhaq.amnshield.databinding.FragmentSocialMediaBlockerConfigBinding
+import com.alhaq.amnshield.databinding.FragmentWebsiteBlockerConfigBinding
 import com.alhaq.amnshield.databinding.ItemSocialBlockCardBinding
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.premium.PremiumManager
 import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
+import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
+import com.alhaq.amnshield.utils.ScheduleUtils
 import java.util.Locale
 
 /**
  * Configuration screen for managing blocked websites/URLs.
  */
-class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
+class WebsiteBlockerConfigFragment : BaseFeatureFragment() {
 
-    private var _binding: FragmentSocialMediaBlockerConfigBinding? = null
+    private var _binding: FragmentWebsiteBlockerConfigBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -28,7 +30,7 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentSocialMediaBlockerConfigBinding.inflate(inflater, container, false)
+        _binding = FragmentWebsiteBlockerConfigBinding.inflate(inflater, container, false)
 
         val premiumManager = PremiumManager.getInstance(requireContext().applicationContext)
         if (!premiumManager.isPremium()) {
@@ -66,19 +68,16 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
     private fun setupUI() {
         // Back arrow
         binding.btnBackArrow.setOnClickListener {
-            activity?.onBackPressedDispatcher?.onBackPressed()
+            if (!parentFragmentManager.popBackStackImmediate()) {
+                activity?.finish()
+            }
         }
 
         // Enable switch
-        val isEnabled = savedPreferencesLoader.isSocialMediaBlockerEnabled()
-        binding.switchSocialMediaBlocker.isChecked = isEnabled
-        binding.switchSocialMediaBlocker.setOnCheckedChangeListener { _, isChecked ->
-            savedPreferencesLoader.setSocialMediaBlockerEnabled(isChecked)
-            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
-        }
+        setupWebsiteBlockerSwitch()
 
-        // Setup prefilled social blocking toggles
-        setupSocialToggles()
+        // Setup prefilled website blocking toggles
+        setupWebsiteToggles()
 
         // Schedule Blocker Button
         binding.btnScheduleWebBlocker.setOnClickListener {
@@ -103,14 +102,14 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
                 .replace("http://", "")
                 .replace("www.", "")
 
-            val currentWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val currentWebsites = savedPreferencesLoader.loadBlockedWebsites().toMutableSet()
             if (currentWebsites.contains(cleanUrl)) {
                 Toast.makeText(requireContext(), "Website already blocked", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             currentWebsites.add(cleanUrl)
-            savedPreferencesLoader.saveBlockedSocialWebsites(currentWebsites)
+            savedPreferencesLoader.saveBlockedWebsites(currentWebsites)
             sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
             binding.inputWebsite.text?.clear()
             refreshWebsitesList()
@@ -119,20 +118,20 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
         refreshWebsitesList()
     }
 
-    private fun setupSocialToggles() {
-        val currentWebsites = savedPreferencesLoader.loadBlockedSocialWebsites()
+    private fun setupWebsiteToggles() {
+        val currentWebsites = savedPreferencesLoader.loadBlockedWebsites()
 
         // 1. Meta (Facebook / Instagram)
         binding.switchBlockMeta.isChecked = currentWebsites.contains("instagram.com") && currentWebsites.contains("facebook.com")
         binding.switchBlockMeta.setOnCheckedChangeListener { _, isChecked ->
-            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val updatedWebsites = savedPreferencesLoader.loadBlockedWebsites().toMutableSet()
             val domains = listOf("instagram.com", "facebook.com", "m.instagram.com", "m.facebook.com")
             if (isChecked) {
                 updatedWebsites.addAll(domains)
             } else {
                 updatedWebsites.removeAll(domains)
             }
-            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            savedPreferencesLoader.saveBlockedWebsites(updatedWebsites)
             sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
             refreshWebsitesList()
         }
@@ -140,14 +139,14 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
         // 2. TikTok
         binding.switchBlockTiktok.isChecked = currentWebsites.contains("tiktok.com")
         binding.switchBlockTiktok.setOnCheckedChangeListener { _, isChecked ->
-            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val updatedWebsites = savedPreferencesLoader.loadBlockedWebsites().toMutableSet()
             val domains = listOf("tiktok.com", "m.tiktok.com")
             if (isChecked) {
                 updatedWebsites.addAll(domains)
             } else {
                 updatedWebsites.removeAll(domains)
             }
-            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            savedPreferencesLoader.saveBlockedWebsites(updatedWebsites)
             sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
             refreshWebsitesList()
         }
@@ -155,14 +154,14 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
         // 3. X / Twitter
         binding.switchBlockTwitter.isChecked = currentWebsites.contains("twitter.com") && currentWebsites.contains("x.com")
         binding.switchBlockTwitter.setOnCheckedChangeListener { _, isChecked ->
-            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val updatedWebsites = savedPreferencesLoader.loadBlockedWebsites().toMutableSet()
             val domains = listOf("twitter.com", "x.com", "mobile.twitter.com")
             if (isChecked) {
                 updatedWebsites.addAll(domains)
             } else {
                 updatedWebsites.removeAll(domains)
             }
-            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            savedPreferencesLoader.saveBlockedWebsites(updatedWebsites)
             sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
             refreshWebsitesList()
         }
@@ -170,14 +169,14 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
         // 4. YouTube
         binding.switchBlockYoutube.isChecked = currentWebsites.contains("youtube.com")
         binding.switchBlockYoutube.setOnCheckedChangeListener { _, isChecked ->
-            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val updatedWebsites = savedPreferencesLoader.loadBlockedWebsites().toMutableSet()
             val domains = listOf("youtube.com", "m.youtube.com", "youtu.be")
             if (isChecked) {
                 updatedWebsites.addAll(domains)
             } else {
                 updatedWebsites.removeAll(domains)
             }
-            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            savedPreferencesLoader.saveBlockedWebsites(updatedWebsites)
             sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
             refreshWebsitesList()
         }
@@ -185,14 +184,14 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
         // 5. Snapchat
         binding.switchBlockSnapchat.isChecked = currentWebsites.contains("snapchat.com")
         binding.switchBlockSnapchat.setOnCheckedChangeListener { _, isChecked ->
-            val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+            val updatedWebsites = savedPreferencesLoader.loadBlockedWebsites().toMutableSet()
             val domains = listOf("snapchat.com")
             if (isChecked) {
                 updatedWebsites.addAll(domains)
             } else {
                 updatedWebsites.removeAll(domains)
             }
-            savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+            savedPreferencesLoader.saveBlockedWebsites(updatedWebsites)
             sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
             refreshWebsitesList()
         }
@@ -200,7 +199,7 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
 
     private fun refreshWebsitesList() {
         binding.layoutBlockedWebsitesList.removeAllViews()
-        val blockedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites()
+        val blockedWebsites = savedPreferencesLoader.loadBlockedWebsites()
 
         // Sync switch states based on current loaded list (so manual additions/deletions update toggles)
         binding.switchBlockMeta.isChecked = blockedWebsites.contains("instagram.com") && blockedWebsites.contains("facebook.com")
@@ -213,9 +212,9 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
             val itemBinding = ItemSocialBlockCardBinding.inflate(layoutInflater, binding.layoutBlockedWebsitesList, false)
             itemBinding.txtTitle.text = website
             itemBinding.btnDelete.setOnClickListener {
-                val updatedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites().toMutableSet()
+                val updatedWebsites = savedPreferencesLoader.loadBlockedWebsites().toMutableSet()
                 updatedWebsites.remove(website)
-                savedPreferencesLoader.saveBlockedSocialWebsites(updatedWebsites)
+                savedPreferencesLoader.saveBlockedWebsites(updatedWebsites)
                 sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
                 refreshWebsitesList()
             }
@@ -229,7 +228,52 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
         _binding = null
     }
 
+    private fun setupWebsiteBlockerSwitch() {
+        val isFeatureEnabled = savedPreferencesLoader.isWebsiteBlockerEnabled() || 
+            savedPreferencesLoader.loadUnifiedFeatureScheduleRules().any { it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER) && it.isEnabled == true }
+        
+        binding.switchWebsiteBlocker.setOnCheckedChangeListener(null)
+        binding.switchWebsiteBlocker.isChecked = isFeatureEnabled
+
+        binding.switchWebsiteBlocker.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked) {
+                val hasSchedules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules().any { 
+                    it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER) && it.isEnabled == true 
+                }
+                if (!hasSchedules) {
+                    buttonView.setOnCheckedChangeListener(null)
+                    buttonView.isChecked = false
+                    setupWebsiteBlockerSwitch()
+                    
+                    showFeatureScheduleDialog("Website Blocker", { start, end, days ->
+                        ScheduleUtils.autoResolveAndSaveFeatureSchedule(
+                            requireContext(),
+                            savedPreferencesLoader,
+                            "Website Blocker",
+                            start,
+                            end,
+                            days
+                        )
+                        setupWebsiteBlockerSwitch()
+                        sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+                        sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
+                    }, {
+                        setupWebsiteBlockerSwitch()
+                    })
+                } else {
+                    savedPreferencesLoader.setWebsiteBlockerEnabled(true, updateManual = true)
+                    sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+                    sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
+                }
+            } else {
+                ScheduleUtils.disableFeatureSchedules(savedPreferencesLoader, "Website Blocker")
+                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
+            }
+        }
+    }
+
     companion object {
-        const val FRAGMENT_ID = "social_media_blocker"
+        const val FRAGMENT_ID = "website_blocker"
     }
 }

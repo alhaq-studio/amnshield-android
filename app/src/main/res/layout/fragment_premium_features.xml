@@ -195,12 +195,14 @@
                         android:textColor="?attr/colorOnTertiaryContainer"
                         app:iconTint="?attr/colorOnTertiaryContainer" />
 
+
+
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnSpecialAccess"
+                        android:id="@+id/btnRedeemLicense"
                         style="@style/Widget.Material3.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/premium_special_access_button"
+                        android:text="Redeem License Key"
                         android:textColor="?attr/colorOnTertiaryContainer"
                         app:iconTint="?attr/colorOnTertiaryContainer" />
                 </LinearLayout>

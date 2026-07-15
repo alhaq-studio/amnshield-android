@@ -100,7 +100,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                     root.recycle()
                 }
             } catch (e: Exception) {
-                // Ignore
+                crashLogger.logNonFatalError("AccessibilityService", "Error during reels tracking execution", e)
             }
             reelsTrackingHandler.postDelayed(this, 1000L)
         }
@@ -233,8 +233,18 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
 
             val isPremiumUser = premiumManager.isPremium()
 
-            if (isPremiumUser && savedPreferencesLoader.isFocusModeFeatureEnabled()) {
-                val focusModeResult = focusModeBlocker.doesAppNeedToBeBlocked(packageName, cachedDefaultLauncher)
+            val isFocusModeActive = isPremiumUser && (savedPreferencesLoader.isFocusModeFeatureEnabled() || focusModeBlocker.focusModeData.isTurnedOn)
+            val activeFocusModeType = if (focusModeBlocker.focusModeData.isTurnedOn) {
+                focusModeBlocker.focusModeData.modeType
+            } else if (savedPreferencesLoader.isFocusModeFeatureEnabled()) {
+                savedPreferencesLoader.getFocusModeData().modeType
+            } else {
+                -1
+            }
+            val isFocusBlockAllExSelectedActive = isFocusModeActive && activeFocusModeType == Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED
+
+            if (isFocusModeActive) {
+                val focusModeResult = focusModeBlocker.doesAppNeedToBeBlocked(packageName, savedPreferencesLoader, cachedDefaultLauncher)
                 if (focusModeResult.isRequestingToUpdateSPData) {
                     savedPreferencesLoader.completeFocusSession()
                     savedPreferencesLoader.saveFocusModeData(focusModeBlocker.focusModeData)
@@ -247,13 +257,10 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 }
             }
 
-            val isFocusModeActive = isPremiumUser && savedPreferencesLoader.isFocusModeFeatureEnabled() && focusModeBlocker.focusModeData.isTurnedOn
-            val isFocusBlockAllExSelectedActive = isFocusModeActive && focusModeBlocker.focusModeData.modeType == Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED
-
-            if (isPremiumUser && savedPreferencesLoader.isSocialMediaBlockerEnabled()) {
-                val blockedSocialApps = savedPreferencesLoader.loadBlockedSocialApps()
+            if (isPremiumUser && savedPreferencesLoader.isWebsiteBlockerEnabled()) {
+                val blockedSocialApps = savedPreferencesLoader.loadBlockedWebsitesApps()
                 if (blockedSocialApps.contains(packageName)) {
-                    blockingStatsManager.recordAppBlock(packageName, "Blocked by Social Media Blocker")
+                    blockingStatsManager.recordAppBlock(packageName, "Blocked by Website Blocker")
                     val intent = Intent(this, WarningActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         putExtra("mode", Constants.WARNING_SCREEN_MODE_APP_BLOCKER)
@@ -343,15 +350,15 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 }
             }
 
-            if (premiumManager.isPremium() && savedPreferencesLoader.isSocialMediaBlockerEnabled()) {
+            if (premiumManager.isPremium() && savedPreferencesLoader.isWebsiteBlockerEnabled()) {
                 try {
-                    if (checkBlockedSocialWebsites(rootNode, packageName)) {
-                        blockingStatsManager.recordAppBlock(packageName, "Social Website Blocked: $packageName")
+                    if (checkBlockedWebsites(rootNode, packageName)) {
+                        blockingStatsManager.recordAppBlock(packageName, "Website Blocked: $packageName")
                         pressHome()
                         return
                     }
                 } catch (e: Exception) {
-                    android.util.Log.e("AmnShield", "Social Media website blocker error", e)
+                    android.util.Log.e("AmnShield", "Website blocker error", e)
                 }
             }
 
@@ -552,11 +559,9 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
 
         val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules()
         val activeRules = rules.filter { it.isRuleEnabled }
-        if (activeRules.isEmpty()) return
 
         UnifiedFeatureScheduleRule.FeatureTarget.entries.forEach { target ->
             val targetRules = activeRules.filter { it.targets.contains(target) }
-            if (targetRules.isEmpty()) return@forEach
 
             val activeCheat = targetRules.firstOrNull {
                 it.type == UnifiedFeatureScheduleRule.RuleType.CHEAT && isUnifiedRuleActive(it, now)
@@ -565,13 +570,13 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 it.type == UnifiedFeatureScheduleRule.RuleType.BLOCK && isUnifiedRuleActive(it, now)
             }
 
-            // Priority: Active Cheat > Active Block > Manual User Setting
-            when {
-                activeCheat != null -> applyUnifiedFeatureState(target, false)
-                activeBlock != null -> applyUnifiedFeatureState(target, true)
-                // If no schedule is active, we don't change the state.
-                // This lets the user's manual toggle in the UI remain in control.
+            val targetEnabled = when {
+                activeCheat != null -> false
+                activeBlock != null -> true
+                else -> savedPreferencesLoader.getManualFeatureState(target)
             }
+
+            applyUnifiedFeatureState(target, targetEnabled)
         }
     }
 
@@ -582,35 +587,35 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         when (target) {
             UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER -> {
                 if (savedPreferencesLoader.isAppBlockerFeatureEnabled() != enabled) {
-                    savedPreferencesLoader.setAppBlockerFeatureEnabled(enabled)
+                    savedPreferencesLoader.setAppBlockerFeatureEnabled(enabled, updateManual = false)
                     setupAppBlocker()
                 }
             }
 
             UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER -> {
                 if (savedPreferencesLoader.isKeywordBlockerFeatureEnabled() != enabled) {
-                    savedPreferencesLoader.setKeywordBlockerFeatureEnabled(enabled)
+                    savedPreferencesLoader.setKeywordBlockerFeatureEnabled(enabled, updateManual = false)
                     setupKeywordBlocker()
                 }
             }
 
             UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER -> {
                 if (savedPreferencesLoader.isReelBlockerEnabled() != enabled) {
-                    savedPreferencesLoader.setReelBlockerEnabled(enabled)
+                    savedPreferencesLoader.setReelBlockerEnabled(enabled, updateManual = false)
                     setupReelBlocker()
                 }
             }
 
             UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE -> {
                 if (savedPreferencesLoader.isFocusModeFeatureEnabled() != enabled) {
-                    savedPreferencesLoader.setFocusModeFeatureEnabled(enabled)
+                    savedPreferencesLoader.setFocusModeFeatureEnabled(enabled, updateManual = false)
                     setupFocusMode()
                 }
             }
 
             UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER -> {
-                if (savedPreferencesLoader.isSocialMediaBlockerEnabled() != enabled) {
-                    savedPreferencesLoader.setSocialMediaBlockerEnabled(enabled)
+                if (savedPreferencesLoader.isWebsiteBlockerEnabled() != enabled) {
+                    savedPreferencesLoader.setWebsiteBlockerEnabled(enabled, updateManual = false)
                 }
             }
         }
@@ -1109,14 +1114,14 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         "com.kiwibrowser.browser" to "url_bar"
     )
 
-    private fun checkBlockedSocialWebsites(rootNode: AccessibilityNodeInfo, packageName: String): Boolean {
+    private fun checkBlockedWebsites(rootNode: AccessibilityNodeInfo, packageName: String): Boolean {
         val urlBarId = BROWSER_URL_BAR_IDS[packageName] ?: return false
         val fullId = "$packageName:id/$urlBarId"
         val urlNode = ViewBlocker.findElementById(rootNode, fullId) ?: return false
         return try {
             val urlText = urlNode.text?.toString()?.lowercase(java.util.Locale.ROOT).orEmpty()
             if (urlText.isNotBlank()) {
-                val blockedWebsites = savedPreferencesLoader.loadBlockedSocialWebsites()
+                val blockedWebsites = savedPreferencesLoader.loadBlockedWebsites()
                 for (site in blockedWebsites) {
                     if (urlText.contains(site)) {
                         return true

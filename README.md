@@ -159,6 +159,16 @@ For Self Build:
 
 ---
 
+## Technical Note: Package Name & Application ID
+
+For historical reasons (AmnShield was rebranded from DeenShield), there is a mismatch in the project identifiers:
+- **`applicationId`**: `com.alhaq.deenshield`
+- **`namespace`**: `com.alhaq.amnshield`
+
+Because the Google Play Store registry binds permanently to the `applicationId`, changing it would require publishing a completely new listing. Consequently, we **maintain the legacy applicationId (`com.alhaq.deenshield`)** to avoid disrupting existing users, while codebase packages and code structures use the modern namespace `com.alhaq.amnshield`. Do not change the `applicationId` when making code updates.
+
+---
+
 ## License
 
 This project is licensed under the **GNU General Public License v3.0**.

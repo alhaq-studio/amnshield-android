@@ -1,6 +1,6 @@
 package com.alhaq.amnshield.ui.screens
 
-import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -13,16 +13,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -43,6 +38,7 @@ import androidx.compose.ui.window.DialogProperties
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.alhaq.amnshield.ui.components.bounceClick
 
 data class FocusAppItem(
     val packageName: String,
@@ -75,16 +71,14 @@ fun FocusScreen(
             preSelectedApps = preSelectedApps,
             defaultMode = defaultMode,
             onDismiss = { showStartFocusDialog = false },
+            onConfigureApps = onConfigureApps,
+            onConfigureSchedules = onConfigureSchedules,
             onStart = { duration, mode, apps ->
                 showStartFocusDialog = false
                 onStartFocusSession(duration, mode, apps)
             }
         )
     }
-
-    // local simulated stats to maintain visual fidelity for interactive controls
-    var simulatedFocusMins by remember { mutableStateOf(45) }
-    var simulatedDistractions by remember { mutableStateOf(12) }
 
     // Simulating simple breathing cadence animation
     LaunchedEffect(isBreathingActive) {
@@ -100,10 +94,6 @@ fun FocusScreen(
                 kotlinx.coroutines.delay(4000)
                 if (!isBreathingActive) break
                 breathCount++
-                // Automatically add focus time locally
-                if (breathCount % 2 == 0) {
-                    simulatedFocusMins += 1
-                }
             }
         } else {
             breathingPhase = "Ready"
@@ -268,7 +258,7 @@ fun FocusScreen(
 
                     if (!isFocusModeActive) {
                         Button(
-                            onClick = onStartFocusSession,
+                            onClick = { showStartFocusDialog = true },
                             enabled = isServiceEnabled,
                             shape = RoundedCornerShape(20.dp),
                             modifier = Modifier
@@ -303,241 +293,10 @@ fun FocusScreen(
             }
         }
 
-        // Daily Wellbeing Insights Card
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.25f)
-                ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Star,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "WELLBEING INSIGHTS",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.tertiary,
-                            letterSpacing = 0.08.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Focus Time block
-                        Card(
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-                            ),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Timer,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                                val focusHours = simulatedFocusMins / 60
-                                val focusMins = simulatedFocusMins % 60
-                                val focusStr = if (focusHours > 0) "${focusHours}h ${focusMins}m" else "${focusMins}m"
-                                Text(
-                                    text = focusStr,
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "Total Focus Time",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        // Distraction block
-                        Card(
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-                            ),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Block,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Text(
-                                    text = "$simulatedDistractions",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "Distractions Blocked",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Insight message box
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                            .padding(14.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.Top) {
-                            Icon(
-                                imageVector = Icons.Outlined.Info,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(18.dp).padding(top = 1.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            val insightText = when {
-                                simulatedFocusMins == 0 && simulatedDistractions == 0 ->
-                                    "No activity logged today yet. Activate Focus sessions or block protection shields to start building your flow!"
-                                simulatedFocusMins >= 120 ->
-                                    "Outstanding flow state! You've achieved your deep focus goal and successfully filtered out $simulatedDistractions potential interruptions."
-                                simulatedFocusMins >= 45 ->
-                                    "Excellent momentum! Shielding $simulatedDistractions distractions has kept you focused on what matters today."
-                                else ->
-                                    "You've focused for $simulatedFocusMins minutes today while deflecting $simulatedDistractions distractions. Great work starting your practice!"
-                            }
-                            Text(
-                                text = insightText,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                lineHeight = 16.sp
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Interactive controls
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedButton(
-                            onClick = { simulatedFocusMins += 15 },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp)
-                        ) {
-                            Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("+15m Focus", style = MaterialTheme.typography.labelSmall)
-                        }
-
-                        OutlinedButton(
-                            onClick = { simulatedDistractions += 1 },
-                            modifier = Modifier
-                                .weight(1.2f)
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            ),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
-                            contentPadding = PaddingValues(horizontal = 8.dp)
-                        ) {
-                            Icon(imageVector = Icons.Default.Shield, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Simulate Block", style = MaterialTheme.typography.labelSmall)
-                        }
-
-                        IconButton(
-                            onClick = {
-                                simulatedFocusMins = 0
-                                simulatedDistractions = 0
-                            },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Reset Stats",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
 
         // Beautiful Mindful Breathing Visualizer Card
         item {
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -591,7 +350,7 @@ fun FocusScreen(
                         targetValue = circleSize,
                         animationSpec = tween(
                             durationMillis = if (breathingPhase == "Hold") 2000 else 4000,
-                            easing = LinearOutSlowInEasing
+                            easing = FastOutSlowInEasing
                         ),
                         label = "breathing_circle_size"
                     )
@@ -676,52 +435,6 @@ fun FocusScreen(
             }
         }
 
-        item {
-            Text(
-                text = "CONFIGURATION",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 0.8.sp
-            )
-        }
-
-        // Configuration Card Container
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            ) {
-                Column {
-                    FocusItemRow(
-                        icon = Icons.Outlined.Apps,
-                        title = "Bypassed Apps",
-                        summary = "Apps allowed during focus sessions",
-                        statusText = "$selectedAppsCount apps",
-                        onChecked = onConfigureApps,
-                        iconColor = Color(0xFF8B5CF6)
-                    )
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-
-                    FocusItemRow(
-                        icon = Icons.Outlined.CalendarToday,
-                        title = "AutoFocus Schedules",
-                        summary = "Automatically schedule focus blocks",
-                        statusText = "Setup",
-                        onChecked = onConfigureSchedules,
-                        iconColor = Color(0xFF3B82F6)
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -737,7 +450,7 @@ fun FocusItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onChecked() }
+            .bounceClick { onChecked() }
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -793,4 +506,363 @@ fun FocusItemRow(
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StartFocusSessionDialog(
+    installedApps: List<FocusAppItem>,
+    preSelectedApps: Set<String>,
+    defaultMode: Int,
+    onDismiss: () -> Unit,
+    onConfigureApps: () -> Unit,
+    onConfigureSchedules: () -> Unit,
+    onStart: (Int, Int, Set<String>) -> Unit
+) {
+    var durationMinutes by remember { mutableStateOf(45) }
+    var selectedMode by remember { mutableStateOf(defaultMode) }
+    val selectedApps = remember { mutableStateOf(preSelectedApps.toMutableSet()) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredApps = remember(searchQuery, installedApps) {
+        if (searchQuery.isBlank()) installedApps
+        else installedApps.filter { it.label.contains(searchQuery, ignoreCase = true) || it.packageName.contains(searchQuery, ignoreCase = true) }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier
+            .fillMaxWidth(0.95f)
+            .fillMaxHeight(0.85f),
+        content = {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp)
+                ) {
+                    // Header
+                    Text(
+                        text = "Configure Focus Session",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // LazyColumn for the scrollable configuration content
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // 1. Duration Picker
+                        item {
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Duration",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "${durationMinutes}m",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Slider(
+                                    value = durationMinutes.toFloat(),
+                                    onValueChange = { durationMinutes = it.toInt() },
+                                    valueRange = 5f..180f,
+                                    steps = 34 // 5-minute increments
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                // Quick choice chips
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    listOf(15, 25, 45, 60, 90).forEach { mins ->
+                                        val isSelected = durationMinutes == mins
+                                        FilterChip(
+                                            selected = isSelected,
+                                            onClick = { durationMinutes = mins },
+                                            label = { Text("${mins}m") }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // 2. Focus Mode Option cards
+                        item {
+                            Column {
+                                Text(
+                                    text = "Focus Mode Type",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    // Option 1: Whitelist
+                                    Card(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .bounceClick { selectedMode = com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED },
+                                        border = BorderStroke(
+                                            width = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) 2.dp else 1.dp,
+                                            color = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                        ),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
+                                        )
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Icon(
+                                                imageVector = Icons.Default.Shield,
+                                                contentDescription = null,
+                                                tint = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "Block All Except Allowed",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "Allows only whitelisted apps",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    // Option 2: Blacklist
+                                    Card(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .bounceClick { selectedMode = com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED },
+                                        border = BorderStroke(
+                                            width = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) 2.dp else 1.dp,
+                                            color = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                        ),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
+                                        )
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Icon(
+                                                imageVector = Icons.Default.Block,
+                                                contentDescription = null,
+                                                tint = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = "Block Selected Only",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "Blocks specific blacklisted apps",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    // 2.5 Focus Settings configuration redirects
+                    item {
+                        Column {
+                            Text(
+                                text = "Focus Settings",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                ),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            ) {
+                                Column {
+                                    FocusItemRow(
+                                        icon = Icons.Outlined.CalendarToday,
+                                        title = "AutoFocus Schedules",
+                                        summary = "Focus block automation rules",
+                                        statusText = "SETUP",
+                                        onChecked = onConfigureSchedules,
+                                        iconColor = Color(0xFF3B82F6)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                        // 3. Search and App Picker Header
+                        item {
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) "Allowed Apps" else "Blocked Apps",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "${selectedApps.value.size} selected",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = searchQuery,
+                                    onValueChange = { searchQuery = it },
+                                    placeholder = { Text("Search apps...") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    singleLine = true
+                                )
+                            }
+                        }
+
+                        // 4. App Picker List Container
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(240.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                            ) {
+                                if (filteredApps.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "No apps found",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                } else {
+                                    androidx.compose.foundation.lazy.LazyColumn(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentPadding = PaddingValues(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        items(filteredApps) { app ->
+                                            val isChecked = selectedApps.value.contains(app.packageName)
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .bounceClick {
+                                                        val newSet = HashSet(selectedApps.value)
+                                                        if (isChecked) newSet.remove(app.packageName)
+                                                        else newSet.add(app.packageName)
+                                                        selectedApps.value = newSet
+                                                    }
+                                                    .padding(vertical = 6.dp, horizontal = 8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                if (app.icon != null) {
+                                                    Image(
+                                                        bitmap = app.icon.asImageBitmap(),
+                                                        contentDescription = null,
+                                                        modifier = Modifier
+                                                            .size(36.dp)
+                                                            .clip(RoundedCornerShape(8.dp))
+                                                    )
+                                                } else {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(36.dp)
+                                                            .clip(RoundedCornerShape(8.dp))
+                                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Shield,
+                                                            contentDescription = null,
+                                                            tint = MaterialTheme.colorScheme.primary,
+                                                            modifier = Modifier.size(18.dp)
+                                                        )
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Text(
+                                                    text = app.label,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    modifier = Modifier.weight(1f),
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Checkbox(
+                                                    checked = isChecked,
+                                                    onCheckedChange = { checked ->
+                                                        val newSet = HashSet(selectedApps.value)
+                                                        if (checked) newSet.add(app.packageName)
+                                                        else newSet.remove(app.packageName)
+                                                        selectedApps.value = newSet
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Actions Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Text("Cancel")
+                        }
+                        Button(
+                            onClick = { onStart(durationMinutes, selectedMode, selectedApps.value) },
+                            modifier = Modifier.weight(1.5f),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Text("Start Focus", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    )
 }

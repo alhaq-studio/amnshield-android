@@ -78,6 +78,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="@dimen/spacing_normal"
+                android:visibility="gone"
                 app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
                 app:cardCornerRadius="@dimen/card_corner_radius_large"
                 app:cardElevation="@dimen/card_elevation_high"

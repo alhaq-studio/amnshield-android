@@ -29,7 +29,8 @@ data class ScheduleRule(
     val selectedApps: List<String> = emptyList(),
     val selectedKeywords: List<String> = emptyList(),
     val selectedWebsites: List<String> = emptyList(),
-    val selectedPlatforms: List<String> = emptyList()
+    val selectedPlatforms: List<String> = emptyList(),
+    val selectedBlockers: List<String> = emptyList()
 )
 
 data class BlockedApp(
@@ -150,5 +151,7 @@ data class AmnShieldState(
     val userGoalMinutes: Int = 120,
     val focusProfileType: String = "Deep Focus",
     val isPinProtectionEnabled: Boolean = false,
-    val profilePin: String = ""
+    val profilePin: String = "",
+    val isAppLockEnabled: Boolean = false,
+    val isBypassPinLockEnabled: Boolean = false
 )

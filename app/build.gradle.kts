@@ -128,9 +128,6 @@ dependencies {
     implementation(libs.androidx.documentfile)
 
    
-    implementation (libs.api)
-    implementation (libs.provider)
-
     implementation(libs.gson)
 
     testImplementation(libs.junit)

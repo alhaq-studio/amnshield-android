@@ -85,9 +85,7 @@ class BlocksFragment : BaseFeatureFragment() {
         val focusData = blocksLoader.getFocusModeData()
         val focusActive = premiumEnabled && focusData.isTurnedOn && serviceEnabled
 
-        val socialAppsCount = blocksLoader.loadBlockedSocialApps().size
-        val socialWebsitesCount = blocksLoader.loadBlockedSocialWebsites().size
-        val socialActive = premiumEnabled && blocksLoader.isSocialMediaBlockerEnabled() && serviceEnabled
+        val websiteActive = premiumEnabled && blocksLoader.isWebsiteBlockerEnabled() && serviceEnabled
 
         val allSchedules = blocksLoader.loadAppBlockerScheduleRules()
         val cheatCount = allSchedules.count { it.type == AppBlockScheduleRule.RuleType.CHEAT }
@@ -115,7 +113,7 @@ class BlocksFragment : BaseFeatureFragment() {
                 isAppBlockerEnabled = appActive,
                 isReelsBlockerEnabled = reelsActive,
                 isKeywordBlockerEnabled = keywordActive,
-                isWebFilterEnabled = socialActive,
+                isWebFilterEnabled = websiteActive,
                 isFocusModeActive = focusActive,
                 isScheduleEnabled = scheduleCount > 0,
                 isUsageLimitEnabled = launchLimitCount > 0,

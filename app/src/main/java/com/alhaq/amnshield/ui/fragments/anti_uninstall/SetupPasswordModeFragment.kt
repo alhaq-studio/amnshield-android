@@ -64,9 +64,6 @@ class SetupPasswordModeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val defaultBlockChanges = arguments?.getBoolean(ChooseModeFragment.ARG_BLOCK_CHANGES_DEFAULT, false) == true
-        binding.cbBlockChanges.isChecked = defaultBlockChanges
-
         binding.btnNextPass.setOnClickListener {
             // Validate password first
             val password = binding.password.text.toString()
@@ -96,16 +93,6 @@ class SetupPasswordModeFragment : Fragment() {
                     requireActivity().finish()
                 }
                 .show()
-        }
-
-        binding.cbBlockChanges.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(getString(R.string.alert))
-                    .setMessage(getString(R.string.if_you_enable_this_you_won_t_be_able_to_change_configurations_such_as_adding_blocked_apps_keywords_and_more))
-                    .setPositiveButton(getString(R.string.i_understand), null)
-                    .show()
-            }
         }
 
     }
@@ -165,7 +152,6 @@ class SetupPasswordModeFragment : Fragment() {
             putBoolean("is_anti_uninstall_on", true)
             putString("password", hashed)
             putInt("mode", Constants.ANTI_UNINSTALL_PASSWORD_MODE)
-            putBoolean("is_configuring_blocked", binding.cbBlockChanges.isChecked)
             commit()
         }
 

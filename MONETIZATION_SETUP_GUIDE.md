@@ -48,8 +48,8 @@ This guide walks you through setting up your **Lemon Squeezy** merchant account,
    # 1. The signing secret you set in Lemon Squeezy Webhook settings:
    supabase secrets set LEMON_SQUEEZY_WEBHOOK_SECRET="your_webhook_signing_secret"
 
-   # 2. Your ECDSA PKCS#8 Private Key (from license_keys.md):
-   supabase secrets set ECDSA_PRIVATE_KEY_PEM="MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCADPX9tuEQ27m1lup+nj/tar6XV7sqbp3IHCWE/7Yh1qQ=="
+    # 2. Your ECDSA PKCS#8 Private Key (from license_keys.md):
+    supabase secrets set ECDSA_PRIVATE_KEY_PEM="your_pkcs8_private_key_pem_here"
 
    # 3. Your Resend API Key (for sending emails):
    supabase secrets set RESEND_API_KEY="re_your_resend_api_key"

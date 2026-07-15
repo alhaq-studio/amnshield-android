@@ -9,6 +9,8 @@
     <string name="focus_mode">Focus Mode</string>
     <string name="app_blocker">App Blocker</string>
     <string name="blocks">Blocks</string>
+    <string name="nav_focus">Focus</string>
+    <string name="nav_advanced">Advanced</string>
     <string name="active_blocks">Active Blocks</string>
     <string name="block_setup">Block Setup</string>
     <string name="manage_all_blocks">Manage all blocks</string>
@@ -28,8 +30,9 @@
     <string name="enable_app_blocker">Enable App Blocker</string>
     <string name="enable_keyword_blocker">Enable Keyword Blocker</string>
     <string name="enable_usage_tracker">Enable Usage Tracker</string>
-    <string name="social_media_blocker">Website/URL Blocker</string>
-    <string name="enable_social_media_blocker">Enable Website/URL Blocker</string>
+    <string name="website_blocker">Website/URL Blocker</string>
+    <string name="social_media_blocker">Social Media Blocker</string>
+    <string name="enable_website_blocker">Enable Website/URL Blocker</string>
     <string name="blocked_social_apps">Blocked Social Apps</string>
     <string name="blocked_social_websites">Blocked Websites/URLs</string>
     <string name="manage_apps">Manage Apps</string>

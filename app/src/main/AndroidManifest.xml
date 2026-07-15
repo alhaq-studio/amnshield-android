@@ -13,6 +13,11 @@
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <permission
+        android:name="com.alhaq.amnshield.permission.BIND_API"
+        android:protectionLevel="signature" />
+
     <application
         android:name=".AmnShield"
         android:allowBackup="true"
@@ -153,7 +158,8 @@
         <!-- API Bound Service for Guardian & paired client apps -->
         <service
             android:name=".api.AmnShieldApiService"
-            android:exported="true">
+            android:exported="true"
+            android:permission="com.alhaq.amnshield.permission.BIND_API">
             <intent-filter>
                 <action android:name="com.alhaq.amnshield.api.BIND" />
             </intent-filter>

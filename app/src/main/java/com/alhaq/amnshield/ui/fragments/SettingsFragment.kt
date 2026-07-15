@@ -107,8 +107,13 @@ class SettingsFragment : Fragment() {
                         state = state,
                         viewModel = viewModel,
                         onNavigateToProfile = {
+                            val containerId = if (requireActivity().findViewById<View>(R.id.nav_host_fragment) != null) {
+                                R.id.nav_host_fragment
+                            } else {
+                                R.id.fragment_holder
+                            }
                             val transaction = parentFragmentManager.beginTransaction()
-                            transaction.replace(R.id.fragment_container, ProfileFragment())
+                            transaction.replace(containerId, ProfileFragment())
                             transaction.addToBackStack(null)
                             transaction.commit()
                         },
@@ -128,7 +133,7 @@ class SettingsFragment : Fragment() {
                         onLanguage = { showLanguageDialog() },
                         onSignOut = { showSignOutDialog() },
                         onToggleWebFilter = { enabled ->
-                            savedPreferencesLoader.setSocialMediaBlockerEnabled(enabled)
+                            savedPreferencesLoader.setWebsiteBlockerEnabled(enabled)
                             sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
                             viewModel.loadState(viewModel.state.value.copy(isWebFilterEnabled = enabled))
                         },
@@ -137,7 +142,9 @@ class SettingsFragment : Fragment() {
                             viewModel.loadState(viewModel.state.value.copy(isUsageLimitEnabled = enabled))
                         },
                         onBack = {
-                            requireActivity().onBackPressedDispatcher.onBackPressed()
+                            if (!parentFragmentManager.popBackStackImmediate()) {
+                                requireActivity().finish()
+                            }
                         }
                     )
                 }
@@ -152,7 +159,7 @@ class SettingsFragment : Fragment() {
     }
 
     private fun loadSettingsState() {
-        val webFilterEnabled = savedPreferencesLoader.isSocialMediaBlockerEnabled()
+        val webFilterEnabled = savedPreferencesLoader.isWebsiteBlockerEnabled()
         val usageTrackerEnabled = savedPreferencesLoader.isUsageTrackerFeatureEnabled()
         val account = googleSignInHelper.getLastSignedInAccount()
         val name = account?.displayName ?: "Alhaq DST"

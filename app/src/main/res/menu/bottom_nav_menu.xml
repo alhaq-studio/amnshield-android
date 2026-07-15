@@ -13,10 +13,10 @@
     <item
         android:id="@+id/navigation_focus"
         android:icon="@drawable/ic_focus_mode"
-        android:title="Focus" />
+        android:title="@string/nav_focus" />
 
     <item
         android:id="@+id/navigation_advanced"
         android:icon="@drawable/ic_amnshield_settings"
-        android:title="Advanced" />
+        android:title="@string/nav_advanced" />
 </menu>

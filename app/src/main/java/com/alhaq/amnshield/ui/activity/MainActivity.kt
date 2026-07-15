@@ -39,6 +39,10 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.alhaq.amnshield.AmnShield
 import com.alhaq.amnshield.data.AmnShieldAccount
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.navigation.NavigationView
@@ -53,7 +57,7 @@ import com.alhaq.amnshield.databinding.DialogPermissionInfoBinding
 import com.alhaq.amnshield.databinding.DialogRemoveAntiUninstallBinding
 import com.alhaq.amnshield.receivers.AdminReceiver
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
-import com.alhaq.amnshield.ui.fragments.BlocksFragment
+import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
 import com.alhaq.amnshield.ui.fragments.StatsFragment
 import com.alhaq.amnshield.ui.fragments.SettingsFragment
 import com.alhaq.amnshield.ui.fragments.AdvancedFragment
@@ -74,6 +78,26 @@ import com.alhaq.amnshield.permissions.PermissionsManager
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Calendar
+
+import androidx.compose.runtime.*
+import androidx.compose.material3.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
+import com.alhaq.amnshield.ui.theme.AmnShieldTheme
+import com.alhaq.amnshield.ui.state.AppTheme
 
 
 class MainActivity : AppCompatActivity() {
@@ -211,11 +235,12 @@ class MainActivity : AppCompatActivity() {
             val startTab = intent.getIntExtra("start_tab", R.id.navigation_stats)
             val initialFragment = when (startTab) {
                 R.id.navigation_advanced -> AdvancedFragment()
-                R.id.navigation_blocks -> BlocksFragment()
+                R.id.navigation_blocks -> ManageBlockSchedulesFragment()
                 R.id.navigation_focus -> FocusFragment()
                 else -> StatsFragment()
             }
             supportFragmentManager.beginTransaction()
+                .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
                 .replace(R.id.nav_host_fragment, initialFragment)
                 .commit()
             binding.bottomNavigation.selectedItemId = startTab
@@ -225,24 +250,28 @@ class MainActivity : AppCompatActivity() {
             when (item.itemId) {
                 R.id.navigation_stats -> {
                     supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
                         .replace(R.id.nav_host_fragment, StatsFragment())
                         .commit()
                     true
                 }
                 R.id.navigation_blocks -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.nav_host_fragment, BlocksFragment())
+                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                        .replace(R.id.nav_host_fragment, ManageBlockSchedulesFragment())
                         .commit()
                     true
                 }
                 R.id.navigation_focus -> {
                     supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
                         .replace(R.id.nav_host_fragment, FocusFragment())
                         .commit()
                     true
                 }
                 R.id.navigation_advanced -> {
                     supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
                         .replace(R.id.nav_host_fragment, AdvancedFragment())
                         .commit()
                     true
@@ -271,6 +300,7 @@ class MainActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
+        checkAppLock()
         // Permissions will now be handled by PermissionsBottomSheet on first launch, 
         // or user can access them through settings if needed.
         // checkPermissions() // Removed old permission check
@@ -1156,11 +1186,7 @@ class MainActivity : AppCompatActivity() {
         navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_profile -> {
-                    if (googleSignInHelper.isSignedIn()) {
-                        openProfileScreen()
-                    } else {
-                        Toast.makeText(this, getString(R.string.sign_in_with_google), Toast.LENGTH_SHORT).show()
-                    }
+                    openProfileScreen()
                 }
                 R.id.nav_sign_in -> {
                     signInWithGoogle()
@@ -1187,9 +1213,191 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openSettingsScreen() {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.nav_host_fragment, SettingsFragment())
-            .commit()
+        val loader = savedPreferencesLoader
+        val pinEnabled = loader.isPinSecurityEnabled()
+        val bypassEnabled = loader.isBypassPinLockEnabled()
+        val antiUninstallPrefs = getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
+        val isAntiUninstallOn = antiUninstallPrefs.getBoolean("is_anti_uninstall_on", false)
+        val pinCode = loader.getPinCode()
+
+        val needsPin = pinEnabled && bypassEnabled && isAntiUninstallOn && pinCode.isNotEmpty() && !AmnShield.isBypassUnlocked
+
+        if (needsPin) {
+            showBypassPinDialog(pinCode, onCancel = {
+                selectTab(R.id.navigation_stats)
+            }) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.nav_host_fragment, SettingsFragment())
+                    .commit()
+            }
+        } else {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.nav_host_fragment, SettingsFragment())
+                .commit()
+        }
+    }
+
+    private fun showBypassPinDialog(correctPinCode: String, onCancel: () -> Unit, onSuccess: () -> Unit) {
+        val dialog = android.app.Dialog(this, android.R.style.Theme_Material_NoActionBar_Fullscreen)
+        
+        dialog.window?.let { window ->
+            window.decorView.setViewTreeLifecycleOwner(this)
+            window.decorView.setViewTreeViewModelStoreOwner(this)
+            window.decorView.setViewTreeSavedStateRegistryOwner(this)
+        }
+
+        val composeView = androidx.compose.ui.platform.ComposeView(this).apply {
+            setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        }
+        
+        composeView.setContent {
+            var pinText by remember { mutableStateOf("") }
+            var errorText by remember { mutableStateOf("") }
+            
+            AmnShieldTheme(appTheme = AppTheme.COSMIC_NIGHT) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = "Settings Locked",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Enter your 4-digit PIN to modify blocker settings",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            repeat(4) { index ->
+                                val hasChar = index < pinText.length
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (hasChar) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                        )
+                                )
+                            }
+                        }
+                        
+                        if (errorText.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = errorText,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(48.dp))
+                        
+                        val buttons = listOf(
+                            listOf("1", "2", "3"),
+                            listOf("4", "5", "6"),
+                            listOf("7", "8", "9"),
+                            listOf("Cancel", "0", "Delete")
+                        )
+                        
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            buttons.forEach { row ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                                ) {
+                                    row.forEach { char ->
+                                        Box(
+                                            modifier = Modifier
+                                                .size(72.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    if (char == "Cancel" || char == "Delete") Color.Transparent
+                                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                                )
+                                                .clickable {
+                                                    when (char) {
+                                                        "Cancel" -> {
+                                                            dialog.dismiss()
+                                                            onCancel()
+                                                        }
+                                                        "Delete" -> {
+                                                            if (pinText.isNotEmpty()) {
+                                                                pinText = pinText.substring(0, pinText.length - 1)
+                                                            }
+                                                        }
+                                                        else -> {
+                                                            if (pinText.length < 4) {
+                                                                pinText += char
+                                                                errorText = ""
+                                                                if (pinText.length == 4) {
+                                                                    if (pinText == correctPinCode) {
+                                                                        AmnShield.isBypassUnlocked = true
+                                                                        dialog.dismiss()
+                                                                        onSuccess()
+                                                                    } else {
+                                                                        pinText = ""
+                                                                        errorText = "Incorrect PIN code"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = char,
+                                                style = if (char == "Cancel" || char == "Delete") MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleLarge,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (char == "Cancel") MaterialTheme.colorScheme.error else if (char == "Delete") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        dialog.setContentView(composeView)
+        dialog.setCancelable(false)
+        dialog.setOnKeyListener { _, keyCode, _ ->
+            if (keyCode == android.view.KeyEvent.KEYCODE_BACK) {
+                dialog.dismiss()
+                onCancel()
+                true
+            } else {
+                false
+            }
+        }
+        dialog.show()
     }
     
     private fun updateNavigationHeader(account: AmnShieldAccount?) {
@@ -1468,7 +1676,182 @@ class MainActivity : AppCompatActivity() {
         // For now, users can manually access reports from the Reports tab
     }
 
+
+
+    private fun checkAppLock() {
+        val pinEnabled = savedPreferencesLoader.isPinSecurityEnabled()
+        val appLockEnabled = savedPreferencesLoader.isAppLockEnabled()
+        val pinCode = savedPreferencesLoader.getPinCode()
+
+        if (pinEnabled && appLockEnabled && pinCode.isNotEmpty() && !AmnShield.isAppUnlocked) {
+            showPinLockFullscreenDialog(pinCode)
+        }
+    }
+
+    private fun showPinLockFullscreenDialog(correctPinCode: String) {
+        val dialog = android.app.Dialog(this, android.R.style.Theme_Material_NoActionBar_Fullscreen)
+        
+        dialog.window?.let { window ->
+            window.decorView.setViewTreeLifecycleOwner(this)
+            window.decorView.setViewTreeViewModelStoreOwner(this)
+            window.decorView.setViewTreeSavedStateRegistryOwner(this)
+        }
+
+        val composeView = androidx.compose.ui.platform.ComposeView(this).apply {
+            setViewCompositionStrategy(androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        }
+        
+        composeView.setContent {
+            var pinText by remember { mutableStateOf("") }
+            var errorText by remember { mutableStateOf("") }
+            
+            AmnShieldTheme(appTheme = AppTheme.COSMIC_NIGHT) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            text = "AmnShield Locked",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Enter your 4-digit PIN to access the app",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(32.dp))
+                        
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            repeat(4) { index ->
+                                val hasChar = index < pinText.length
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (hasChar) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                        )
+                                )
+                            }
+                        }
+                        
+                        if (errorText.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = errorText,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(48.dp))
+                        
+                        val buttons = listOf(
+                            listOf("1", "2", "3"),
+                            listOf("4", "5", "6"),
+                            listOf("7", "8", "9"),
+                            listOf("Exit", "0", "Delete")
+                        )
+                        
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            buttons.forEach { row ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                                ) {
+                                    row.forEach { char ->
+                                        Box(
+                                            modifier = Modifier
+                                                .size(72.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    if (char == "Exit" || char == "Delete") Color.Transparent
+                                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                                )
+                                                .clickable {
+                                                    when (char) {
+                                                        "Exit" -> {
+                                                            dialog.dismiss()
+                                                            finish()
+                                                        }
+                                                        "Delete" -> {
+                                                            if (pinText.isNotEmpty()) {
+                                                                pinText = pinText.substring(0, pinText.length - 1)
+                                                            }
+                                                        }
+                                                        else -> {
+                                                            if (pinText.length < 4) {
+                                                                pinText += char
+                                                                errorText = ""
+                                                                if (pinText.length == 4) {
+                                                                    if (pinText == correctPinCode) {
+                                                                        AmnShield.isAppUnlocked = true
+                                                                        dialog.dismiss()
+                                                                    } else {
+                                                                        pinText = ""
+                                                                        errorText = "Incorrect PIN code"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = char,
+                                                style = if (char == "Exit" || char == "Delete") MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleLarge,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (char == "Exit") MaterialTheme.colorScheme.error else if (char == "Delete") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        dialog.setContentView(composeView)
+        dialog.setCancelable(false)
+        dialog.setOnKeyListener { _, keyCode, _ ->
+            if (keyCode == android.view.KeyEvent.KEYCODE_BACK) {
+                dialog.dismiss()
+                finish()
+                true
+            } else {
+                false
+            }
+        }
+        dialog.show()
+    }
+
     private companion object {
+
         private val SUPPORT_CC_ADDRESSES = arrayOf(
             "support@alhaq-initiative.org",
             "alhaq.dst@gmail.com"

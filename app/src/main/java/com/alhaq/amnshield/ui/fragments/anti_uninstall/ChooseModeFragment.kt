@@ -12,7 +12,6 @@ class ChooseModeFragment : Fragment() {
 
     companion object {
         const val FRAGMENT_ID = "choose_anti_uninstall_mode"
-        const val ARG_BLOCK_CHANGES_DEFAULT = "arg_block_changes_default"
     }
     private var _binding: FragmentChoseAntiUninstallModeBinding? = null
     private val binding get() = _binding!!  // Safe getter for binding
@@ -29,25 +28,10 @@ class ChooseModeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.cbBlockChangesMode.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(getString(R.string.enable_block_changes_guard))
-                    .setMessage(getString(R.string.if_you_enable_this_you_won_t_be_able_to_change_configurations_such_as_adding_blocked_apps_keywords_and_more))
-                    .setPositiveButton(getString(R.string.i_understand), null)
-                    .show()
-            }
-        }
-
         binding.btnNext.setOnClickListener {
-            val defaultBlockChanges = binding.cbBlockChangesMode.isChecked
             when (binding.radioGroup.checkedRadioButtonId) {
                 binding.passMode.id -> {
-                    val fragment = SetupPasswordModeFragment().apply {
-                        arguments = Bundle().apply {
-                            putBoolean(ARG_BLOCK_CHANGES_DEFAULT, defaultBlockChanges)
-                        }
-                    }
+                    val fragment = SetupPasswordModeFragment()
                     requireActivity().supportFragmentManager.beginTransaction()
                         .replace(
                             R.id.fragment_holder,
@@ -58,11 +42,7 @@ class ChooseModeFragment : Fragment() {
                 }
 
                 binding.timedMode.id -> {
-                    val fragment = SetupTimedModeFragment().apply {
-                        arguments = Bundle().apply {
-                            putBoolean(ARG_BLOCK_CHANGES_DEFAULT, defaultBlockChanges)
-                        }
-                    }
+                    val fragment = SetupTimedModeFragment()
                     requireActivity().supportFragmentManager.beginTransaction()
                         .replace(
                             R.id.fragment_holder,

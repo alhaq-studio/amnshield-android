@@ -48,12 +48,16 @@ class AdvancedFragment : BaseFeatureFragment() {
                 AmnShieldTheme(appTheme = state.currentTheme) {
                     AdvancedScreen(
                         state = state,
-                        onNavigateToCheatHours = { openCheatHours() },
-                        onNavigateToSchedules = { openSchedules() },
-                        onNavigateToLaunchLimits = { openLaunchLimits() },
+                        onNavigateToAppBlocker = { openFeatureConfig("app_blocker", requiresPremium = true) },
+                        onNavigateToKeywordBlocker = { openFeatureConfig("keyword_blocker", requiresPremium = false) },
+                        onNavigateToWebBlocker = { openFeatureConfig("website_blocker", requiresPremium = true) },
+                        onNavigateToReelsBlocker = { openFeatureConfig("reel_blocker", requiresPremium = true) },
                         onNavigateToAntiUninstall = { openFeatureConfig("anti_uninstall", requiresPremium = true) },
                         onNavigateToUsageTracker = { openFeatureConfig("usage_tracker", requiresPremium = false) },
-                        onNavigateToPremium = { openFeatureConfig("premium_features", requiresPremium = false) }
+                        onNavigateToPremium = { openFeatureConfig("premium_features", requiresPremium = false) },
+                        onTogglePinSecurity = { enabled, pin -> togglePinSecurity(enabled, pin) },
+                        onToggleAppLock = { enabled -> toggleAppLock(enabled) },
+                        onToggleBypassPinLock = { enabled -> toggleBypassPinLock(enabled) }
                     )
                 }
             }
@@ -79,7 +83,7 @@ class AdvancedFragment : BaseFeatureFragment() {
         val focusData = loader.getFocusModeData()
         val focusActive = premiumEnabled && focusData.isTurnedOn && serviceEnabled
 
-        val socialActive = premiumEnabled && loader.isSocialMediaBlockerEnabled() && serviceEnabled
+        val websiteActive = premiumEnabled && loader.isWebsiteBlockerEnabled() && serviceEnabled
 
         val allSchedules = loader.loadAppBlockerScheduleRules()
         val scheduleCount = allSchedules.count { it.type == AppBlockScheduleRule.RuleType.BLOCK }
@@ -96,6 +100,11 @@ class AdvancedFragment : BaseFeatureFragment() {
 
         val usageTrackerActive = loader.isUsageTrackerFeatureEnabled() && serviceEnabled
 
+        val pinEnabled = loader.isPinSecurityEnabled()
+        val pinCode = loader.getPinCode()
+        val appLockActive = loader.isAppLockEnabled()
+        val bypassPinLockActive = loader.isBypassPinLockEnabled()
+
         viewModel.loadState(
             AmnShieldState(
                 isMainServiceEnabled = serviceEnabled,
@@ -105,11 +114,15 @@ class AdvancedFragment : BaseFeatureFragment() {
                 isAppBlockerEnabled = appActive,
                 isReelsBlockerEnabled = reelsActive,
                 isKeywordBlockerEnabled = keywordActive,
-                isWebFilterEnabled = socialActive,
+                isWebFilterEnabled = websiteActive,
                 isFocusModeActive = focusActive,
                 isScheduleEnabled = scheduleCount > 0,
                 isUsageLimitEnabled = launchLimitCount > 0,
-                keywords = loader.loadBlockedKeywords().toList()
+                keywords = loader.loadBlockedKeywords().toList(),
+                isPinProtectionEnabled = pinEnabled,
+                profilePin = pinCode,
+                isAppLockEnabled = appLockActive,
+                isBypassPinLockEnabled = bypassPinLockActive
             )
         )
     }
@@ -126,31 +139,7 @@ class AdvancedFragment : BaseFeatureFragment() {
         startActivity(intent, activityOptions.toBundle())
     }
 
-    private fun openCheatHours() {
-        openSchedules()
-    }
-
-    private fun openSchedules() {
-        if (!premiumManager.isPremium()) {
-            showPremiumUpsell()
-            return
-        }
-        val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-            putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
-        }
-        startActivity(intent, activityOptions.toBundle())
-    }
-
-    private fun openLaunchLimits() {
-        if (!premiumManager.isPremium()) {
-            showPremiumUpsell()
-            return
-        }
-        val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-            putExtra("fragment", ManageLaunchLimitsFragment.FRAGMENT_ID)
-        }
-        startActivity(intent, activityOptions.toBundle())
-    }
+    // Advanced rules and schedules are now handled via the main Blocks tab screen
 
     private fun showPremiumUpsell() {
         MaterialAlertDialogBuilder(requireContext())
@@ -170,5 +159,43 @@ class AdvancedFragment : BaseFeatureFragment() {
         val devicePolicyManager = ctx.getSystemService(Context.DEVICE_POLICY_SERVICE) as? DevicePolicyManager
         val adminComponent = ComponentName(ctx, AdminReceiver::class.java)
         return devicePolicyManager?.isAdminActive(adminComponent) == true
+    }
+
+    private fun togglePinSecurity(enabled: Boolean, pin: String) {
+        loader.setPinSecurityEnabled(enabled)
+        loader.setPinCode(pin)
+        if (!enabled) {
+            loader.setAppLockEnabled(false)
+            loader.setBypassPinLockEnabled(false)
+        }
+        viewModel.updateProfile(
+            name = viewModel.state.value.userName,
+            email = viewModel.state.value.userEmail,
+            bio = viewModel.state.value.userBio,
+            goalMinutes = viewModel.state.value.userGoalMinutes,
+            profileType = viewModel.state.value.focusProfileType,
+            pinEnabled = enabled,
+            pin = pin
+        )
+        viewModel.updatePinSettings(
+            appLock = if (enabled) loader.isAppLockEnabled() else false,
+            bypassLock = if (enabled) loader.isBypassPinLockEnabled() else false
+        )
+    }
+
+    private fun toggleAppLock(enabled: Boolean) {
+        loader.setAppLockEnabled(enabled)
+        viewModel.updatePinSettings(
+            appLock = enabled,
+            bypassLock = viewModel.state.value.isBypassPinLockEnabled
+        )
+    }
+
+    private fun toggleBypassPinLock(enabled: Boolean) {
+        loader.setBypassPinLockEnabled(enabled)
+        viewModel.updatePinSettings(
+            appLock = viewModel.state.value.isAppLockEnabled,
+            bypassLock = enabled
+        )
     }
 }

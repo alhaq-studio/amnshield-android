@@ -28,6 +28,7 @@ import com.alhaq.amnshield.ui.state.AmnShieldState
 import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
 import com.alhaq.amnshield.ui.state.AppTheme
 import com.alhaq.amnshield.ui.components.AmnShieldToggleButton
+import com.alhaq.amnshield.ui.components.bounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,12 +84,13 @@ fun SettingsScreen(
 
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bounceClick { onNavigateToProfile() },
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                    ),
-                    onClick = onNavigateToProfile
+                    )
                 ) {
                     Row(
                         modifier = Modifier
@@ -161,7 +163,7 @@ fun SettingsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { expandedThemeMenu = true }
+                                .bounceClick { expandedThemeMenu = true }
                                 .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -256,7 +258,7 @@ fun SettingsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onLanguage() }
+                                .bounceClick { onLanguage() }
                                 .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -326,19 +328,6 @@ fun SettingsScreen(
                     )
                 ) {
                     Column {
-                        // Feature Toggle: Web Filter
-                        SettingsToggleRow(
-                            icon = Icons.Default.Language,
-                            title = "Web Filter",
-                            checked = state.isWebFilterEnabled,
-                            onCheckedChange = { onToggleWebFilter(it) }
-                        )
-
-                        Divider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
-
                         // Feature Toggle: Usage Tracker
                         SettingsToggleRow(
                             icon = Icons.Default.BarChart,
@@ -532,7 +521,7 @@ fun SettingsNavigationRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .bounceClick { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween

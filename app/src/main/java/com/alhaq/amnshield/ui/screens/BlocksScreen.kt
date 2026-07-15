@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alhaq.amnshield.ui.state.AmnShieldState
 import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
+import com.alhaq.amnshield.ui.components.bounceClick
 
 @Composable
 fun BlocksScreen(
@@ -189,7 +190,7 @@ fun BlockItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onChecked() }
+            .bounceClick { onChecked() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween

@@ -12,8 +12,7 @@ class PremiumManager private constructor(context: Context) {
     enum class UserType {
         FREE,
         COMPASSIONATE,
-        PREMIUM,
-        SPECIAL
+        PREMIUM
     }
 
     /**
@@ -25,19 +24,11 @@ class PremiumManager private constructor(context: Context) {
         } else {
             isLicenseKeyValid()
         }
-        return hasLocalPremium || isSpecialUser() || isCompassionateAccessActive()
+        return hasLocalPremium || isCompassionateAccessActive()
     }
 
     fun isCompassionateAccessActive(): Boolean {
         return preferencesLoader.getCompassionateAccessExpiry() > System.currentTimeMillis()
-    }
-
-    /**
-     * Check if user is a special user with the special access ID
-     */
-    fun isSpecialUser(): Boolean {
-        val specialId = preferencesLoader.getSpecialAccessId()
-        return specialId == SPECIAL_ACCESS_ID
     }
 
     /**
@@ -60,7 +51,6 @@ class PremiumManager private constructor(context: Context) {
             isLicenseKeyValid()
         }
         return when {
-            isSpecialUser() -> UserType.SPECIAL
             isCompassionateAccessActive() -> UserType.COMPASSIONATE
             isPremiumActive -> UserType.PREMIUM
             else -> UserType.FREE
@@ -75,7 +65,6 @@ class PremiumManager private constructor(context: Context) {
             UserType.FREE -> "Free"
             UserType.COMPASSIONATE -> "Compassionate Access"
             UserType.PREMIUM -> "Premium"
-            UserType.SPECIAL -> "Special"
         }
     }
 
@@ -103,26 +92,6 @@ class PremiumManager private constructor(context: Context) {
         preferencesLoader.clearLicenseKey()
     }
 
-    /**
-     * Set special access ID
-     * @param accessId The special access ID provided by company
-     * @return true if the ID is valid and accepted
-     */
-    fun setSpecialAccessId(accessId: String): Boolean {
-        val isValid = accessId.trim() == SPECIAL_ACCESS_ID
-        if (isValid) {
-            preferencesLoader.setSpecialAccessId(accessId.trim())
-        }
-        return isValid
-    }
-
-    /**
-     * Remove special access
-     */
-    fun removeSpecialAccess() {
-        preferencesLoader.setSpecialAccessId("")
-    }
-
     fun shouldShowReminder(): Boolean {
         if (isPremium()) return false
         val now = System.currentTimeMillis()
@@ -140,9 +109,6 @@ class PremiumManager private constructor(context: Context) {
 
     companion object {
         private const val REMINDER_INTERVAL_MS = 3L * 24 * 60 * 60 * 1000 // ~twice per week
-        
-        // Special access ID for users who contacted the company
-        const val SPECIAL_ACCESS_ID = "Special-2025_free_premium_one_year_access_2416"
 
         @Volatile
         private var instance: PremiumManager? = null

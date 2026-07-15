@@ -69,8 +69,6 @@ class SetupTimedModeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val defaultBlockChanges = arguments?.getBoolean(ChooseModeFragment.ARG_BLOCK_CHANGES_DEFAULT, false) == true
-        binding.blockChanges.isChecked = defaultBlockChanges
         binding.calendarView.minDate = binding.calendarView.date
         
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
@@ -109,15 +107,6 @@ class SetupTimedModeFragment : Fragment() {
                     requireActivity().finish()
                 }
                 .show()
-        }
-        binding.blockChanges.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle(getString(R.string.alert))
-                    .setMessage(getString(R.string.if_you_enable_this_you_won_t_be_able_to_change_configurations_such_as_adding_blocked_apps_keywords_and_more))
-                    .setPositiveButton(getString(R.string.i_understand), null)
-                    .show()
-            }
         }
 
     }
@@ -173,7 +162,6 @@ class SetupTimedModeFragment : Fragment() {
             putBoolean("is_anti_uninstall_on", true)
             putString("date", selectedDate)
             putLong("unlock_at_millis", unlockAtMillis)
-            putBoolean("is_configuring_blocked", binding.blockChanges.isChecked)
             putInt("mode", Constants.ANTI_UNINSTALL_TIMED_MODE)
             commit()
         }

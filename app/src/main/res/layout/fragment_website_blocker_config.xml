@@ -101,6 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
+                android:visibility="gone"
                 app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
                 app:cardCornerRadius="@dimen/card_corner_radius_large"
                 app:cardElevation="@dimen/card_elevation_high"
@@ -118,12 +119,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
-                        android:layout_toStartOf="@id/switch_social_media_blocker"
+                        android:layout_toStartOf="@id/switch_website_blocker"
                         android:text="Enable Website/URL Blocker"
                         android:textStyle="bold" />
 
                     <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/switch_social_media_blocker"
+                        android:id="@+id/switch_website_blocker"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
@@ -185,7 +186,7 @@
                 </RelativeLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Quick Block Social Sites Card -->
+            <!-- Quick Block Popular Platforms Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -206,7 +207,7 @@
                         style="@style/TextAppearance.Material3.TitleLarge"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Quick Block Social Sites"
+                        android:text="Quick Block Sites"
                         android:textStyle="bold" />
 
                     <TextView
@@ -215,7 +216,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:layout_marginBottom="16dp"
-                        android:text="Instantly block popular social media platforms."
+                        android:text="Instantly block popular web platforms."
                         android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <!-- Instagram & Facebook -->
@@ -320,7 +321,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Blocked Social Websites Card -->
+            <!-- Blocked Websites Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

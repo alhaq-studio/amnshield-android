@@ -62,9 +62,11 @@ class ManageBlockSchedulesFragment : Fragment() {
                             },
                             onToggleRule = { id -> toggleScheduleRuleActive(id) },
                             onDeleteRule = { id -> deleteScheduleRule(id) },
-                            onBack = {
-                                requireActivity().onBackPressedDispatcher.onBackPressed()
-                            }
+                             onBack = {
+                                 if (!parentFragmentManager.popBackStackImmediate()) {
+                                     requireActivity().finish()
+                                 }
+                             }
                         )
                     } else {
                         CreateRuleScreen(
@@ -121,66 +123,110 @@ class ManageBlockSchedulesFragment : Fragment() {
 
         val rulesList = mutableListOf<com.alhaq.amnshield.ui.state.ScheduleRule>()
 
-        // 1. App Block Schedules
-        val groupedApp = appSchedules.groupBy { it.groupId ?: it.id }
-        groupedApp.forEach { (groupId, rules) ->
-            val first = rules.first()
-            val apps = rules.map { it.packageName }
-            val displayDays = first.selectedDays.map { calendarIntToDay(it) }
-            val restrictionTypeStr = if (first.type == AppBlockScheduleRule.RuleType.CHEAT) "Cheat Window" else "Block Schedule"
-            val appOrCategory = if (apps.size == 1) {
-                try {
-                    requireContext().packageManager.getApplicationLabel(
-                        requireContext().packageManager.getApplicationInfo(apps.first(), 0)
-                    ).toString()
-                } catch (_: Exception) {
-                    apps.first()
-                }
-            } else {
-                "${apps.size} Apps"
-            }
-            
-            rulesList.add(
-                com.alhaq.amnshield.ui.state.ScheduleRule(
-                    id = if (first.groupId != null) "app_group::$groupId" else first.id,
-                    name = first.groupTitle ?: first.title,
-                    appOrCategory = appOrCategory,
-                    restrictionType = restrictionTypeStr,
-                    startTime = String.format("%02d:%02d", first.startMinute / 60, first.startMinute % 60),
-                    endTime = String.format("%02d:%02d", first.endMinute / 60, first.endMinute % 60),
-                    days = displayDays,
-                    isActive = first.isRuleEnabled,
-                    targetBlockerType = "App Blocker",
-                    selectedApps = apps
-                )
-            )
-        }
+        // Find all unique group IDs across appSchedules and featureSchedules
+        val allAppGroupIds = appSchedules.map { it.groupId ?: it.id }.distinct()
+        val allFeatureGroupIds = featureSchedules.map { it.groupId ?: it.id }.distinct()
+        val allGroupIds = (allAppGroupIds + allFeatureGroupIds).distinct()
 
-        // 2. Feature Schedules
-        featureSchedules.forEach { rule ->
-            val featureName = when {
-                rule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER) -> "Reels Blocker"
-                rule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER) -> "Keyword Blocker"
-                rule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER) -> "Website Blocker"
-                else -> "Notification Shielder"
-            }
-            val displayDays = rule.selectedDays.map { calendarIntToDay(it) }
-            val restrictionTypeStr = if (rule.type == UnifiedFeatureScheduleRule.RuleType.CHEAT) "Cheat Window" else "Block Schedule"
-            
-            rulesList.add(
-                com.alhaq.amnshield.ui.state.ScheduleRule(
-                    id = "ufs::${rule.id}",
-                    name = rule.title,
-                    appOrCategory = featureName,
-                    restrictionType = restrictionTypeStr,
-                    startTime = String.format("%02d:%02d", rule.startMinute / 60, rule.startMinute % 60),
-                    endTime = String.format("%02d:%02d", rule.endMinute / 60, rule.endMinute % 60),
-                    days = displayDays,
-                    isActive = rule.isRuleEnabled,
-                    targetBlockerType = featureName,
-                    selectedKeywords = rule.targets.map { it.name }.toList()
+        allGroupIds.forEach { groupId ->
+            val associatedApps = appSchedules.filter { (it.groupId ?: it.id) == groupId }
+            val associatedFeatures = featureSchedules.filter { (it.groupId ?: it.id) == groupId }
+
+            if (associatedApps.isNotEmpty() || associatedFeatures.isNotEmpty()) {
+                val firstApp = associatedApps.firstOrNull()
+                val firstFeature = associatedFeatures.firstOrNull()
+
+                val name = firstApp?.groupTitle ?: firstApp?.title
+                    ?: firstFeature?.groupTitle ?: firstFeature?.title
+                    ?: "Unified Rule"
+
+                val isEnabled = firstApp?.isEnabled ?: firstFeature?.isEnabled ?: true
+
+                val restrictionTypeStr = when {
+                    firstApp?.type == AppBlockScheduleRule.RuleType.CHEAT ||
+                    firstFeature?.type == UnifiedFeatureScheduleRule.RuleType.CHEAT -> "Cheat Window"
+                    else -> "Block Schedule"
+                }
+
+                // Apps
+                val apps = associatedApps.map { it.packageName }.distinct()
+
+                // Blockers list
+                val selectedBlockers = mutableListOf<String>()
+                if (associatedApps.isNotEmpty()) {
+                    selectedBlockers.add("App Blocker")
+                }
+                associatedFeatures.forEach { featRule ->
+                    if (featRule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER)) {
+                        selectedBlockers.add("Keyword Blocker")
+                    }
+                    if (featRule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER)) {
+                        selectedBlockers.add("Website Blocker")
+                    }
+                    if (featRule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER)) {
+                        selectedBlockers.add("Reels Blocker")
+                    }
+                    if (featRule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE)) {
+                        selectedBlockers.add("Notification Shield")
+                    }
+                }
+                val distinctBlockers = selectedBlockers.distinct()
+
+                // Display blockers / apps string
+                val appOrCategory = if (distinctBlockers.size == 1) {
+                    when (distinctBlockers.first()) {
+                        "App Blocker" -> if (apps.size == 1) {
+                            try {
+                                requireContext().packageManager.getApplicationLabel(
+                                    requireContext().packageManager.getApplicationInfo(apps.first(), 0)
+                                ).toString()
+                            } catch (_: Exception) {
+                                apps.first()
+                            }
+                        } else {
+                            "${apps.size} Apps"
+                        }
+                        else -> distinctBlockers.first()
+                    }
+                } else {
+                    distinctBlockers.joinToString(" • ")
+                }
+
+                // Collect periods
+                val periods = mutableListOf<com.alhaq.amnshield.ui.state.SchedulePeriod>()
+                associatedApps.forEach { item ->
+                    val start = String.format("%02d:%02d", item.startMinute / 60, item.startMinute % 60)
+                    val end = String.format("%02d:%02d", item.endMinute / 60, item.endMinute % 60)
+                    val daysList = item.selectedDays.map { calendarIntToDay(it) }
+                    periods.add(com.alhaq.amnshield.ui.state.SchedulePeriod(start, end, daysList))
+                }
+                associatedFeatures.forEach { item ->
+                    val start = String.format("%02d:%02d", item.startMinute / 60, item.startMinute % 60)
+                    val end = String.format("%02d:%02d", item.endMinute / 60, item.endMinute % 60)
+                    val daysList = item.selectedDays.map { calendarIntToDay(it) }
+                    periods.add(com.alhaq.amnshield.ui.state.SchedulePeriod(start, end, daysList))
+                }
+
+                val distinctPeriods = periods.distinctBy { Triple(it.startTime, it.endTime, it.days.sorted()) }
+                val firstPeriod = distinctPeriods.firstOrNull() ?: com.alhaq.amnshield.ui.state.SchedulePeriod("09:00", "17:00", listOf("Mon", "Tue", "Wed", "Thu", "Fri"))
+
+                rulesList.add(
+                    com.alhaq.amnshield.ui.state.ScheduleRule(
+                        id = groupId,
+                        name = name,
+                        appOrCategory = appOrCategory,
+                        restrictionType = restrictionTypeStr,
+                        startTime = firstPeriod.startTime,
+                        endTime = firstPeriod.endTime,
+                        days = firstPeriod.days,
+                        isActive = isEnabled,
+                        periods = distinctPeriods,
+                        targetBlockerType = distinctBlockers.firstOrNull() ?: "App Blocker",
+                        selectedApps = apps,
+                        selectedBlockers = distinctBlockers
+                    )
                 )
-            )
+            }
         }
 
         // 3. Launch Limits
@@ -204,7 +250,8 @@ class ManageBlockSchedulesFragment : Fragment() {
                     limitValue = limit.maxLaunches,
                     isActive = true,
                     targetBlockerType = "App Blocker",
-                    selectedApps = listOf(limit.packageName)
+                    selectedApps = listOf(limit.packageName),
+                    selectedBlockers = listOf("App Blocker")
                 )
             )
         }
@@ -217,102 +264,120 @@ class ManageBlockSchedulesFragment : Fragment() {
     }
 
     private fun saveScheduleRule(rule: com.alhaq.amnshield.ui.state.ScheduleRule) {
-        val startMin = timeToMinutes(rule.startTime)
-        val endMin = timeToMinutes(rule.endTime)
-        val calendarDays = rule.days.map { dayToCalendarInt(it) }.toSet()
+        if (rule.restrictionType == "Launch Limit") {
+            val appPkg = rule.selectedApps.firstOrNull() ?: ""
+            val limitRule = AppLaunchLimitRule(
+                id = rule.id,
+                packageName = appPkg,
+                maxLaunches = rule.limitValue,
+                timePeriod = AppLaunchLimitRule.TimePeriod.DAILY,
+                createdAt = System.currentTimeMillis()
+            )
+            savedPreferencesLoader.addAppLaunchLimitRule(limitRule)
+            sendRefreshRequest()
+            loadSchedulesAndLimits()
+            Toast.makeText(requireContext(), "Rule applied successfully", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        when (rule.restrictionType) {
-            "Launch Limit" -> {
-                val appPkg = rule.selectedApps.firstOrNull() ?: ""
-                val limitRule = AppLaunchLimitRule(
-                    id = rule.id,
-                    packageName = appPkg,
-                    maxLaunches = rule.limitValue,
-                    timePeriod = AppLaunchLimitRule.TimePeriod.DAILY,
-                    createdAt = System.currentTimeMillis()
-                )
-                savedPreferencesLoader.addAppLaunchLimitRule(limitRule)
+        // If not Launch Limit, delete any existing rules with the same groupId/id to avoid conflicts
+        savedPreferencesLoader.removeAppBlockerScheduleGroup(rule.id)
+        savedPreferencesLoader.removeAppBlockerScheduleRule(rule.id)
+        savedPreferencesLoader.removeUnifiedFeatureScheduleGroup(rule.id)
+        savedPreferencesLoader.removeUnifiedFeatureScheduleRule(rule.id)
+
+        val groupId = rule.id
+        val groupTitle = rule.name
+        val selectedBlockers = rule.selectedBlockers.ifEmpty { listOf(rule.targetBlockerType) }
+
+        val appRuleType = if (rule.restrictionType == "Cheat Window") {
+            AppBlockScheduleRule.RuleType.CHEAT
+        } else {
+            AppBlockScheduleRule.RuleType.BLOCK
+        }
+
+        val ufsRuleType = if (rule.restrictionType == "Cheat Window") {
+            UnifiedFeatureScheduleRule.RuleType.CHEAT
+        } else {
+            UnifiedFeatureScheduleRule.RuleType.BLOCK
+        }
+
+        // Loop through each period and save
+        rule.periods.forEach { period ->
+            val startMin = timeToMinutes(period.startTime)
+            val endMin = timeToMinutes(period.endTime)
+            val calendarDays = period.days.map { dayToCalendarInt(it) }.toSet()
+
+            val recurrence = if (period.days.size == 7) {
+                AppBlockScheduleRule.Recurrence.DAILY
+            } else {
+                AppBlockScheduleRule.Recurrence.WEEKLY
             }
-            else -> {
-                val ruleType = if (rule.restrictionType == "Cheat Window") {
-                    AppBlockScheduleRule.RuleType.CHEAT
-                } else {
-                    AppBlockScheduleRule.RuleType.BLOCK
-                }
 
-                val recurrence = if (rule.days.size == 7) {
-                    AppBlockScheduleRule.Recurrence.DAILY
-                } else {
-                    AppBlockScheduleRule.Recurrence.WEEKLY
-                }
+            val ufsRecurrence = if (period.days.size == 7) {
+                UnifiedFeatureScheduleRule.Recurrence.DAILY
+            } else {
+                UnifiedFeatureScheduleRule.Recurrence.WEEKLY
+            }
 
-                if (rule.targetBlockerType == "App Blocker") {
-                    val groupId = UUID.randomUUID().toString()
-                    val groupTitle = rule.name
-                    
-                    rule.selectedApps.forEach { appPkg ->
-                        val appName = try {
-                            requireContext().packageManager.getApplicationLabel(
-                                requireContext().packageManager.getApplicationInfo(appPkg, 0)
-                            ).toString()
-                        } catch (_: Exception) {
-                            appPkg
-                        }
-                        
-                        val appRule = AppBlockScheduleRule(
-                            id = UUID.randomUUID().toString(),
-                            title = "Unified • $appName • ${ruleType.name} • ${recurrence.name}",
-                            packageName = appPkg,
-                            type = ruleType,
-                            recurrence = recurrence,
-                            startMinute = startMin,
-                            endMinute = endMin,
-                            selectedDays = calendarDays,
-                            createdAt = System.currentTimeMillis(),
-                            groupId = groupId,
-                            groupTitle = groupTitle,
-                            isEnabled = true
-                        )
-                        savedPreferencesLoader.upsertAppBlockerScheduleRule(appRule)
+            // 1. Save App Block Rules if App Blocker is selected
+            if (selectedBlockers.contains("App Blocker")) {
+                rule.selectedApps.forEach { appPkg ->
+                    val appName = try {
+                        requireContext().packageManager.getApplicationLabel(
+                            requireContext().packageManager.getApplicationInfo(appPkg, 0)
+                        ).toString()
+                    } catch (_: Exception) {
+                        appPkg
                     }
-                } else {
-                    val featureTargets = mutableSetOf<UnifiedFeatureScheduleRule.FeatureTarget>()
-                    when (rule.targetBlockerType) {
-                        "Keyword Blocker" -> featureTargets.add(UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER)
-                        "Website Blocker" -> featureTargets.add(UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER)
-                        "Reels Blocker" -> featureTargets.add(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER)
-                        "Notification Shielder" -> featureTargets.add(UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE)
-                    }
-                    
-                    val ufsType = if (rule.restrictionType == "Cheat Window") {
-                        UnifiedFeatureScheduleRule.RuleType.CHEAT
-                    } else {
-                        UnifiedFeatureScheduleRule.RuleType.BLOCK
-                    }
-                    
-                    val ufsRecurrence = if (rule.days.size == 7) {
-                        UnifiedFeatureScheduleRule.Recurrence.DAILY
-                    } else {
-                        UnifiedFeatureScheduleRule.Recurrence.WEEKLY
-                    }
-                    
-                    val ufsRule = UnifiedFeatureScheduleRule(
-                        id = rule.id,
-                        title = rule.name,
-                        type = ufsType,
-                        recurrence = ufsRecurrence,
-                        targets = featureTargets,
+
+                    val appRule = AppBlockScheduleRule(
+                        id = UUID.randomUUID().toString(),
+                        title = "Unified • $appName • ${appRuleType.name} • ${recurrence.name}",
+                        packageName = appPkg,
+                        type = appRuleType,
+                        recurrence = recurrence,
                         startMinute = startMin,
                         endMinute = endMin,
                         selectedDays = calendarDays,
                         createdAt = System.currentTimeMillis(),
-                        isEnabled = true
+                        groupId = groupId,
+                        groupTitle = groupTitle,
+                        isEnabled = rule.isActive
                     )
-                    savedPreferencesLoader.upsertUnifiedFeatureScheduleRule(ufsRule)
+                    savedPreferencesLoader.upsertAppBlockerScheduleRule(appRule)
                 }
             }
+
+            // 2. Save Unified Feature Rules if other blockers are selected
+            val featureTargets = mutableSetOf<UnifiedFeatureScheduleRule.FeatureTarget>()
+            if (selectedBlockers.contains("App Blocker")) featureTargets.add(UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER)
+            if (selectedBlockers.contains("Keyword Blocker")) featureTargets.add(UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER)
+            if (selectedBlockers.contains("Website Blocker")) featureTargets.add(UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER)
+            if (selectedBlockers.contains("Reels Blocker")) featureTargets.add(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER)
+            if (selectedBlockers.contains("Notification Shielder") || selectedBlockers.contains("Notification Shield")) {
+                featureTargets.add(UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE)
+            }
+
+            if (featureTargets.isNotEmpty()) {
+                val ufsRule = UnifiedFeatureScheduleRule(
+                    id = UUID.randomUUID().toString(),
+                    title = groupTitle,
+                    type = ufsRuleType,
+                    recurrence = ufsRecurrence,
+                    targets = featureTargets,
+                    startMinute = startMin,
+                    endMinute = endMin,
+                    selectedDays = calendarDays,
+                    createdAt = System.currentTimeMillis(),
+                    groupId = groupId,
+                    groupTitle = groupTitle,
+                    isEnabled = rule.isActive
+                )
+                savedPreferencesLoader.upsertUnifiedFeatureScheduleRule(ufsRule)
+            }
         }
-        
+
         sendRefreshRequest()
         loadSchedulesAndLimits()
         Toast.makeText(requireContext(), "Rule applied successfully", Toast.LENGTH_SHORT).show()
@@ -322,37 +387,39 @@ class ManageBlockSchedulesFragment : Fragment() {
     fun toggleScheduleRuleActive(id: String) {
         viewModel.toggleScheduleRuleActive(id)
         
-        when {
-            id.startsWith("ufs::") -> {
-                val ruleId = id.removePrefix("ufs::")
-                val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules()
-                val idx = rules.indexOfFirst { it.id == ruleId }
-                if (idx >= 0) {
-                    rules[idx] = rules[idx].copy(isEnabled = !(rules[idx].isEnabled ?: true))
-                    savedPreferencesLoader.saveUnifiedFeatureScheduleRules(rules)
-                }
-            }
-            id.startsWith("app_group::") -> {
-                val groupId = id.removePrefix("app_group::")
-                val rules = savedPreferencesLoader.loadAppBlockerScheduleRules()
-                val targetState = !(rules.firstOrNull { it.groupId == groupId }?.isEnabled ?: true)
-                rules.forEachIndexed { idx, item ->
-                    if (item.groupId == groupId) {
-                        rules[idx] = item.copy(isEnabled = targetState)
+        if (id.startsWith("limit::")) {
+            // Launch Limits don't have built-in switch toggles in legacy backend, they are deleted
+        } else {
+            val appRules = savedPreferencesLoader.loadAppBlockerScheduleRules()
+            var appModified = false
+            var targetState: Boolean? = null
+            
+            appRules.forEachIndexed { idx, item ->
+                if (item.groupId == id || item.id == id) {
+                    if (targetState == null) {
+                        targetState = !(item.isEnabled ?: true)
                     }
+                    appRules[idx] = item.copy(isEnabled = targetState)
+                    appModified = true
                 }
-                savedPreferencesLoader.saveAppBlockerScheduleRules(rules)
             }
-            id.startsWith("limit::") -> {
-                // Launch Limits don't have built-in switch toggles in legacy backend, they are deleted
+            if (appModified) {
+                savedPreferencesLoader.saveAppBlockerScheduleRules(appRules)
             }
-            else -> {
-                val rules = savedPreferencesLoader.loadAppBlockerScheduleRules()
-                val idx = rules.indexOfFirst { it.id == id }
-                if (idx >= 0) {
-                    rules[idx] = rules[idx].copy(isEnabled = !(rules[idx].isEnabled ?: true))
-                    savedPreferencesLoader.saveAppBlockerScheduleRules(rules)
+
+            val featRules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules()
+            var featModified = false
+            featRules.forEachIndexed { idx, item ->
+                if (item.groupId == id || item.id == id) {
+                    if (targetState == null) {
+                        targetState = !(item.isEnabled ?: true)
+                    }
+                    featRules[idx] = item.copy(isEnabled = targetState)
+                    featModified = true
                 }
+            }
+            if (featModified) {
+                savedPreferencesLoader.saveUnifiedFeatureScheduleRules(featRules)
             }
         }
         sendRefreshRequest()
@@ -362,22 +429,14 @@ class ManageBlockSchedulesFragment : Fragment() {
     fun deleteScheduleRule(id: String) {
         viewModel.deleteScheduleRule(id)
         
-        when {
-            id.startsWith("ufs::") -> {
-                val ruleId = id.removePrefix("ufs::")
-                savedPreferencesLoader.removeUnifiedFeatureScheduleRule(ruleId)
-            }
-            id.startsWith("app_group::") -> {
-                val groupId = id.removePrefix("app_group::")
-                savedPreferencesLoader.removeAppBlockerScheduleGroup(groupId)
-            }
-            id.startsWith("limit::") -> {
-                val pkg = id.removePrefix("limit::")
-                savedPreferencesLoader.removeAppLaunchLimitRule(pkg)
-            }
-            else -> {
-                savedPreferencesLoader.removeAppBlockerScheduleRule(id)
-            }
+        if (id.startsWith("limit::")) {
+            val pkg = id.removePrefix("limit::")
+            savedPreferencesLoader.removeAppLaunchLimitRule(pkg)
+        } else {
+            savedPreferencesLoader.removeAppBlockerScheduleGroup(id)
+            savedPreferencesLoader.removeAppBlockerScheduleRule(id)
+            savedPreferencesLoader.removeUnifiedFeatureScheduleGroup(id)
+            savedPreferencesLoader.removeUnifiedFeatureScheduleRule(id)
         }
         sendRefreshRequest()
         loadSchedulesAndLimits()

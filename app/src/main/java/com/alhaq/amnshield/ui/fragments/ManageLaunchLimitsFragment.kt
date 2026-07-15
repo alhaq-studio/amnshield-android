@@ -64,7 +64,9 @@ class ManageLaunchLimitsFragment : Fragment() {
 
         // Setup back button
         binding.btnBackArrow.setOnClickListener {
-            requireActivity().onBackPressedDispatcher.onBackPressed()
+            if (!parentFragmentManager.popBackStackImmediate()) {
+                requireActivity().finish()
+            }
         }
 
         // Setup adapter

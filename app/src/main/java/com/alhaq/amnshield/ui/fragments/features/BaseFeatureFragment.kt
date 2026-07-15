@@ -11,15 +11,22 @@ import android.provider.Settings
 import android.text.TextUtils
 import android.view.View
 import android.widget.Toast
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.checkbox.MaterialCheckBox
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
 import com.alhaq.amnshield.R
 import com.alhaq.amnshield.databinding.DialogPermissionInfoBinding
 import com.alhaq.amnshield.receivers.AdminReceiver
 import com.alhaq.amnshield.ui.activity.FragmentActivity
 import com.alhaq.amnshield.ui.fragments.installation.AccessibilityGuide
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
+import com.alhaq.amnshield.utils.ScheduleUtils
 
 /**
  * Base feature fragment that provides shared helpers for the individual feature screens.
@@ -191,5 +198,147 @@ abstract class BaseFeatureFragment : Fragment() {
         } catch (_: Exception) {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
+    }
+
+    protected fun showFeatureScheduleDialog(
+        featureName: String,
+        onConfirm: (startTime: String, endTime: String, days: List<String>) -> Unit,
+        onCancel: () -> Unit
+    ) {
+        var startTime = "09:00"
+        var endTime = "17:00"
+        val selectedDays = mutableSetOf("Mon", "Tue", "Wed", "Thu", "Fri")
+
+        val context = requireContext()
+        val dialogView = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(48, 36, 48, 36)
+        }
+
+        val titleText = TextView(context).apply {
+            text = "Set Blocker Time Window"
+            textSize = 20f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, 24)
+        }
+        dialogView.addView(titleText)
+
+        val subtitleText = TextView(context).apply {
+            text = "This blocker will only apply during the selected times."
+            textSize = 14f
+            setPadding(0, 0, 0, 36)
+        }
+        dialogView.addView(subtitleText)
+
+        val startTimeRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 0, 0, 24)
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+        val startTimeLabel = TextView(context).apply {
+            text = "Start Time: "
+            textSize = 16f
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        val startTimeBtn = MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+            text = startTime
+            setOnClickListener {
+                val parts = startTime.split(":")
+                val initialHour = parts.getOrNull(0)?.toIntOrNull() ?: 9
+                val initialMin = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                val picker = MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .setHour(initialHour)
+                    .setMinute(initialMin)
+                    .setTitleText("Select Start Time")
+                    .build()
+                picker.addOnPositiveButtonClickListener {
+                    startTime = String.format("%02d:%02d", picker.hour, picker.minute)
+                    text = startTime
+                }
+                picker.show(childFragmentManager, "start_time_picker")
+            }
+        }
+        startTimeRow.addView(startTimeLabel)
+        startTimeRow.addView(startTimeBtn)
+        dialogView.addView(startTimeRow)
+
+        val endTimeRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 0, 0, 36)
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+        val endTimeLabel = TextView(context).apply {
+            text = "End Time: "
+            textSize = 16f
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        val endTimeBtn = MaterialButton(context, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+            text = endTime
+            setOnClickListener {
+                val parts = endTime.split(":")
+                val initialHour = parts.getOrNull(0)?.toIntOrNull() ?: 17
+                val initialMin = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                val picker = MaterialTimePicker.Builder()
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .setHour(initialHour)
+                    .setMinute(initialMin)
+                    .setTitleText("Select End Time")
+                    .build()
+                picker.addOnPositiveButtonClickListener {
+                    endTime = String.format("%02d:%02d", picker.hour, picker.minute)
+                    text = endTime
+                }
+                picker.show(childFragmentManager, "end_time_picker")
+            }
+        }
+        endTimeRow.addView(endTimeLabel)
+        endTimeRow.addView(endTimeBtn)
+        dialogView.addView(endTimeRow)
+
+        val daysLabel = TextView(context).apply {
+            text = "Select Days:"
+            textSize = 16f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setPadding(0, 0, 0, 16)
+        }
+        dialogView.addView(daysLabel)
+
+        val daysContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, 0, 0, 24)
+        }
+        val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        daysOfWeek.forEach { day ->
+            val cb = MaterialCheckBox(context).apply {
+                text = day
+                isChecked = selectedDays.contains(day)
+                setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) selectedDays.add(day) else selectedDays.remove(day)
+                }
+            }
+            daysContainer.addView(cb)
+        }
+        dialogView.addView(daysContainer)
+
+        val dialog = MaterialAlertDialogBuilder(context)
+            .setView(dialogView)
+            .setPositiveButton("Apply") { _, _ ->
+                if (selectedDays.isEmpty()) {
+                    Toast.makeText(context, "Please select at least one day", Toast.LENGTH_SHORT).show()
+                    onCancel()
+                } else {
+                    onConfirm(startTime, endTime, selectedDays.toList())
+                }
+            }
+            .setNegativeButton("Cancel") { _, _ ->
+                onCancel()
+            }
+            .setOnCancelListener {
+                onCancel()
+            }
+            .create()
+
+        dialog.show()
     }
 }

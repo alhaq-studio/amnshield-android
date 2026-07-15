@@ -13,7 +13,24 @@ class AmnShieldViewModel : ViewModel() {
     val state: StateFlow<AmnShieldState> = _state.asStateFlow()
 
     fun loadState(newState: AmnShieldState) {
-        _state.value = newState
+        _state.update { current ->
+            newState.copy(
+                userName = if (newState.userName == "Alhaq DST") current.userName else newState.userName,
+                userEmail = if (newState.userEmail == "alhaq.dst@gmail.com") current.userEmail else newState.userEmail,
+                userBio = if (newState.userBio == "Digital Wellbeing Guardian • Staying mindful & focused.") current.userBio else newState.userBio,
+                userGoalMinutes = if (newState.userGoalMinutes == 120) current.userGoalMinutes else newState.userGoalMinutes,
+                focusProfileType = if (newState.focusProfileType == "Deep Focus") current.focusProfileType else newState.focusProfileType
+            )
+        }
+    }
+
+    fun updatePinSettings(appLock: Boolean, bypassLock: Boolean) {
+        _state.update {
+            it.copy(
+                isAppLockEnabled = appLock,
+                isBypassPinLockEnabled = bypassLock
+            )
+        }
     }
 
     fun toggleAppBlocker() {

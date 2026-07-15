@@ -31,12 +31,14 @@ import com.alhaq.amnshield.ui.components.AmnShieldInputField
 fun ProfileScreen(
     state: AmnShieldState,
     viewModel: AmnShieldViewModel,
+    isGoogleSignedIn: Boolean,
+    onGoogleSignIn: () -> Unit,
+    onGoogleSignOut: () -> Unit,
     onBack: () -> Unit
 ) {
-    var name by remember { mutableStateOf(state.userName) }
-    var email by remember { mutableStateOf(state.userEmail) }
-    var bio by remember { mutableStateOf(state.userBio) }
-    var profileType by remember { mutableStateOf(state.focusProfileType) }
+    var name by remember(state.userName) { mutableStateOf(state.userName) }
+    var email by remember(state.userEmail) { mutableStateOf(state.userEmail) }
+    var bio by remember(state.userBio) { mutableStateOf(state.userBio) }
     
     var showSuccessMessage by remember { mutableStateOf(false) }
 
@@ -123,7 +125,7 @@ fun ProfileScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = name.take(2).uppercase(),
+                                text = name.take(2).uppercase().ifEmpty { "ME" },
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.onPrimary
@@ -161,6 +163,178 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
                         )
+                    }
+                }
+            }
+
+            // GOOGLE ACCOUNT SECTION
+            item {
+                Text(
+                    text = "LINKED ACCOUNT",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 0.8.sp
+                    )
+                )
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                ) {
+                    if (isGoogleSignedIn) {
+                        // Signed-in state — show account info + sign out
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                            ) {
+                                // Google icon placeholder
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.linearGradient(
+                                                colors = listOf(
+                                                    Color(0xFF4285F4),
+                                                    Color(0xFF34A853)
+                                                )
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = state.userName.take(1).uppercase().ifEmpty { "G" },
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color.White
+                                    )
+                                }
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = state.userName.ifEmpty { "Google Account" },
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = state.userEmail,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Linked",
+                                    tint = Color(0xFF34A853),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                            )
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { onGoogleSignOut() }
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ExitToApp,
+                                    contentDescription = "Sign Out",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Sign Out",
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    } else {
+                        // Not signed in — show sign-in prompt
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+
+                            Text(
+                                text = "Link Google Account",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Sign in to sync your settings across devices and enable cloud backup.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Button(
+                                onClick = onGoogleSignIn,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF4285F4)
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ExitToApp,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "Sign in with Google",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -219,147 +393,34 @@ fun ProfileScreen(
                 }
             }
 
-            // TARGET FOCUS LEVEL
-            item {
-                Text(
-                    text = "SHIELD PROFILE TYPE",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 0.8.sp
-                    )
-                )
-            }
-
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        val profiles = listOf(
-                            Triple("Deep Focus", "Strict App blocks + complete keyword blacklists.", Icons.Default.Lock),
-                            Triple("Balanced Work", "Permits core social apps with moderate timer warning.", Icons.Default.Adjust),
-                            Triple("Mindful Explorer", "Gentle popups & basic usage visual statistics.", Icons.Default.RemoveRedEye)
-                        )
-
-                        profiles.forEach { (title, subtitle, icon) ->
-                            val isSelected = profileType == title
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(
-                                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                                        else Color.Transparent
-                                    )
-                                    .border(
-                                        1.dp,
-                                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                                        else Color.Transparent,
-                                        RoundedCornerShape(16.dp)
-                                    )
-                                    .clickable { profileType = title }
-                                    .padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(
-                                            if (isSelected) MaterialTheme.colorScheme.primary 
-                                            else MaterialTheme.colorScheme.surfaceVariant
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = null,
-                                        tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = title,
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = subtitle,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-
-                                RadioButton(
-                                    selected = isSelected,
-                                    onClick = { profileType = title }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ACTION SAVE BUTTONS
+            // ACTION SAVE BUTTON
             item {
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AmnShieldButton(
-                        text = "Reset Default",
-                        onClick = {
-                            name = "Alhaq DST"
-                            email = "alhaq.dst@gmail.com"
-                            bio = "Digital Wellbeing Guardian • Staying mindful & focused."
-                            profileType = "Deep Focus"
-                        },
-                        style = AmnShieldButtonStyle.Secondary,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    val context = LocalContext.current
-                    AmnShieldButton(
-                        text = "Save Profile",
-                        onClick = {
-                            viewModel.updateProfile(
-                                name = name,
-                                email = email,
-                                bio = bio,
-                                goalMinutes = state.userGoalMinutes,
-                                profileType = profileType,
-                                pinEnabled = state.isPinProtectionEnabled,
-                                pin = state.profilePin
-                            )
-                            // Persist locally to SharedPreferences
-                            val prefs = context.getSharedPreferences("AppPreferences", android.content.Context.MODE_PRIVATE)
-                            val editor = prefs.edit()
-                            editor.putString("profile_name", name)
-                            editor.putString("profile_email", email)
-                            editor.putString("profile_bio", bio)
-                            editor.putString("profile_type", profileType)
-                            editor.apply()
-                            showSuccessMessage = true
-                        },
-                        style = AmnShieldButtonStyle.Primary,
-                        modifier = Modifier.weight(1.3f)
-                    )
-                }
+                val context = LocalContext.current
+                AmnShieldButton(
+                    text = "Save Profile",
+                    onClick = {
+                        viewModel.updateProfile(
+                            name = name,
+                            email = email,
+                            bio = bio,
+                            goalMinutes = state.userGoalMinutes,
+                            profileType = state.focusProfileType,
+                            pinEnabled = state.isPinProtectionEnabled,
+                            pin = state.profilePin
+                        )
+                        // Persist locally to SharedPreferences
+                        val prefs = context.getSharedPreferences("AppPreferences", android.content.Context.MODE_PRIVATE)
+                        val editor = prefs.edit()
+                        editor.putString("profile_name", name)
+                        editor.putString("profile_email", email)
+                        editor.putString("profile_bio", bio)
+                        editor.apply()
+                        showSuccessMessage = true
+                    },
+                    style = AmnShieldButtonStyle.Primary,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
