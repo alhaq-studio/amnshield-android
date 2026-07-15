@@ -2,11 +2,28 @@ package com.alhaq.amnshield.utils
 
 import android.content.Context
 import android.content.pm.PackageManager
-import com.alhaq.amnshield.ui.dto.Report
-import com.alhaq.amnshield.ui.dto.ReportDetail
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
+
+/** Report type categories */
+enum class ReportType {
+    APP_BLOCKER, FOCUS_MODE, KEYWORD_BLOCKER, VIEW_BLOCKER
+}
+
+/** A single key-value detail line inside a report */
+data class ReportDetail(val label: String, val value: String)
+
+/** A generated daily report for one blocker category */
+data class Report(
+    val title: String,
+    val summary: String,
+    val count: Int,
+    val yesterdayCount: Int,
+    val type: ReportType,
+    val detailedStats: List<ReportDetail> = emptyList(),
+    val additionalInfo: String? = null
+)
 
 /**
  * Utility class to generate comprehensive daily reports from blocking statistics
@@ -83,7 +100,7 @@ class ReportGenerator(private val context: Context) {
             summary = summary,
             count = count,
             yesterdayCount = prevCount,
-            type = com.alhaq.amnshield.ui.dto.ReportType.APP_BLOCKER,
+            type = ReportType.APP_BLOCKER,
             detailedStats = detailedStats,
             additionalInfo = if (count > 0) "You stayed focused by avoiding blocked apps." else null
         )
@@ -135,7 +152,7 @@ class ReportGenerator(private val context: Context) {
             summary = summary,
             count = totalMinutes.toInt(),
             yesterdayCount = prevTotalMinutes.toInt(),
-            type = com.alhaq.amnshield.ui.dto.ReportType.FOCUS_MODE,
+            type = ReportType.FOCUS_MODE,
             detailedStats = detailedStats,
             additionalInfo = if (totalMinutes > 0) "Great work staying focused!" else null
         )
@@ -172,7 +189,7 @@ class ReportGenerator(private val context: Context) {
             summary = summary,
             count = count,
             yesterdayCount = prevCount,
-            type = com.alhaq.amnshield.ui.dto.ReportType.KEYWORD_BLOCKER,
+            type = ReportType.KEYWORD_BLOCKER,
             detailedStats = detailedStats,
             additionalInfo = if (count > 0) "Protected you from harmful content." else null
         )
@@ -211,7 +228,7 @@ class ReportGenerator(private val context: Context) {
             summary = summary,
             count = count,
             yesterdayCount = prevCount,
-            type = com.alhaq.amnshield.ui.dto.ReportType.VIEW_BLOCKER,
+            type = ReportType.VIEW_BLOCKER,
             detailedStats = detailedStats,
             additionalInfo = if (count > 0) "Saved you from time-wasting short-form content." else null
         )
