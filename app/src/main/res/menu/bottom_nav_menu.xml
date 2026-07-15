@@ -16,7 +16,7 @@
         android:title="Focus" />
 
     <item
-        android:id="@+id/navigation_reports"
-        android:icon="@drawable/ic_amnshield_reports"
-        android:title="@string/reports" />
+        android:id="@+id/navigation_advanced"
+        android:icon="@drawable/ic_amnshield_settings"
+        android:title="Advanced" />
 </menu>

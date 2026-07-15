@@ -56,7 +56,7 @@ import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.ui.fragments.BlocksFragment
 import com.alhaq.amnshield.ui.fragments.StatsFragment
 import com.alhaq.amnshield.ui.fragments.SettingsFragment
-import com.alhaq.amnshield.ui.fragments.ReportsFragment
+import com.alhaq.amnshield.ui.fragments.AdvancedFragment
 import com.alhaq.amnshield.ui.fragments.FocusFragment
 import com.alhaq.amnshield.ui.activity.FragmentActivity
 import com.alhaq.amnshield.ui.fragments.installation.AccessibilityGuide
@@ -210,7 +210,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             val startTab = intent.getIntExtra("start_tab", R.id.navigation_stats)
             val initialFragment = when (startTab) {
-                R.id.navigation_reports -> ReportsFragment()
+                R.id.navigation_advanced -> AdvancedFragment()
                 R.id.navigation_blocks -> BlocksFragment()
                 R.id.navigation_focus -> FocusFragment()
                 else -> StatsFragment()
@@ -241,9 +241,9 @@ class MainActivity : AppCompatActivity() {
                         .commit()
                     true
                 }
-                R.id.navigation_reports -> {
+                R.id.navigation_advanced -> {
                     supportFragmentManager.beginTransaction()
-                        .replace(R.id.nav_host_fragment, ReportsFragment())
+                        .replace(R.id.nav_host_fragment, AdvancedFragment())
                         .commit()
                     true
                 }
@@ -1174,8 +1174,8 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_donate -> {
                     showSupportOptionsDialog()
                 }
-                R.id.nav_reports -> {
-                    selectTab(R.id.navigation_reports)
+                R.id.nav_advanced -> {
+                    selectTab(R.id.navigation_advanced)
                 }
                 R.id.nav_settings -> {
                     openSettingsScreen()

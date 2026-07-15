@@ -65,7 +65,7 @@ class StatsFragment : Fragment() {
                             startActivity(intent, options.toBundle())
                         },
                         onViewReelsMetrics = {
-                            (activity as? MainActivity)?.selectTab(R.id.navigation_reports)
+                            (activity as? MainActivity)?.selectTab(R.id.navigation_blocks)
                         }
                     )
                 }

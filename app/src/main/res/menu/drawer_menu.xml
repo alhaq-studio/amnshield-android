@@ -31,9 +31,9 @@
             android:title="@string/donate" />
 
         <item
-            android:id="@+id/nav_reports"
-            android:icon="@drawable/ic_amnshield_reports"
-            android:title="@string/reports" />
+            android:id="@+id/nav_advanced"
+            android:icon="@drawable/ic_app_protection"
+            android:title="Advanced" />
 
         <item
             android:id="@+id/nav_settings"
