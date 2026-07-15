@@ -14,7 +14,7 @@ object ThemeUtils {
 
     private fun resolveTheme(context: Context): Int {
         val themeStyle = context
-            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getSharedPreferences("${context.packageName}_preferences", Context.MODE_PRIVATE)
             .getString(KEY_THEME_STYLE, "default")
 
         return when (themeStyle) {

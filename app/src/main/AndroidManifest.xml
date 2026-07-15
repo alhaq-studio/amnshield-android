@@ -41,8 +41,7 @@
             android:name=".ui.activity.AntiUninstallPasswordActivity"
             android:excludeFromRecents="true"
             android:exported="false"
-            android:launchMode="singleTask"
-            android:theme="@style/Theme.Material3.DayNight" />
+            android:launchMode="singleTask" />
         <activity
             android:name=".ui.activity.FragmentActivity"
             android:exported="false" />

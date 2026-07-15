@@ -19,6 +19,7 @@ class WarningActivity : AppCompatActivity() {
     private var proceedTimer: CountDownTimer? = null
     private var dialog: AlertDialog? = null
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.alhaq.amnshield.utils.ThemeUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         val savedPreferencesLoader = SavedPreferencesLoader(this)
 

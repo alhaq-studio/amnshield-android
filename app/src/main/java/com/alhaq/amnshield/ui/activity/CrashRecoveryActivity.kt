@@ -33,6 +33,7 @@ class CrashRecoveryActivity : AppCompatActivity() {
     private var crashStackTrace: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.alhaq.amnshield.utils.ThemeUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         binding = ActivityCrashRecoveryBinding.inflate(layoutInflater)
         setContentView(binding.root)
