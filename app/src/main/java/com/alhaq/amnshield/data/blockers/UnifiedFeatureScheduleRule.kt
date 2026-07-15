@@ -16,8 +16,12 @@ data class UnifiedFeatureScheduleRule(
     val activeUntilMillis: Long = 0L,
     val createdAt: Long = System.currentTimeMillis(),
     val groupId: String? = null,
-    val groupTitle: String? = null
+    val groupTitle: String? = null,
+    val isEnabled: Boolean? = true
 ) {
+    val isRuleEnabled: Boolean
+        get() = isEnabled ?: true
+
     enum class RuleType {
         BLOCK,
         CHEAT
@@ -34,6 +38,7 @@ data class UnifiedFeatureScheduleRule(
         APP_BLOCKER,
         KEYWORD_BLOCKER,
         REEL_BLOCKER,
-        FOCUS_MODE
+        FOCUS_MODE,
+        WEBSITE_BLOCKER
     }
 }

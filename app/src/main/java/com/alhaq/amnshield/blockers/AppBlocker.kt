@@ -33,7 +33,7 @@ class AppBlocker : BaseBlocker() {
             return AppBlockerResult(isBlocked = false)
         }
 
-        val packageRules = scheduleRules.filter { it.packageName == packageName }
+        val packageRules = scheduleRules.filter { it.packageName == packageName && it.isRuleEnabled }
 
         // 2. Check for active CHEAT rules (highest priority bypass)
         val activeCheatEnd = getActiveRuleEndTime(

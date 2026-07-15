@@ -102,7 +102,8 @@ class ManageBlockSchedulesFragment : Fragment() {
         // Setup Block Schedules RecyclerView
         scheduleAdapter = BlockScheduleAdapter(
             onEdit = { rule -> editSchedule(rule) },
-            onDelete = { rule -> deleteSchedule(rule) }
+            onDelete = { rule -> deleteSchedule(rule) },
+            onToggle = { rule, isChecked -> toggleSchedule(rule, isChecked) }
         )
         binding.schedulesList.layoutManager = LinearLayoutManager(requireContext())
         binding.schedulesList.adapter = scheduleAdapter
@@ -125,6 +126,13 @@ class ManageBlockSchedulesFragment : Fragment() {
         }
 
         loadSchedulesAndLimits()
+
+        // Check for prefilled target extra
+        val prefillTargetStr = requireActivity().intent?.getStringExtra("prefill_target")
+        if (prefillTargetStr != null) {
+            requireActivity().intent?.removeExtra("prefill_target")
+            handlePrefillTarget(prefillTargetStr)
+        }
     }
 
     override fun onResume() {
@@ -322,6 +330,7 @@ class ManageBlockSchedulesFragment : Fragment() {
                             UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER -> "Keyword Blocker"
                             UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER -> "Reel Blocker"
                             UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE -> "Focus Mode"
+                            UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER -> "Website/URL Blocker"
                         }
                     }
                     .sorted()
@@ -789,13 +798,15 @@ class ManageBlockSchedulesFragment : Fragment() {
             "App Blocker",
             "Keyword Blocker",
             "Reel Blocker",
-            "Focus Mode"
+            "Focus Mode",
+            "Website/URL Blocker"
         )
         val targets = arrayOf(
             UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER,
             UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER,
             UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER,
-            UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE
+            UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE,
+            UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER
         )
         val checked = BooleanArray(labels.size)
 
@@ -1370,7 +1381,8 @@ class ManageBlockSchedulesFragment : Fragment() {
             activeUntilMillis = rule.activeUntilMillis,
             createdAt = rule.createdAt,
             groupId = rule.groupId,
-            groupTitle = rule.groupTitle
+            groupTitle = rule.groupTitle,
+            isEnabled = rule.isEnabled
         )
     }
 
@@ -1425,7 +1437,64 @@ class ManageBlockSchedulesFragment : Fragment() {
             UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER -> "Keyword"
             UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER -> "Reel"
             UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE -> "Focus"
+            UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER -> "Website/URL"
         }
+    }
+
+    private fun handlePrefillTarget(targetStr: String) {
+        val target = try {
+            UnifiedFeatureScheduleRule.FeatureTarget.valueOf(targetStr)
+        } catch (e: Exception) {
+            null
+        } ?: return
+
+        // Skip target selection dialog and go straight to Rule Type dialog!
+        showUnifiedFeatureRuleTypeDialog(setOf(target))
+    }
+
+    private fun toggleSchedule(rule: AppBlockScheduleRule, isChecked: Boolean) {
+        if (rule.id.startsWith(FEATURE_RULE_PREFIX)) {
+            // Unified Feature Schedule Rule
+            val ruleId = rule.id.removePrefix(FEATURE_RULE_PREFIX)
+            val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules()
+            val existingIndex = rules.indexOfFirst { it.id == ruleId }
+            if (existingIndex >= 0) {
+                val updated = rules[existingIndex].copy(isEnabled = isChecked)
+                rules[existingIndex] = updated
+                savedPreferencesLoader.saveUnifiedFeatureScheduleRules(rules)
+            }
+        } else if (rule.id.startsWith(FEATURE_GROUP_RULE_PREFIX)) {
+            // Unified Feature Schedule Group
+            val groupId = rule.id.removePrefix(FEATURE_GROUP_RULE_PREFIX)
+            val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules()
+            rules.forEachIndexed { idx, item ->
+                if (item.groupId == groupId) {
+                    rules[idx] = item.copy(isEnabled = isChecked)
+                }
+            }
+            savedPreferencesLoader.saveUnifiedFeatureScheduleRules(rules)
+        } else if (rule.id.startsWith(APP_GROUP_RULE_PREFIX)) {
+            // App Schedule Group
+            val groupId = rule.id.removePrefix(APP_GROUP_RULE_PREFIX)
+            val rules = savedPreferencesLoader.loadAppBlockerScheduleRules()
+            rules.forEachIndexed { idx, item ->
+                if (item.groupId == groupId) {
+                    rules[idx] = item.copy(isEnabled = isChecked)
+                }
+            }
+            savedPreferencesLoader.saveAppBlockerScheduleRules(rules)
+        } else {
+            // Single App Schedule Rule
+            val rules = savedPreferencesLoader.loadAppBlockerScheduleRules()
+            val existingIndex = rules.indexOfFirst { it.id == rule.id }
+            if (existingIndex >= 0) {
+                val updated = rules[existingIndex].copy(isEnabled = isChecked)
+                rules[existingIndex] = updated
+                savedPreferencesLoader.saveAppBlockerScheduleRules(rules)
+            }
+        }
+        sendRefreshRequest()
+        loadSchedulesAndLimits()
     }
 
     override fun onDestroyView() {

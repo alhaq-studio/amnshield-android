@@ -12,6 +12,7 @@ import com.alhaq.amnshield.databinding.FragmentSocialMediaBlockerConfigBinding
 import com.alhaq.amnshield.databinding.ItemSocialBlockCardBinding
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.premium.PremiumManager
+import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
 import java.util.Locale
 
 /**
@@ -78,6 +79,15 @@ class SocialMediaBlockerConfigFragment : BaseFeatureFragment() {
 
         // Setup prefilled social blocking toggles
         setupSocialToggles()
+
+        // Schedule Blocker Button
+        binding.btnScheduleWebBlocker.setOnClickListener {
+            val intent = Intent(requireContext(), com.alhaq.amnshield.ui.activity.FragmentActivity::class.java).apply {
+                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("prefill_target", "WEBSITE_BLOCKER")
+            }
+            startActivity(intent, activityOptions.toBundle())
+        }
 
         // Add website button
         binding.btnAddWebsite.setOnClickListener {

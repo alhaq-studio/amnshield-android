@@ -511,10 +511,11 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         lastUnifiedScheduleEvalTime = now
 
         val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules()
-        if (rules.isEmpty()) return
+        val activeRules = rules.filter { it.isRuleEnabled }
+        if (activeRules.isEmpty()) return
 
         UnifiedFeatureScheduleRule.FeatureTarget.entries.forEach { target ->
-            val targetRules = rules.filter { it.targets.contains(target) }
+            val targetRules = activeRules.filter { it.targets.contains(target) }
             if (targetRules.isEmpty()) return@forEach
 
             val activeCheat = targetRules.firstOrNull {
@@ -564,6 +565,12 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 if (savedPreferencesLoader.isFocusModeFeatureEnabled() != enabled) {
                     savedPreferencesLoader.setFocusModeFeatureEnabled(enabled)
                     setupFocusMode()
+                }
+            }
+
+            UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER -> {
+                if (savedPreferencesLoader.isSocialMediaBlockerEnabled() != enabled) {
+                    savedPreferencesLoader.setSocialMediaBlockerEnabled(enabled)
                 }
             }
         }

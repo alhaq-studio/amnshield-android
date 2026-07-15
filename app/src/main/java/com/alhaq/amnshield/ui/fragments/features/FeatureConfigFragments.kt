@@ -109,6 +109,7 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
         binding.btnCheatHours.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
                 putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("prefill_target", "APP_BLOCKER")
             }
             startActivity(intent)
         }
@@ -116,6 +117,7 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
         binding.btnBlockSchedules.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
                 putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("prefill_target", "APP_BLOCKER")
             }
             startActivity(intent)
         }
@@ -326,6 +328,7 @@ class ReelBlockerConfigFragment : BaseFeatureFragment() {
         binding.btnCheatHours.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
                 putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("prefill_target", "REEL_BLOCKER")
             }
             startActivity(intent)
         }
@@ -510,6 +513,14 @@ class KeywordBlockerConfigFragment : BaseFeatureFragment() {
             )
         }
 
+        binding.btnScheduleKeyword.setOnClickListener {
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("prefill_target", "KEYWORD_BLOCKER")
+            }
+            startActivity(intent)
+        }
+
         return binding.root
     }
     
@@ -526,6 +537,7 @@ class KeywordBlockerConfigFragment : BaseFeatureFragment() {
         binding.btnManageKeywords.isEnabled = enabled
         binding.btnKeywordPacks.isEnabled = enabled
         binding.btnKeywordConfig.isEnabled = enabled
+        binding.btnScheduleKeyword.isEnabled = enabled
     }
 
     companion object {

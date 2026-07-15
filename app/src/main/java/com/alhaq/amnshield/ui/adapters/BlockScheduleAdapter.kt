@@ -16,18 +16,34 @@ import java.util.Locale
 
 class BlockScheduleAdapter(
     private val onEdit: (AppBlockScheduleRule) -> Unit,
-    private val onDelete: (AppBlockScheduleRule) -> Unit
+    private val onDelete: (AppBlockScheduleRule) -> Unit,
+    private val onToggle: (AppBlockScheduleRule, Boolean) -> Unit
 ) : ListAdapter<AppBlockScheduleRule, BlockScheduleAdapter.ViewHolder>(DiffCallback) {
 
     class ViewHolder(
         private val binding: BlockScheduleItemBinding,
         private val onEdit: (AppBlockScheduleRule) -> Unit,
-        private val onDelete: (AppBlockScheduleRule) -> Unit
+        private val onDelete: (AppBlockScheduleRule) -> Unit,
+        private val onToggle: (AppBlockScheduleRule, Boolean) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(rule: AppBlockScheduleRule) {
             val ctx = binding.root.context
             binding.scheduleTitle.text = rule.title
+
+            // Dim text/elements if disabled
+            val alpha = if (rule.isRuleEnabled) 1.0f else 0.5f
+            binding.scheduleTitle.alpha = alpha
+            binding.scheduleTimeWindow.alpha = alpha
+            binding.scheduleRecurrence.alpha = alpha
+            binding.cardTypeIndicator.alpha = alpha
+
+            // Setup Switch
+            binding.switchEnableRule.setOnCheckedChangeListener(null)
+            binding.switchEnableRule.isChecked = rule.isRuleEnabled
+            binding.switchEnableRule.setOnCheckedChangeListener { _, isChecked ->
+                onToggle(rule, isChecked)
+            }
 
             // Color the type indicator circle: green for CHEAT windows, primary for BLOCK rules
             val isCheat = rule.type == AppBlockScheduleRule.RuleType.CHEAT
@@ -97,7 +113,7 @@ class BlockScheduleAdapter(
             parent,
             false
         )
-        return ViewHolder(binding, onEdit, onDelete)
+        return ViewHolder(binding, onEdit, onDelete, onToggle)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

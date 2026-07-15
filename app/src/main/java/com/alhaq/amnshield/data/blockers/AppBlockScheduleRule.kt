@@ -13,8 +13,12 @@ data class AppBlockScheduleRule(
     val activeUntilMillis: Long = 0L,
     val createdAt: Long = System.currentTimeMillis(),
     val groupId: String? = null,
-    val groupTitle: String? = null
+    val groupTitle: String? = null,
+    val isEnabled: Boolean? = true
 ) {
+    val isRuleEnabled: Boolean
+        get() = isEnabled ?: true
+
     enum class RuleType {
         BLOCK,
         CHEAT
