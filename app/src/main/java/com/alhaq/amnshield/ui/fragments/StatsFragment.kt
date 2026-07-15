@@ -113,14 +113,55 @@ class StatsFragment : Fragment() {
                         val endTime = System.currentTimeMillis()
 
                         val statsList = usageStatsHelper.getForegroundStatsByTimestamps(startTime, endTime)
-                        val totalTime = statsList.sumOf { it.totalTime }
+                        val deviceTotalTime = statsList.sumOf { it.totalTime }
 
-                        val sortedApps = statsList.sortedByDescending { it.totalTime }.take(5)
+                        // 1. Gather all launcher packages
+                        val launcherIntent = Intent(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_HOME) }
+                        val resolveInfos = ctx.packageManager.queryIntentActivities(launcherIntent, 0)
+                        val launcherPackages = resolveInfos.map { it.activityInfo.packageName }.toSet()
+
+                        val systemPackages = setOf(
+                            "android",
+                            "com.android.systemui",
+                            "com.android.settings",
+                            "com.google.android.gms",
+                            "com.google.android.inputmethod.latin",
+                            "com.sec.android.inputmethod",
+                            ctx.packageName
+                        )
+
+                        // 2. Filter stats: ignore system and launcher apps, and require a launch intent (user-facing)
+                        val filteredStats = statsList.filter { stat ->
+                            val pkg = stat.packageName
+                            !systemPackages.contains(pkg) &&
+                            !launcherPackages.contains(pkg) &&
+                            pkg.isNotBlank() &&
+                            ctx.packageManager.getLaunchIntentForPackage(pkg) != null
+                        }
+
+                        val sortedApps = filteredStats.sortedByDescending { it.totalTime }.take(5)
+
+                        // 3. Resolve app labels and load icons on IO thread
+                        val resolvedApps = sortedApps.map { appStat ->
+                            val appName = try {
+                                val appInfo = ctx.packageManager.getApplicationInfo(appStat.packageName, 0)
+                                ctx.packageManager.getApplicationLabel(appInfo).toString()
+                            } catch (e: Exception) {
+                                appStat.packageName
+                            }
+                            val appTime = appStat.totalTime / (1000 * 60)
+                            val appTimeFormatted = if (appTime >= 60) "${appTime / 60}h ${appTime % 60}m" else "${appTime}m"
+                            val progress = (appTime.toFloat() / 120f).coerceIn(0f, 1f)
+                            
+                            val iconBitmap = getAppIconBitmap(ctx, appStat.packageName)
+                            
+                            AppUsageItem(appName, appTimeFormatted, progress, iconBitmap)
+                        }
 
                         withContext(Dispatchers.Main) {
                             // Update screen time
-                            val hours = totalTime / (1000 * 60 * 60)
-                            val minutes = (totalTime % (1000 * 60 * 60)) / (1000 * 60)
+                            val hours = deviceTotalTime / (1000 * 60 * 60)
+                            val minutes = (deviceTotalTime % (1000 * 60 * 60)) / (1000 * 60)
                             totalScreenTimeState.value = "${hours}h ${minutes}m"
 
                             // Update blocking stats
@@ -131,18 +172,7 @@ class StatsFragment : Fragment() {
 
                             // Update top apps list
                             topAppsState.clear()
-                            for (appStat in sortedApps) {
-                                val appName = try {
-                                    val appInfo = ctx.packageManager.getApplicationInfo(appStat.packageName, 0)
-                                    ctx.packageManager.getApplicationLabel(appInfo).toString()
-                                } catch (e: Exception) {
-                                    appStat.packageName
-                                }
-                                val appTime = appStat.totalTime / (1000 * 60)
-                                val appTimeFormatted = if (appTime >= 60) "${appTime / 60}h ${appTime % 60}m" else "${appTime}m"
-                                val progress = (appTime.toFloat() / 120f).coerceIn(0f, 1f)
-                                topAppsState.add(AppUsageItem(appName, appTimeFormatted, progress))
-                            }
+                            topAppsState.addAll(resolvedApps)
                         }
                     }
                 } catch (t: Throwable) {
@@ -153,6 +183,21 @@ class StatsFragment : Fragment() {
                     android.util.Log.e("StatsFragment", "Failed to load stats", t)
                 }
             }
+        }
+    }
+
+    private fun getAppIconBitmap(context: android.content.Context, packageName: String): android.graphics.Bitmap? {
+        return try {
+            val pm = context.packageManager
+            val iconDrawable = pm.getApplicationIcon(packageName)
+            val size = 120
+            val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(bitmap)
+            iconDrawable.setBounds(0, 0, size, size)
+            iconDrawable.draw(canvas)
+            bitmap
+        } catch (e: Exception) {
+            null
         }
     }
 

@@ -156,7 +156,7 @@ class ReportsFragment : Fragment() {
             else -> "Elevated"
         }
 
-        usageRecommendationState.value = "$riskText risk: ${topRiskyAppName ?: top.packageName} used ${minutes}m across $sessions sessions. Consider limiting usage in App Blocker."
+        usageRecommendationState.value = "$riskText risk: $topRiskyAppName used ${minutes}m across $sessions sessions. Consider limiting usage in App Blocker."
     }
 
     private fun getAppLabel(packageName: String): String {

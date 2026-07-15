@@ -26,11 +26,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
 
 data class AppUsageItem(
     val name: String,
     val timeFormatted: String,
-    val progress: Float
+    val progress: Float,
+    val icon: android.graphics.Bitmap? = null
 )
 
 @Composable
@@ -258,7 +261,7 @@ fun StatsScreen(
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Circle app icon fallback
+                    // App icon or fallback
                     Box(
                         modifier = Modifier
                             .size(44.dp)
@@ -266,12 +269,20 @@ fun StatsScreen(
                             .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = getIconForApp(app.name),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        if (app.icon != null) {
+                            Image(
+                                bitmap = app.icon.asImageBitmap(),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(
+                                imageVector = getIconForApp(app.name),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(12.dp))

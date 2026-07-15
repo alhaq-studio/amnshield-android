@@ -59,7 +59,7 @@ class StartFocusMode(
             .setPositiveButton(getString(R.string.start)) { _, _ ->
                 val totalMillis = dialogFocusModeBinding.focusModeMinsPicker.getValue() * 60000L
                 val mode = selectedMode
-                if (mode != null && ensureNotificationPermission(totalMillis, mode)) {
+                if (ensureNotificationPermission(totalMillis, mode)) {
                     startFocusModeSession(totalMillis, mode)
                 }
             }

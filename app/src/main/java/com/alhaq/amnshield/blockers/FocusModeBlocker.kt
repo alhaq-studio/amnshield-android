@@ -8,6 +8,9 @@ class FocusModeBlocker : BaseBlocker() {
         // Essential system apps that should NEVER be blocked to prevent system instability
         val ESSENTIAL_SYSTEM_APPS = setOf(
             "com.android.settings",
+            "com.google.android.settings",
+            "com.samsung.android.settings",
+            "com.coloros.settings",
             "com.android.systemui",
             "com.google.android.apps.nexuslauncher",
             "com.android.launcher",
@@ -25,7 +28,63 @@ class FocusModeBlocker : BaseBlocker() {
             "com.google.android.contacts",
             "com.samsung.android.dialer",
             "com.samsung.android.contacts",
-            "com.alhaq.amnshield" // AmnShield itself
+            "com.alhaq.amnshield", // AmnShield itself
+            
+            // OEM Security/Phone Managers
+            "com.huawei.systemmanager",
+            "com.miui.securitycenter",
+            "com.iqoo.secure",
+            "com.oppo.safe",
+            "com.oneplus.security",
+            "com.vivo.permissionmanager",
+            "com.samsung.android.lool",
+            "com.samsung.android.sm",
+            "com.samsung.android.sm_cn",
+            "com.coloros.safecenter",
+            "com.coloros.securityguard",
+
+            // System Keyboards (required to type)
+            "com.google.android.inputmethod.latin",
+            "com.samsung.android.honeyboard",
+            "com.android.inputmethod.latin",
+            "com.huawei.android.inputmethod",
+            "com.miui.miinput",
+
+            // Clocks & Alarms
+            "com.google.android.deskclock",
+            "com.sec.android.app.clockpackage",
+            "com.android.deskclock",
+            "com.huawei.deskclock",
+            "com.miui.clock",
+            "com.coloros.alarm",
+            "com.oppo.alarm",
+
+            // Calendars
+            "com.google.android.calendar",
+            "com.android.calendar",
+            "com.samsung.android.calendar",
+            "com.miui.calendar",
+
+            // Calculators
+            "com.google.android.calculator",
+            "com.sec.android.app.popupcalculator",
+            "com.android.calculator2",
+            "com.miui.calculator",
+            "com.coloros.calculator",
+
+            // File Managers / Documents Provider
+            "com.google.android.apps.nbu.files",
+            "com.sec.android.app.myfiles",
+            "com.android.documentsui",
+            "com.mi.android.globalFileexplorer",
+            "com.coloros.filemanager",
+
+            // System Package Installer & Google Play Services
+            "com.google.android.packageinstaller",
+            "com.android.packageinstaller",
+            "com.google.android.permissioncontroller",
+            "com.android.vending",
+            "com.google.android.gms"
         )
     }
 

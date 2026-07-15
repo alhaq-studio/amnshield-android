@@ -140,7 +140,17 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         return packageName == "com.android.settings" ||
                 packageName == "com.google.android.settings" ||
                 packageName == "com.samsung.android.settings" ||
-                packageName.endsWith(".settings")
+                packageName.endsWith(".settings") ||
+                packageName.contains("securitycenter") ||
+                packageName.contains("safecenter") ||
+                packageName.contains("systemmanager") ||
+                packageName.contains("permissionmanager") ||
+                packageName == "com.samsung.android.lool" ||
+                packageName == "com.samsung.android.sm" ||
+                packageName == "com.samsung.android.sm_cn" ||
+                packageName == "com.oppo.safe" ||
+                packageName == "com.iqoo.secure" ||
+                packageName == "com.oneplus.security"
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -416,11 +426,25 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         userIgnoredPackages.add("com.android.settings")
         userIgnoredPackages.add("com.google.android.settings")
         userIgnoredPackages.add("com.samsung.android.settings")
+        userIgnoredPackages.add("com.coloros.settings")
         userIgnoredPackages.add("com.android.systemui")
         userIgnoredPackages.add("android")
         userIgnoredPackages.add("com.android.launcher")
         userIgnoredPackages.add("com.google.android.apps.nexuslauncher")
         userIgnoredPackages.add("com.sec.android.app.launcher")
+        
+        // Add OEM system managers and security centers to ignored packages
+        userIgnoredPackages.add("com.huawei.systemmanager")
+        userIgnoredPackages.add("com.miui.securitycenter")
+        userIgnoredPackages.add("com.iqoo.secure")
+        userIgnoredPackages.add("com.oppo.safe")
+        userIgnoredPackages.add("com.oneplus.security")
+        userIgnoredPackages.add("com.vivo.permissionmanager")
+        userIgnoredPackages.add("com.samsung.android.lool")
+        userIgnoredPackages.add("com.samsung.android.sm")
+        userIgnoredPackages.add("com.samsung.android.sm_cn")
+        userIgnoredPackages.add("com.coloros.safecenter")
+        userIgnoredPackages.add("com.miui.cleanmaster")
 
         keywordBlocker.ignoredPackages = userIgnoredPackages
     }
