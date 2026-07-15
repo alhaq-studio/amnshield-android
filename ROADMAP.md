@@ -1,8 +1,15 @@
 # AmnShield Roadmap
 
-Last updated: 2026-07-13
+Last updated: 2026-07-15
 
 ## Recently Completed
+- **High-Fidelity Visual Redesign (July 2026)**
+  - Ported the premium modern design system and layouts from `AmnGuard` into `AmnShield-Android`.
+  - Redesigned `StatsScreen.kt` with a detailed screen time hero card, circular goal meter, Canvas-drawn weekly bar chart, and modern app breakdown list.
+  - Redesigned `FocusScreen.kt` with a Mindfulness & Wellbeing Insights hub, including a pulsing mindful breathing visualizer and interactive focus/distraction simulation tools.
+  - Ported and migrated Settings and Profile screens to Compose (`SettingsScreen.kt`, `ProfileScreen.kt`), wiring them into `SettingsFragment` and `ProfileFragment` with local data persistence.
+  - Ported and migrated Schedules & Rules management and creation screens to Compose (`ManageSchedulesScreen.kt`, `CreateRuleScreen.kt`), replacing `ManageBlockSchedulesFragment` with a clean, unified Compose implementation supporting time windows, automatic consolidation, and conflict auto-correction.
+  - Updated `Theme.kt` to globally synchronize Android status bar and navigation bar colors to match active themes (Sunset Glow, Emerald Calm, Cosmic Night).
 - **Social Media Blocker Integration & Consolidation (July 2026)**
   - Re-implemented the dedicated Social Media Blocker screen matching design requirements (enabling global switch, managing blocked apps, and adding custom blocked websites/domains).
   - Consolidated gaming blocker into general App Blocker to clean up duplicate features.

@@ -1,0 +1,456 @@
+package com.alhaq.amnshield.ui.screens
+
+import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.alhaq.amnshield.ui.state.AmnShieldState
+import com.alhaq.amnshield.ui.state.ScheduleRule
+import com.alhaq.amnshield.ui.state.SchedulePeriod
+import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
+
+fun timeToMinutes(timeStr: String): Int {
+    val parts = timeStr.split(":")
+    if (parts.size != 2) return 0
+    val hours = parts[0].toIntOrNull() ?: 0
+    val minutes = parts[1].toIntOrNull() ?: 0
+    return hours * 60 + minutes
+}
+
+fun periodsOverlap(p1: SchedulePeriod, p2: SchedulePeriod): Boolean {
+    val commonDays = p1.days.intersect(p2.days)
+    if (commonDays.isEmpty()) return false
+
+    val s1 = timeToMinutes(p1.startTime)
+    val e1 = timeToMinutes(p1.endTime)
+    val s2 = timeToMinutes(p2.startTime)
+    val e2 = timeToMinutes(p2.endTime)
+
+    fun getIntervals(s: Int, e: Int): List<Pair<Int, Int>> {
+        return if (e >= s) {
+            listOf(Pair(s, e))
+        } else {
+            listOf(Pair(s, 1440), Pair(0, e))
+        }
+    }
+
+    val intervals1 = getIntervals(s1, e1)
+    val intervals2 = getIntervals(s2, e2)
+
+    for (i1 in intervals1) {
+        for (i2 in intervals2) {
+            if (i1.first < i2.second && i2.first < i1.second) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+fun mergeSchedules(periods: List<SchedulePeriod>): List<SchedulePeriod> {
+    if (periods.size <= 1) return periods
+
+    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    val dayIntervals = daysOfWeek.associateWith { mutableListOf<Pair<Int, Int>>() }.toMutableMap()
+
+    for (p in periods) {
+        val s = timeToMinutes(p.startTime)
+        val e = timeToMinutes(p.endTime)
+        val intervals = if (e >= s) {
+            listOf(Pair(s, e))
+        } else {
+            listOf(Pair(s, 1440), Pair(0, e))
+        }
+        for (day in p.days) {
+            dayIntervals[day]?.addAll(intervals)
+        }
+    }
+
+    val mergedDayIntervals = mutableMapOf<String, List<Pair<Int, Int>>>()
+    for ((day, intervals) in dayIntervals) {
+        if (intervals.isEmpty()) continue
+        intervals.sortBy { it.first }
+        val merged = mutableListOf<Pair<Int, Int>>()
+        var current = intervals[0]
+        for (i in 1 until intervals.size) {
+            val next = intervals[i]
+            if (next.first <= current.second) {
+                current = Pair(current.first, maxOf(current.second, next.second))
+            } else {
+                merged.add(current)
+                current = next
+            }
+        }
+        merged.add(current)
+        mergedDayIntervals[day] = merged
+    }
+
+    val intervalToDays = mutableMapOf<Pair<Int, Int>, MutableList<String>>()
+    for ((day, intervals) in mergedDayIntervals) {
+        for (interval in intervals) {
+            intervalToDays.getOrPut(interval) { mutableListOf() }.add(day)
+        }
+    }
+
+    val result = mutableListOf<SchedulePeriod>()
+    for ((interval, days) in intervalToDays) {
+        val startStr = String.format("%02d:%02d", interval.first / 60, interval.first % 60)
+        val endStr = if (interval.second >= 1440) "23:59" else String.format("%02d:%02d", interval.second / 60, interval.second % 60)
+        result.add(SchedulePeriod(startStr, endStr, days))
+    }
+
+    return result
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ManageSchedulesScreen(
+    state: AmnShieldState,
+    viewModel: AmnShieldViewModel,
+    initialFilter: String = "All",
+    onNavigateToCreateRule: (String) -> Unit,
+    onToggleRule: (String) -> Unit,
+    onDeleteRule: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    var selectedFilter by remember { mutableStateOf(initialFilter) }
+
+    val filteredRules = when (selectedFilter) {
+        "Schedules" -> state.scheduleRules.filter { it.restrictionType == "Block Schedule" }
+        "Limits" -> state.scheduleRules.filter { it.restrictionType == "Launch Limit" }
+        "Cheat Hours" -> state.scheduleRules.filter { it.restrictionType == "Cheat Window" }
+        else -> state.scheduleRules
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = "Schedules & Rules",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Text(
+                            text = "Manage recurring offline restrictions",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                text = { Text("Add Rule", fontWeight = FontWeight.Bold) },
+                icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
+                onClick = {
+                    val defaultType = when (selectedFilter) {
+                        "Schedules" -> "Block Schedule"
+                        "Limits" -> "Launch Limit"
+                        "Cheat Hours" -> "Cheat Window"
+                        else -> "Block Schedule"
+                    }
+                    onNavigateToCreateRule(defaultType)
+                },
+                shape = RoundedCornerShape(16.dp),
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 20.dp)
+        ) {
+            // Horizontal filter pills
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                val filters = listOf("All", "Schedules", "Limits", "Cheat Hours")
+                filters.forEach { filter ->
+                    val isSelected = selectedFilter == filter
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            )
+                            .clickable { selectedFilter = filter }
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = filter,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (filteredRules.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(24.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = when (selectedFilter) {
+                                    "Schedules" -> Icons.Outlined.CalendarToday
+                                    "Limits" -> Icons.Outlined.Launch
+                                    "Cheat Hours" -> Icons.Outlined.HourglassEmpty
+                                    else -> Icons.Outlined.Rule
+                                },
+                                contentDescription = null,
+                                modifier = Modifier.size(36.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "No Rules Active",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "There are no $selectedFilter rules configured right now. Tap Add Rule to create one.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    contentPadding = PaddingValues(bottom = 88.dp)
+                ) {
+                    items(filteredRules) { rule ->
+                        RuleItemCard(
+                            rule = rule,
+                            onToggleActive = { onToggleRule(rule.id) },
+                            onDelete = { onDeleteRule(rule.id) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RuleItemCard(
+    rule: ScheduleRule,
+    onToggleActive: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val themeColor = when (rule.restrictionType) {
+        "Block Schedule" -> Color(0xFFEF4444) // Red
+        "Launch Limit" -> Color(0xFF8B5CF6) // Purple
+        else -> Color(0xFFF59E0B) // Amber
+    }
+
+    val iconType = when (rule.restrictionType) {
+        "Block Schedule" -> Icons.Outlined.Lock
+        "Launch Limit" -> Icons.Outlined.Launch
+        else -> Icons.Outlined.HourglassEmpty
+    }
+
+    val badgeText = when (rule.restrictionType) {
+        "Block Schedule" -> "Full Block"
+        "Launch Limit" -> "Limit: ${rule.limitValue}x opens"
+        else -> "Cheat: ${rule.limitValue}m left"
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(themeColor.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = iconType,
+                        contentDescription = null,
+                        tint = themeColor,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = rule.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = rule.appOrCategory,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                        )
+                        Text(
+                            text = badgeText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = themeColor,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Switch(
+                    checked = rule.isActive,
+                    onCheckedChange = { onToggleActive() },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    val displayPeriods = if (rule.periods.isNotEmpty()) rule.periods else listOf(SchedulePeriod(rule.startTime, rule.endTime, rule.days))
+                    displayPeriods.forEachIndexed { index, period ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.AccessTime,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "${period.startTime} - ${period.endTime}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = period.days.joinToString(" • "),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Medium
+                        )
+                        if (index < displayPeriods.lastIndex) {
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+                    }
+                }
+
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Rule",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
+}

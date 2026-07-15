@@ -20,15 +20,26 @@ import com.alhaq.amnshield.ui.theme.AmnShieldTheme
 import com.alhaq.amnshield.ui.state.AppTheme
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
 
+import androidx.lifecycle.ViewModelProvider
+import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+
 class FocusFragment : BaseFeatureFragment() {
 
     private val premiumManager by lazy { PremiumManager.getInstance(requireContext().applicationContext) }
     private val loader by lazy { SavedPreferencesLoader(requireContext()) }
+    private lateinit var viewModel: AmnShieldViewModel
 
     private val isServiceEnabled = mutableStateOf(false)
     private val isFocusModeActive = mutableStateOf(false)
     private val focusModeEndTime = mutableStateOf(0L)
     private val allowedAppsCount = mutableStateOf(0)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(this)[AmnShieldViewModel::class.java]
+    }
 
     private val selectAppsLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -53,19 +64,8 @@ class FocusFragment : BaseFeatureFragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                val activeTheme = remember {
-                    val prefs = context.getSharedPreferences("theme_prefs", android.content.Context.MODE_PRIVATE)
-                    val themeStyle = prefs.getString("theme_style", "default")
-                    when (themeStyle) {
-                        "gradient" -> AppTheme.SUNSET_GLOW
-                        "purple" -> AppTheme.COSMIC_NIGHT
-                        "emerald" -> AppTheme.EMERALD_CALM
-                        "sunset" -> AppTheme.SUNSET_GLOW
-                        else -> AppTheme.SUNSET_GLOW
-                    }
-                }
-                
-                AmnShieldTheme(appTheme = activeTheme) {
+                val state by viewModel.state.collectAsState()
+                AmnShieldTheme(appTheme = state.currentTheme) {
                     FocusScreen(
                         isServiceEnabled = isServiceEnabled.value,
                         isFocusModeActive = isFocusModeActive.value,

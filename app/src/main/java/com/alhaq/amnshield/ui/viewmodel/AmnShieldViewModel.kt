@@ -114,6 +114,24 @@ class AmnShieldViewModel : ViewModel() {
         _state.update { it.copy(isShowingAddAppModal = show) }
     }
 
+    fun addScheduleRule(rule: com.alhaq.amnshield.ui.state.ScheduleRule) {
+        _state.update { it.copy(scheduleRules = it.scheduleRules + rule) }
+    }
+
+    fun deleteScheduleRule(id: String) {
+        _state.update { it.copy(scheduleRules = it.scheduleRules.filter { rule -> rule.id != id }) }
+    }
+
+    fun toggleScheduleRuleActive(id: String) {
+        _state.update {
+            it.copy(
+                scheduleRules = it.scheduleRules.map { rule ->
+                    if (rule.id == id) rule.copy(isActive = !rule.isActive) else rule
+                }
+            )
+        }
+    }
+
     fun updateProfile(
         name: String,
         email: String,

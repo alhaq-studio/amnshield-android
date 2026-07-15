@@ -1,11 +1,16 @@
 package com.alhaq.amnshield.ui.theme
 
+import android.app.Activity
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import com.alhaq.amnshield.ui.state.AppTheme
 
 // Light dynamic fallback scheme
@@ -63,6 +68,7 @@ private val CosmicColorScheme = darkColorScheme(
     outlineVariant = CosmicOutline
 )
 
+
 @Composable
 fun AmnShieldTheme(
     appTheme: AppTheme = AppTheme.SUNSET_GLOW,
@@ -72,6 +78,24 @@ fun AmnShieldTheme(
         AppTheme.SUNSET_GLOW -> SunsetColorScheme
         AppTheme.EMERALD_CALM -> EmeraldColorScheme
         AppTheme.COSMIC_NIGHT -> CosmicColorScheme
+    }
+
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window
+            if (window != null) {
+                // Set system status and navigation bar colors to match the theme background
+                window.statusBarColor = colorScheme.background.toArgb()
+                window.navigationBarColor = colorScheme.background.toArgb()
+
+                // Set light/dark system bar icons accordingly (Cosmic Night is dark theme, others light)
+                val insetsController = WindowCompat.getInsetsController(window, view)
+                val isDarkTheme = appTheme == AppTheme.COSMIC_NIGHT
+                insetsController.isAppearanceLightStatusBars = !isDarkTheme
+                insetsController.isAppearanceLightNavigationBars = !isDarkTheme
+            }
+        }
     }
 
     MaterialTheme(

@@ -1,6 +1,7 @@
 package com.alhaq.amnshield.ui.fragments
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -13,11 +14,13 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.os.LocaleListCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.materialswitch.MaterialSwitch
 import com.alhaq.amnshield.Constants
 import com.alhaq.amnshield.R
-import com.alhaq.amnshield.databinding.FragmentSettingsBinding
 import com.alhaq.amnshield.ui.activity.MainActivity
 import com.alhaq.amnshield.ui.activity.FragmentActivity
 import com.alhaq.amnshield.ui.activity.RemindersActivity
@@ -25,16 +28,18 @@ import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.premium.PremiumManager
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
 import com.alhaq.amnshield.utils.ZipUtils
+import com.alhaq.amnshield.utils.GoogleSignInHelper
+import com.alhaq.amnshield.ui.screens.SettingsScreen
+import com.alhaq.amnshield.ui.theme.AmnShieldTheme
+import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
 import java.util.Locale
 
 class SettingsFragment : Fragment() {
 
-    private var _binding: FragmentSettingsBinding? = null
-    private val binding get() = _binding!!
+    private lateinit var viewModel: AmnShieldViewModel
     private val premiumManager by lazy { PremiumManager.getInstance(requireContext().applicationContext) }
     private val savedPreferencesLoader by lazy { SavedPreferencesLoader(requireContext().applicationContext) }
-    private var suppressFeatureSwitchChange = false
-
+    private lateinit var googleSignInHelper: GoogleSignInHelper
 
     // Backup launcher
     private val backupDirLauncher = registerForActivityResult(
@@ -84,191 +89,88 @@ class SettingsFragment : Fragment() {
         }
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(requireActivity())[AmnShieldViewModel::class.java]
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentSettingsBinding.inflate(inflater, container, false)
-        return binding.root
+        return ComposeView(requireContext()).apply {
+            setContent {
+                val state by viewModel.state.collectAsState()
+                AmnShieldTheme(appTheme = state.currentTheme) {
+                    SettingsScreen(
+                        state = state,
+                        viewModel = viewModel,
+                        onNavigateToProfile = {
+                            val transaction = parentFragmentManager.beginTransaction()
+                            transaction.replace(R.id.fragment_container, ProfileFragment())
+                            transaction.addToBackStack(null)
+                            transaction.commit()
+                        },
+                        onBackupRestore = { showBackupRestoreDialog() },
+                        onReminders = {
+                            val intent = Intent(requireContext(), RemindersActivity::class.java)
+                            val options = ActivityOptionsCompat.makeCustomAnimation(
+                                requireContext(),
+                                R.anim.fade_in,
+                                R.anim.fade_out
+                            )
+                            startActivity(intent, options.toBundle())
+                        },
+                        onShareCrashLogs = { shareCrashLogs() },
+                        onHelpFAQ = { showFAQDialog() },
+                        onAbout = { showAboutDialog() },
+                        onLanguage = { showLanguageDialog() },
+                        onSignOut = { showSignOutDialog() },
+                        onToggleWebFilter = { enabled ->
+                            savedPreferencesLoader.setSocialMediaBlockerEnabled(enabled)
+                            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+                            viewModel.loadState(viewModel.state.value.copy(isWebFilterEnabled = enabled))
+                        },
+                        onToggleUsageLimit = { enabled ->
+                            savedPreferencesLoader.setUsageTrackerFeatureEnabled(enabled)
+                            viewModel.loadState(viewModel.state.value.copy(isUsageLimitEnabled = enabled))
+                        },
+                        onBack = {
+                            requireActivity().onBackPressedDispatcher.onBackPressed()
+                        }
+                    )
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadPreferences()
-        setupClickListeners()
+        googleSignInHelper = GoogleSignInHelper(requireContext())
+        loadSettingsState()
     }
 
-    private fun loadPreferences() {
-        context?.let { ctx ->
-            val prefs = ctx.getSharedPreferences("theme_prefs", android.content.Context.MODE_PRIVATE)
-            val themeMode = prefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-            val themeStyle = prefs.getString("theme_style", "default")
-
-            binding.txtThemeStatus.text = when {
-                themeStyle == "gradient" -> getString(R.string.modern_gradient)
-                themeStyle == "purple" -> getString(R.string.purple_gradient)
-                themeStyle == "emerald" -> getString(R.string.emerald_theme)
-                themeStyle == "sunset" -> getString(R.string.sunset_glow)
-                themeMode == AppCompatDelegate.MODE_NIGHT_NO -> getString(R.string.light_mode)
-                themeMode == AppCompatDelegate.MODE_NIGHT_YES -> getString(R.string.dark_mode)
-                else -> getString(R.string.system_default)
-            }
-
-            try {
-                val versionName = ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName
-                binding.txtVersion.text = "Version $versionName"
-            } catch (e: Exception) {
-                binding.txtVersion.text = getString(R.string.app_version)
-            }
-
-            suppressFeatureSwitchChange = true
-
-            val viewBlockerPrefs = requireContext().getSharedPreferences("view_blocker", android.content.Context.MODE_PRIVATE)
-            binding.switchReelBlockerQuick.isChecked = savedPreferencesLoader.isReelBlockerEnabled(
-                viewBlockerPrefs.getBoolean("is_enabled", false)
+    private fun loadSettingsState() {
+        val webFilterEnabled = savedPreferencesLoader.isSocialMediaBlockerEnabled()
+        val usageTrackerEnabled = savedPreferencesLoader.isUsageTrackerFeatureEnabled()
+        val account = googleSignInHelper.getLastSignedInAccount()
+        val name = account?.displayName ?: "Alhaq DST"
+        val email = account?.email ?: "alhaq.dst@gmail.com"
+        
+        viewModel.loadState(
+            viewModel.state.value.copy(
+                isWebFilterEnabled = webFilterEnabled,
+                isUsageLimitEnabled = usageTrackerEnabled,
+                userName = name,
+                userEmail = email
             )
-            binding.switchKeywordBlockerQuick.isChecked = savedPreferencesLoader.isKeywordBlockerFeatureEnabled()
-            binding.switchUsageTrackerQuick.isChecked = savedPreferencesLoader.isUsageTrackerFeatureEnabled()
-
-            suppressFeatureSwitchChange = false
-
-            updateFeatureStatuses()
-
-            // Load language preference
-            updateLanguageStatus()
-        }
-    }
-
-    private fun setupClickListeners() {
-        // Theme selection
-        binding.themeOption.setOnClickListener { showThemeSelectionDialog() }
-
-        // Low-risk quick toggles
-        binding.switchReelBlockerQuick.setOnCheckedChangeListener { _, isChecked ->
-            if (suppressFeatureSwitchChange) return@setOnCheckedChangeListener
-            if (!premiumManager.isPremium()) {
-                revertSwitch(binding.switchReelBlockerQuick, false)
-                showPremiumUpsell()
-                return@setOnCheckedChangeListener
-            }
-            handleReelBlockerToggle(isChecked)
-        }
-
-        binding.switchKeywordBlockerQuick.setOnCheckedChangeListener { _, isChecked ->
-            if (suppressFeatureSwitchChange) return@setOnCheckedChangeListener
-            savedPreferencesLoader.setKeywordBlockerFeatureEnabled(isChecked)
-            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST)
-            updateFeatureStatuses()
-        }
-
-        binding.switchUsageTrackerQuick.setOnCheckedChangeListener { _, isChecked ->
-            if (suppressFeatureSwitchChange) return@setOnCheckedChangeListener
-            savedPreferencesLoader.setUsageTrackerFeatureEnabled(isChecked)
-            updateFeatureStatuses()
-        }
-
-        // High-risk status rows open full config screens
-        binding.appBlockerOption.setOnClickListener {
-            openFeatureConfig("app_blocker", requiresPremium = true)
-        }
-
-        binding.focusModeOption.setOnClickListener {
-            openFeatureConfig("focus_mode", requiresPremium = true)
-        }
-
-        binding.antiUninstallOption.setOnClickListener {
-            openFeatureConfig("anti_uninstall", requiresPremium = true)
-        }
-
-        binding.backupOption.setOnClickListener {
-            showBackupRestoreDialog()
-        }
-
-        binding.remindersOption.setOnClickListener {
-            val intent = Intent(requireContext(), RemindersActivity::class.java)
-            val options = ActivityOptionsCompat.makeCustomAnimation(
-                requireContext(),
-                R.anim.fade_in,
-                R.anim.fade_out
-            )
-            startActivity(intent, options.toBundle())
-        }
-
-        binding.shareErrorsOption.setOnClickListener {
-            shareCrashLogs()
-        }
-
-        binding.helpFaqOption.setOnClickListener {
-            showFAQDialog()
-        }
-
-        binding.aboutOption.setOnClickListener {
-            showAboutDialog()
-        }
-
-        binding.languageOption.setOnClickListener {
-            showLanguageDialog()
-        }
-    }
-
-    private fun handleReelBlockerToggle(enabled: Boolean) {
-        if (!premiumManager.isPremium()) {
-            revertSwitch(binding.switchReelBlockerQuick, false)
-            showPremiumUpsell()
-            return
-        }
-        savedPreferencesLoader.setReelBlockerEnabled(enabled)
-        sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_REEL_BLOCKER)
-        updateFeatureStatuses()
-    }
-
-    private fun updateFeatureStatuses() {
-        val appEnabled = premiumManager.isPremium() &&
-            savedPreferencesLoader.isAppBlockerFeatureEnabled() &&
-            savedPreferencesLoader.loadBlockedApps().isNotEmpty()
-        val focusEnabled = premiumManager.isPremium() && savedPreferencesLoader.getFocusModeData().isTurnedOn
-        val antiEnabled = premiumManager.isPremium() &&
-            requireContext().getSharedPreferences("anti_uninstall", android.content.Context.MODE_PRIVATE)
-                .getBoolean("is_anti_uninstall_on", false)
-
-        binding.txtAppBlockerStatus.text = if (appEnabled) getString(R.string.on) else getString(R.string.off)
-        binding.txtFocusModeStatus.text = if (focusEnabled) getString(R.string.on) else getString(R.string.off)
-        binding.txtAntiUninstallStatus.text = if (antiEnabled) getString(R.string.on) else getString(R.string.off)
-    }
-
-    private fun openFeatureConfig(featureType: String, requiresPremium: Boolean) {
-        if (requiresPremium && !premiumManager.isPremium()) {
-            showPremiumUpsell()
-            return
-        }
-
-        val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-            putExtra("feature_type", featureType)
-        }
-        startActivity(intent)
+        )
     }
 
     private fun sendRefreshRequest(action: String) {
         val ctx = requireContext()
         ctx.sendBroadcast(Intent(action).setPackage(ctx.packageName))
-    }
-
-    private fun handleDarkModeToggle(enabled: Boolean) {
-        context?.let { ctx ->
-            val prefs = ctx.getSharedPreferences("theme_prefs", android.content.Context.MODE_PRIVATE)
-            val newTheme = if (enabled) {
-                AppCompatDelegate.MODE_NIGHT_YES
-            } else {
-                AppCompatDelegate.MODE_NIGHT_NO
-            }
-            
-            prefs.edit().putInt("theme_mode", newTheme).commit()
-            AppCompatDelegate.setDefaultNightMode(newTheme)
-            
-            // Update status text
-            binding.txtThemeStatus.text = if (enabled) getString(R.string.dark) else getString(R.string.light)
-        }
     }
 
     private fun showBackupRestoreDialog() {
@@ -506,11 +408,6 @@ class SettingsFragment : Fragment() {
                 .show()
         }
     }
-    private fun revertSwitch(target: MaterialSwitch, checked: Boolean) {
-        suppressFeatureSwitchChange = true
-        target.isChecked = checked
-        suppressFeatureSwitchChange = false
-    }
 
     private fun showPremiumUpsell() {
         MaterialAlertDialogBuilder(requireContext())
@@ -530,7 +427,6 @@ class SettingsFragment : Fragment() {
         startActivity(intent)
     }
 
-
     private fun openUrl(url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         try {
@@ -545,78 +441,17 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private fun showThemeSelectionDialog() {
-        val themes = arrayOf(
-            getString(R.string.light_mode),
-            getString(R.string.dark_mode),
-            getString(R.string.system_default),
-            getString(R.string.modern_gradient),
-            getString(R.string.purple_gradient),
-            getString(R.string.emerald_theme),
-            getString(R.string.sunset_glow)
-        )
-
-        val prefs = requireContext().getSharedPreferences("theme_prefs", android.content.Context.MODE_PRIVATE)
-        val currentMode = prefs.getInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-        val currentStyle = prefs.getString("theme_style", "default")
-
-        var checkedItem = when {
-            currentStyle == "gradient" -> 3
-            currentStyle == "purple" -> 4
-            currentStyle == "emerald" -> 5
-            currentStyle == "sunset" -> 6
-            currentMode == AppCompatDelegate.MODE_NIGHT_NO -> 0
-            currentMode == AppCompatDelegate.MODE_NIGHT_YES -> 1
-            else -> 2
-        }
-
+    private fun showSignOutDialog() {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(getString(R.string.select_theme))
-            .setSingleChoiceItems(themes, checkedItem) { dialog, which ->
-                val editor = prefs.edit()
-                when (which) {
-                    0 -> { // Light
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO)
-                        editor.putString("theme_style", "default")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    }
-                    1 -> { // Dark
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_YES)
-                        editor.putString("theme_style", "default")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                    }
-                    2 -> { // System
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                        editor.putString("theme_style", "default")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                    }
-                    3 -> { // Gradient
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_YES) // Force dark for gradient
-                        editor.putString("theme_style", "gradient")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                    }
-                    4 -> { // Purple Gradient
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_YES)
-                        editor.putString("theme_style", "purple")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                    }
-                    5 -> { // Emerald
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO)
-                        editor.putString("theme_style", "emerald")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    }
-                    6 -> { // Sunset Glow (flat warm, slightly dark-ish)
-                        editor.putInt("theme_mode", AppCompatDelegate.MODE_NIGHT_NO)
-                        editor.putString("theme_style", "sunset")
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    }
+            .setTitle(getString(R.string.sign_out))
+            .setMessage(getString(R.string.sign_out_confirmation))
+            .setPositiveButton(getString(R.string.sign_out)) { _, _ ->
+                googleSignInHelper.signOut {
+                    Toast.makeText(requireContext(), getString(R.string.signed_out_successfully), Toast.LENGTH_SHORT).show()
+                    loadSettingsState()
                 }
-                editor.apply()
-                dialog.dismiss()
-                
-                // Restart activity to apply theme changes
-                requireActivity().recreate()
             }
+            .setNegativeButton(getString(R.string.cancel), null)
             .show()
     }
 
@@ -656,36 +491,13 @@ class SettingsFragment : Fragment() {
         }
         
         AppCompatDelegate.setApplicationLocales(localeList)
-        updateLanguageStatus()
+        loadSettingsState()
         
         Toast.makeText(requireContext(), R.string.restart_required, Toast.LENGTH_LONG).show()
     }
 
-    private fun updateLanguageStatus() {
-        val currentLocale = AppCompatDelegate.getApplicationLocales()[0]
-        binding.txtLanguageStatus.text = when (currentLocale?.language) {
-            "en" -> getString(R.string.language_english)
-            "de" -> getString(R.string.language_german)
-            "fa" -> getString(R.string.language_persian)
-            "fr" -> getString(R.string.language_french)
-            "hi" -> getString(R.string.language_hindi)
-            "pt" -> getString(R.string.language_portuguese)
-            "tr" -> getString(R.string.language_turkish)
-            "zh" -> getString(R.string.language_chinese)
-            else -> getString(R.string.language_system)
-        }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
     override fun onResume() {
         super.onResume()
-        if (_binding != null) {
-            loadPreferences()
-        }
+        loadSettingsState()
     }
 }
-

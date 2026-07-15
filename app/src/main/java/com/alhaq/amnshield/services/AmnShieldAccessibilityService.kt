@@ -84,6 +84,28 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
     private var lastUnifiedScheduleEvalTime = 0L
     private var cachedDefaultLauncher: String? = null
 
+    private var lastReelScrollTime = 0L
+    private val reelsTrackingHandler = Handler(Looper.getMainLooper())
+    private val reelsTrackingRunnable = object : Runnable {
+        override fun run() {
+            try {
+                val root = rootInActiveWindow
+                if (root != null) {
+                    val pkg = root.packageName?.toString().orEmpty()
+                    val surfaceId = reelBlocker.detectReelSurfaceId(root, pkg)
+                    if (surfaceId != null) {
+                        savedPreferencesLoader.addReelsWatchTime(1L)
+                        reelBlocker.reelsScrolledToday = savedPreferencesLoader.getReelsScrolledToday()
+                    }
+                    root.recycle()
+                }
+            } catch (e: Exception) {
+                // Ignore
+            }
+            reelsTrackingHandler.postDelayed(this, 1000L)
+        }
+    }
+
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val eventChannel = Channel<AccessibilityEvent>(Channel.CONFLATED) { droppedEvent ->
         droppedEvent.recycle()
@@ -92,6 +114,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun onServiceConnected() {
         super.onServiceConnected()
+        reelsTrackingHandler.post(reelsTrackingRunnable)
 
         appBlocker = AppBlocker()
         focusModeBlocker = FocusModeBlocker()
@@ -172,6 +195,23 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                 trackAppLaunch(packageName)
                 cachedDefaultLauncher = getDefaultLauncherPackage()
+            }
+
+            if (event.eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+                val now = System.currentTimeMillis()
+                if (now - lastReelScrollTime > 1500L) {
+                    val root = rootInActiveWindow
+                    if (root != null) {
+                        val activePackage = event.packageName?.toString().orEmpty()
+                        val surfaceId = reelBlocker.detectReelSurfaceId(root, activePackage)
+                        if (surfaceId != null) {
+                            lastReelScrollTime = now
+                            savedPreferencesLoader.incrementReelsScrolled()
+                            reelBlocker.reelsScrolledToday = savedPreferencesLoader.getReelsScrolledToday()
+                        }
+                        root.recycle()
+                    }
+                }
             }
 
             rootNode = rootInActiveWindow
@@ -1094,6 +1134,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        reelsTrackingHandler.removeCallbacks(reelsTrackingRunnable)
         try {
             unregisterReceiver(refreshReceiver)
         } catch (_: Exception) {

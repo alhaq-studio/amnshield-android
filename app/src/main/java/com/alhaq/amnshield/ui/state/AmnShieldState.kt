@@ -8,6 +8,30 @@ enum class AppTheme {
     COSMIC_NIGHT
 }
 
+data class SchedulePeriod(
+    val startTime: String, // "HH:MM" format
+    val endTime: String,   // "HH:MM" format
+    val days: List<String> // listOf("Mon", "Tue", etc.)
+)
+
+data class ScheduleRule(
+    val id: String,
+    val name: String,
+    val appOrCategory: String,
+    val restrictionType: String, // "Block Schedule", "Launch Limit", "Cheat Window"
+    val startTime: String, // "HH:MM" format
+    val endTime: String, // "HH:MM" format
+    val days: List<String>, // listOf("Mon", "Tue", etc.)
+    val limitValue: Int = 0, // e.g. limit opens or duration
+    val isActive: Boolean = true,
+    val periods: List<SchedulePeriod> = emptyList(),
+    val targetBlockerType: String = "App Blocker", // "App Blocker", "Keyword Blocker", "Website Blocker", "Reels Blocker", "Notification Shielder"
+    val selectedApps: List<String> = emptyList(),
+    val selectedKeywords: List<String> = emptyList(),
+    val selectedWebsites: List<String> = emptyList(),
+    val selectedPlatforms: List<String> = emptyList()
+)
+
 data class BlockedApp(
     val packageName: String,
     val name: String,
@@ -119,6 +143,7 @@ data class AmnShieldState(
     val isShowingAddAppModal: Boolean = false,
 
     // Profile settings
+    val scheduleRules: List<ScheduleRule> = emptyList(),
     val userName: String = "Alhaq DST",
     val userEmail: String = "alhaq.dst@gmail.com",
     val userBio: String = "Digital Wellbeing Guardian • Staying mindful & focused.",

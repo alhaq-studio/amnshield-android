@@ -29,16 +29,29 @@ import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.Locale
 
+import androidx.lifecycle.ViewModelProvider
+import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+
 class StatsFragment : Fragment() {
 
     private val premiumManager by lazy { PremiumManager.getInstance(requireContext()) }
     private val savedPreferencesLoader by lazy { SavedPreferencesLoader(requireContext()) }
+    private lateinit var viewModel: AmnShieldViewModel
 
     // Compose States
     private val totalScreenTimeState = mutableStateOf("0h 0m")
     private val distractionsBlockedState = mutableStateOf(0)
     private val focusTimeState = mutableStateOf("0m")
+    private val totalReelsWatchedState = mutableStateOf(0)
+    private val averageWatchSecondsState = mutableStateOf(0)
     private val topAppsState = mutableStateListOf<AppUsageItem>()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(this)[AmnShieldViewModel::class.java]
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,11 +60,14 @@ class StatsFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                AmnShieldTheme {
+                val state by viewModel.state.collectAsState()
+                AmnShieldTheme(appTheme = state.currentTheme) {
                     StatsScreen(
                         totalScreenTime = totalScreenTimeState.value,
                         distractionsBlocked = distractionsBlockedState.value,
                         focusTime = focusTimeState.value,
+                        totalReelsWatched = totalReelsWatchedState.value,
+                        averageWatchSeconds = averageWatchSecondsState.value,
                         topApps = topAppsState,
                         onRefresh = { loadStats() },
                         onViewDetailedUsage = {
@@ -169,6 +185,14 @@ class StatsFragment : Fragment() {
                             val totalBlocks = blockStats.appBlocksCount + blockStats.keywordBlocksCount + blockStats.viewBlocksCount
                             distractionsBlockedState.value = totalBlocks
                             focusTimeState.value = formatMinutes(blockStats.totalFocusMinutes)
+
+                            // Update reels stats
+                            val reelsScrolled = savedPreferencesLoader.getReelsScrolledToday()
+                            val reelsWatchTime = savedPreferencesLoader.getReelsWatchTimeSeconds()
+                            val avgWatch = if (reelsScrolled > 0) (reelsWatchTime / reelsScrolled).toInt() else 0
+
+                            totalReelsWatchedState.value = reelsScrolled
+                            averageWatchSecondsState.value = avgWatch
 
                             // Update top apps list
                             topAppsState.clear()

@@ -1,6 +1,7 @@
 package com.alhaq.amnshield.utils
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.alhaq.amnshield.blockers.ReelBlocker
 import com.google.gson.Gson
@@ -977,4 +978,42 @@ class SavedPreferencesLoader(private val context: Context) {
         val period: String // "HOURLY", "DAILY", "WEEKLY"
     )
 
+    private fun checkAndResetReelsStatsDaily(sharedPreferences: SharedPreferences) {
+        val today = com.alhaq.amnshield.utils.TimeTools.getCurrentDate()
+        val savedDate = sharedPreferences.getString("reels_stats_date", "")
+        if (savedDate != today) {
+            val editor = sharedPreferences.edit()
+            editor.putString("reels_stats_date", today)
+            editor.putInt("reels_scrolled_today", 0)
+            editor.putLong("reels_watch_time_seconds_today", 0L)
+            editor.apply()
+        }
+    }
+
+    fun getReelsScrolledToday(): Int {
+        val sharedPreferences = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
+        checkAndResetReelsStatsDaily(sharedPreferences)
+        return sharedPreferences.getInt("reels_scrolled_today", 0)
+    }
+
+    fun incrementReelsScrolled() {
+        val sharedPreferences = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
+        checkAndResetReelsStatsDaily(sharedPreferences)
+        val current = sharedPreferences.getInt("reels_scrolled_today", 0)
+        sharedPreferences.edit().putInt("reels_scrolled_today", current + 1).apply()
+    }
+
+    fun getReelsWatchTimeSeconds(): Long {
+        val sharedPreferences = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
+        checkAndResetReelsStatsDaily(sharedPreferences)
+        return sharedPreferences.getLong("reels_watch_time_seconds_today", 0L)
+    }
+
+    fun addReelsWatchTime(seconds: Long) {
+        if (seconds <= 0) return
+        val sharedPreferences = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
+        checkAndResetReelsStatsDaily(sharedPreferences)
+        val current = sharedPreferences.getLong("reels_watch_time_seconds_today", 0L)
+        sharedPreferences.edit().putLong("reels_watch_time_seconds_today", current + seconds).apply()
+    }
 }
