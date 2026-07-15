@@ -10,7 +10,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.alhaq.amnshield.R
 import com.alhaq.amnshield.ui.activity.MainActivity
-import com.alhaq.amnshield.ui.activity.ReportsActivity
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -106,7 +105,8 @@ class NotificationHelper(private val context: Context) {
         val summaryText = reportGenerator.generateDailySummaryText(date)
         val shortDate = date.format(DateTimeFormatter.ofPattern("MMM d"))
         
-        val intent = Intent(context, ReportsActivity::class.java).apply {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            putExtra("start_tab", R.id.navigation_reports)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         
@@ -195,7 +195,8 @@ class NotificationHelper(private val context: Context) {
         val notificationKey = "${achievement.lowercase()}_$todayKey"
         if (achievementPrefs.getBoolean(notificationKey, false)) return
 
-        val intent = Intent(context, ReportsActivity::class.java).apply {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            putExtra("start_tab", R.id.navigation_reports)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         

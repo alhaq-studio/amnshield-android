@@ -56,6 +56,7 @@ import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.ui.fragments.BlocksFragment
 import com.alhaq.amnshield.ui.fragments.StatsFragment
 import com.alhaq.amnshield.ui.fragments.SettingsFragment
+import com.alhaq.amnshield.ui.fragments.ReportsFragment
 import com.alhaq.amnshield.ui.activity.FragmentActivity
 import com.alhaq.amnshield.ui.fragments.installation.AccessibilityGuide
 import com.alhaq.amnshield.ui.fragments.installation.WelcomeFragment
@@ -204,12 +205,18 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun setupFragmentNavigation(savedInstanceState: Bundle?) {
-        // Load StatsFragment by default
+        // Load StatsFragment or deep-linked tab by default
         if (savedInstanceState == null) {
+            val startTab = intent.getIntExtra("start_tab", R.id.navigation_stats)
+            val initialFragment = when (startTab) {
+                R.id.navigation_reports -> ReportsFragment()
+                R.id.navigation_blocks -> BlocksFragment()
+                else -> StatsFragment()
+            }
             supportFragmentManager.beginTransaction()
-                .replace(R.id.nav_host_fragment, StatsFragment())
+                .replace(R.id.nav_host_fragment, initialFragment)
                 .commit()
-            binding.bottomNavigation.selectedItemId = R.id.navigation_stats
+            binding.bottomNavigation.selectedItemId = startTab
         }
         
         binding.bottomNavigation.setOnItemSelectedListener { item ->
@@ -221,8 +228,9 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.navigation_reports -> {
-                    val intent = Intent(this, ReportsActivity::class.java)
-                    startActivity(intent)
+                    supportFragmentManager.beginTransaction()
+                        .replace(R.id.nav_host_fragment, ReportsFragment())
+                        .commit()
                     true
                 }
                 R.id.navigation_blocks -> {
@@ -233,6 +241,19 @@ class MainActivity : AppCompatActivity() {
                 }
                 else -> false
             }
+        }
+    }
+
+    fun selectTab(tabId: Int) {
+        binding.bottomNavigation.selectedItemId = tabId
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val startTab = intent.getIntExtra("start_tab", -1)
+        if (startTab != -1) {
+            selectTab(startTab)
         }
     }
 
@@ -1146,8 +1167,7 @@ class MainActivity : AppCompatActivity() {
                     showSupportOptionsDialog()
                 }
                 R.id.nav_reports -> {
-                    val intent = Intent(this, ReportsActivity::class.java)
-                    startActivity(intent)
+                    selectTab(R.id.navigation_reports)
                 }
                 R.id.nav_settings -> {
                     openSettingsScreen()

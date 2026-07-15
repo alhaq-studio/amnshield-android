@@ -1,14 +1,20 @@
-package com.alhaq.amnshield.ui.activity
+package com.alhaq.amnshield.ui.fragments
 
 import android.app.AppOpsManager
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.content.FileProvider
+import androidx.fragment.app.Fragment
+import com.alhaq.amnshield.R
 import com.alhaq.amnshield.ui.dto.Report
 import com.alhaq.amnshield.ui.screens.ReportsScreen
 import com.alhaq.amnshield.ui.theme.AmnShieldTheme
@@ -21,7 +27,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-class ReportsActivity : AppCompatActivity() {
+class ReportsFragment : Fragment() {
 
     private lateinit var reportGenerator: ReportGenerator
     private var currentDate: LocalDate = LocalDate.now()
@@ -36,13 +42,14 @@ class ReportsActivity : AppCompatActivity() {
     private val reportsState = mutableStateListOf<Report>()
     private val canGoNextState = mutableStateOf(false)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        com.alhaq.amnshield.utils.ThemeUtils.applyTheme(this)
-        super.onCreate(savedInstanceState)
-        
-        try {
-            reportGenerator = ReportGenerator(this)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        reportGenerator = ReportGenerator(requireContext())
 
+        return ComposeView(requireContext()).apply {
             setContent {
                 AmnShieldTheme {
                     ReportsScreen(
@@ -69,25 +76,21 @@ class ReportsActivity : AppCompatActivity() {
                     )
                 }
             }
-            refreshReports()
-        } catch (t: Throwable) {
-            android.util.Log.e("ReportsActivity", "onCreate init failed", t)
-            android.widget.Toast.makeText(
-                this,
-                "Reports could not be opened. Please try again.",
-                android.widget.Toast.LENGTH_LONG
-            ).show()
-            finish()
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        refreshReports()
     }
 
     override fun onResume() {
         super.onResume()
-        if (isFinishing || !::reportGenerator.isInitialized) return
         refreshReports()
     }
 
     private fun refreshReports() {
+        val context = context ?: return
         try {
             currentDateLabelState.value = if (currentDate == LocalDate.now()) "Today" else currentDate.format(dateFormatter)
             canGoNextState.value = currentDate.isBefore(LocalDate.now())
@@ -96,7 +99,7 @@ class ReportsActivity : AppCompatActivity() {
             reportsState.clear()
             reportsState.addAll(newReports)
 
-            val statsManager = BlockingStatsManager.getInstance(this)
+            val statsManager = BlockingStatsManager.getInstance(context)
             val summary = statsManager.getStatsSummaryForDate(currentDate)
             val totalBlocks = summary.appBlocksCount + summary.keywordBlocksCount + summary.viewBlocksCount
             totalBlocksState.value = totalBlocks
@@ -104,31 +107,32 @@ class ReportsActivity : AppCompatActivity() {
             val focusMin = summary.totalFocusMinutes
             focusTimeLabelState.value = if (focusMin >= 60) "${focusMin / 60}h ${focusMin % 60}m" else "${focusMin}m"
 
-            val prefs = SavedPreferencesLoader(this)
+            val prefs = SavedPreferencesLoader(context)
             isAppBlockerEnabledState.value = prefs.isAppBlockerFeatureEnabled()
 
             refreshUsageRecommendation()
         } catch (t: Throwable) {
-            android.util.Log.e("ReportsActivity", "refreshReports failed", t)
+            android.util.Log.e("ReportsFragment", "refreshReports failed", t)
             reportsState.clear()
             totalBlocksState.value = 0
             focusTimeLabelState.value = "0m"
             usageRecommendationState.value = "Could not calculate app usage recommendation for this day."
-            android.widget.Toast.makeText(
-                this,
+            Toast.makeText(
+                context,
                 "Could not load report for this day",
-                android.widget.Toast.LENGTH_SHORT
+                Toast.LENGTH_SHORT
             ).show()
         }
     }
 
     private fun refreshUsageRecommendation() {
+        val context = context ?: return
         if (!hasUsageStatsPermission()) {
             usageRecommendationState.value = "Grant usage access to enable app-level recommendations."
             return
         }
 
-        val stats = UsageStatsHelper(this).getForegroundStatsByDay(currentDate)
+        val stats = UsageStatsHelper(context).getForegroundStatsByDay(currentDate)
             .filter {
                 it.totalTime >= 180_000L &&
                     !it.packageName.equals("com.alhaq.amnshield", ignoreCase = true) &&
@@ -156,41 +160,44 @@ class ReportsActivity : AppCompatActivity() {
     }
 
     private fun getAppLabel(packageName: String): String {
+        val context = context ?: return packageName
         return try {
-            val info = packageManager.getApplicationInfo(packageName, 0)
-            packageManager.getApplicationLabel(info).toString()
+            val info = context.packageManager.getApplicationInfo(packageName, 0)
+            context.packageManager.getApplicationLabel(info).toString()
         } catch (_: Exception) {
             packageName
         }
     }
 
     private fun hasUsageStatsPermission(): Boolean {
-        val appOpsManager = getSystemService(AppOpsManager::class.java)
+        val context = context ?: return false
+        val appOpsManager = context.getSystemService(AppOpsManager::class.java) ?: return false
         val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             appOpsManager.unsafeCheckOpNoThrow(
                 AppOpsManager.OPSTR_GET_USAGE_STATS,
                 android.os.Process.myUid(),
-                packageName
+                context.packageName
             )
         } else {
             @Suppress("DEPRECATION")
             appOpsManager.checkOpNoThrow(
                 AppOpsManager.OPSTR_GET_USAGE_STATS,
                 android.os.Process.myUid(),
-                packageName
+                context.packageName
             )
         }
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
     private fun exportReport(reports: List<Report>) {
+        val context = context ?: return
         try {
             val reportBuilder = StringBuilder()
             reportBuilder.append("AmnShield Stats & Report\n")
             reportBuilder.append("=========================\n")
             reportBuilder.append("Date: ${currentDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))}\n")
 
-            val summary = BlockingStatsManager.getInstance(this).getStatsSummaryForDate(currentDate)
+            val summary = BlockingStatsManager.getInstance(context).getStatsSummaryForDate(currentDate)
             val totalBlocks = summary.appBlocksCount + summary.keywordBlocksCount + summary.viewBlocksCount
             reportBuilder.append("Total Blocks: $totalBlocks\n")
             reportBuilder.append("Focus Time: ${summary.totalFocusMinutes} minutes\n")
@@ -219,10 +226,10 @@ class ReportsActivity : AppCompatActivity() {
                 reportBuilder.append("\n")
             }
 
-            val file = File(cacheDir, "amnshield_report.txt")
+            val file = File(context.cacheDir, "amnshield_report.txt")
             file.writeText(reportBuilder.toString())
 
-            val uri = FileProvider.getUriForFile(this, "${packageName}.provider", file)
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
 
             val shareIntent = Intent().apply {
                 action = Intent.ACTION_SEND
@@ -232,11 +239,11 @@ class ReportsActivity : AppCompatActivity() {
             }
             startActivity(Intent.createChooser(shareIntent, "Export Report"))
         } catch (t: Throwable) {
-            android.util.Log.e("ReportsActivity", "exportReport failed", t)
-            android.widget.Toast.makeText(
-                this,
+            android.util.Log.e("ReportsFragment", "exportReport failed", t)
+            Toast.makeText(
+                context,
                 "Could not export report",
-                android.widget.Toast.LENGTH_SHORT
+                Toast.LENGTH_SHORT
             ).show()
         }
     }

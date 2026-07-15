@@ -14,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import com.alhaq.amnshield.R
 import com.alhaq.amnshield.premium.PremiumManager
 import com.alhaq.amnshield.ui.activity.FragmentActivity
-import com.alhaq.amnshield.ui.activity.ReportsActivity
+import com.alhaq.amnshield.ui.activity.MainActivity
 import com.alhaq.amnshield.ui.fragments.usage.AllAppsUsageFragment
 import com.alhaq.amnshield.ui.screens.AppUsageItem
 import com.alhaq.amnshield.ui.screens.StatsScreen
@@ -65,13 +65,7 @@ class StatsFragment : Fragment() {
                             startActivity(intent, options.toBundle())
                         },
                         onViewReelsMetrics = {
-                            val intent = Intent(requireContext(), ReportsActivity::class.java)
-                            val options = ActivityOptionsCompat.makeCustomAnimation(
-                                requireContext(),
-                                R.anim.fade_in,
-                                R.anim.fade_out
-                            )
-                            startActivity(intent, options.toBundle())
+                            (activity as? MainActivity)?.selectTab(R.id.navigation_reports)
                         }
                     )
                 }
