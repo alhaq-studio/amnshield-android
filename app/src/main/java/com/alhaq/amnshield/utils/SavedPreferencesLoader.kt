@@ -1037,9 +1037,7 @@ class SavedPreferencesLoader(val context: Context) {
         val activePrefs = if (sharedPreferences.contains("blocked_websites")) sharedPreferences else legacyPreferences
         val hasKey = activePrefs.contains("blocked_websites")
         if (!hasKey) {
-            val defaults = setOf("facebook.com", "fb.com", "fb.watch")
-            sharedPreferences.edit().putStringSet("blocked_websites", defaults).apply()
-            return defaults
+            return emptySet()
         }
         return activePrefs.getStringSet("blocked_websites", emptySet()) ?: emptySet()
     }

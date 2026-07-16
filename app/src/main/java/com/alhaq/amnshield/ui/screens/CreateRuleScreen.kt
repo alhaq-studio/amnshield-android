@@ -27,6 +27,11 @@ import com.alhaq.amnshield.ui.state.SchedulePeriod
 import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
 import com.alhaq.amnshield.utils.ScheduleUtils
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.app.Activity
+import android.content.Intent
+import com.alhaq.amnshield.ui.activity.SelectAppsActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,14 +94,43 @@ fun CreateRuleScreen(
     
     // Feature configurations
     val prefilledApps = remember(prefillTarget) {
-        if (prefillTarget == "APP_BLOCKER" || prefillTarget == "FOCUS_MODE") {
-            val loader = SavedPreferencesLoader(context)
-            val apps = if (prefillTarget == "APP_BLOCKER") loader.loadBlockedApps() else loader.getFocusModeSelectedApps()
-            if (apps.isNotEmpty()) apps.toList() else listOf("com.instagram.android", "com.google.android.youtube")
+        val loader = SavedPreferencesLoader(context)
+        val apps = if (prefillTarget == "APP_BLOCKER") {
+            loader.loadBlockedApps()
+        } else if (prefillTarget == "FOCUS_MODE") {
+            loader.getFocusModeSelectedApps()
         } else {
-            listOf("com.instagram.android", "com.google.android.youtube")
+            emptySet()
+        }
+        apps.toList()
+    }
+    val prefilledKeywords = remember(prefillTarget) {
+        if (prefillTarget == "KEYWORD_BLOCKER") {
+            SavedPreferencesLoader(context).loadBlockedKeywords().toList()
+        } else {
+            emptyList()
         }
     }
+    val prefilledWebsites = remember(prefillTarget) {
+        if (prefillTarget == "WEBSITE_BLOCKER") {
+            SavedPreferencesLoader(context).loadBlockedWebsites().toList()
+        } else {
+            emptyList()
+        }
+    }
+    val prefilledPlatforms = remember(prefillTarget) {
+        if (prefillTarget == "REEL_BLOCKER") {
+            val loader = SavedPreferencesLoader(context)
+            val list = mutableListOf<String>()
+            if (loader.isReelBlockerInstagramEnabled()) list.add("Instagram")
+            if (loader.isReelBlockerTiktokEnabled()) list.add("TikTok")
+            if (loader.isReelBlockerYoutubeEnabled()) list.add("YouTube")
+            list
+        } else {
+            listOf("Instagram", "TikTok")
+        }
+    }
+
     val selectedApps = remember(editingRule) {
         mutableStateListOf<String>().apply {
             if (editingRule != null) {
@@ -110,6 +144,8 @@ fun CreateRuleScreen(
         mutableStateListOf<String>().apply {
             if (editingRule != null) {
                 addAll(editingRule.selectedKeywords)
+            } else {
+                addAll(prefilledKeywords)
             }
         }
     }
@@ -117,6 +153,8 @@ fun CreateRuleScreen(
         mutableStateListOf<String>().apply {
             if (editingRule != null) {
                 addAll(editingRule.selectedWebsites)
+            } else {
+                addAll(prefilledWebsites)
             }
         }
     }
@@ -125,7 +163,7 @@ fun CreateRuleScreen(
             if (editingRule != null) {
                 addAll(editingRule.selectedPlatforms)
             } else {
-                addAll(listOf("Instagram", "TikTok"))
+                addAll(prefilledPlatforms)
             }
         }
     }
@@ -153,15 +191,23 @@ fun CreateRuleScreen(
     var limitValueStr by remember(editingRule) {
         mutableStateOf(editingRule?.limitValue?.toString() ?: "5")
     }
-    
-    // On initial launch, pre-populate one default period
-    LaunchedEffect(editingRule) {
-        if (periodsList.isEmpty()) {
-            if (editingRule != null) {
-                periodsList.add(SchedulePeriod(editingRule.startTime, editingRule.endTime, editingRule.days))
-            } else {
-                periodsList.add(SchedulePeriod("09:00", "17:00", listOf("Mon", "Tue", "Wed", "Thu", "Fri")))
+
+    val selectAppsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val selected = result.data?.getStringArrayListExtra("SELECTED_APPS")
+            if (selected != null) {
+                selectedApps.clear()
+                selectedApps.addAll(selected)
             }
+        }
+    }
+    
+    // On initial launch, pre-populate period only if editing an existing rule
+    LaunchedEffect(editingRule) {
+        if (periodsList.isEmpty() && editingRule != null) {
+            periodsList.add(SchedulePeriod(editingRule.startTime, editingRule.endTime, editingRule.days))
         }
         // Initialize from global state lists if empty and not editing
         if (editingRule == null) {
@@ -171,6 +217,13 @@ fun CreateRuleScreen(
             if (selectedWebsites.isEmpty() && state.customBlockedWebsites.isNotEmpty()) {
                 selectedWebsites.addAll(state.customBlockedWebsites.take(2))
             }
+        }
+    }
+
+    val isAppBlockerSelected = selectedBlockerTypes.contains("App Blocker")
+    LaunchedEffect(isAppBlockerSelected) {
+        if (!isAppBlockerSelected && (targetType == "Launch Limit" || targetType == "Usage Limit")) {
+            targetType = "Block Schedule"
         }
     }
 
@@ -382,73 +435,69 @@ fun CreateRuleScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             
-                            val defaultAppsList = listOf(
-                                "Instagram" to "com.instagram.android",
-                                "YouTube" to "com.google.android.youtube",
-                                "X (Twitter)" to "com.twitter.android",
-                                "TikTok" to "com.zhiliaoapp.musically",
-                                "Snapchat" to "com.snapchat.android",
-                                "Facebook" to "com.facebook.katana",
-                                "Call of Duty" to "com.activision.callofduty"
-                            )
-                            
-                            // Show checkable app list
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                defaultAppsList.forEach { (appName, pkg) ->
-                                    val isChecked = selectedApps.contains(pkg)
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .clickable {
-                                                if (isChecked) selectedApps.remove(pkg) else selectedApps.add(pkg)
-                                            }
-                                            .padding(vertical = 6.dp, horizontal = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Checkbox(
-                                            checked = isChecked,
-                                            onCheckedChange = { checked ->
-                                                if (checked) selectedApps.add(pkg) else selectedApps.remove(pkg)
-                                            }
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Column {
-                                            Text(appName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                            Text(pkg, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
+                            Button(
+                                onClick = {
+                                    val intent = Intent(context, SelectAppsActivity::class.java).apply {
+                                        putStringArrayListExtra("PRE_SELECTED_APPS", ArrayList(selectedApps))
                                     }
-                                }
+                                    selectAppsLauncher.launch(intent)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.AppShortcut,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (selectedApps.isEmpty()) "Open App Picker" else "Edit App Selection (${selectedApps.size} Selected)",
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                             
-                            // Custom app entry
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                OutlinedTextField(
-                                    value = customAppInput,
-                                    onValueChange = { customAppInput = it },
-                                    placeholder = { Text("Add custom package (e.g. com.reddit)") },
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(8.dp),
-                                    textStyle = MaterialTheme.typography.bodySmall
-                                )
-                                Button(
-                                    onClick = {
-                                        if (customAppInput.isNotBlank()) {
-                                            if (!selectedApps.contains(customAppInput)) {
-                                                selectedApps.add(customAppInput)
-                                            }
-                                            customAppInput = ""
-                                        }
-                                    },
-                                    shape = RoundedCornerShape(8.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp)
+                            if (selectedApps.isNotEmpty()) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState())
+                                        .padding(vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text("Add")
+                                    selectedApps.forEach { pkg ->
+                                        val appLabel = remember(pkg) {
+                                            try {
+                                                val appInfo = context.packageManager.getApplicationInfo(pkg, 0)
+                                                context.packageManager.getApplicationLabel(appInfo).toString()
+                                            } catch (e: Exception) {
+                                                pkg.substringAfterLast(".")
+                                            }
+                                        }
+                                        FilterChip(
+                                            selected = true,
+                                            onClick = { selectedApps.remove(pkg) },
+                                            label = { Text(appLabel, style = MaterialTheme.typography.bodySmall) },
+                                            trailingIcon = {
+                                                Icon(
+                                                    imageVector = Icons.Default.Close,
+                                                    contentDescription = "Remove",
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            },
+                                            shape = RoundedCornerShape(8.dp),
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                                selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                selectedTrailingIconColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                            )
+                                        )
+                                    }
                                 }
                             }
                             separatorNeeded = true
@@ -712,12 +761,17 @@ fun CreateRuleScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        val types = listOf(
-                            Triple("Block Schedule", "Block", Icons.Outlined.Lock),
-                            Triple("Launch Limit", "Launch", Icons.Outlined.Launch),
-                            Triple("Usage Limit", "Usage", Icons.Outlined.HourglassEmpty),
-                            Triple("Cheat Window", "Cheat", Icons.Outlined.Star)
-                        )
+                        val types = remember(isAppBlockerSelected) {
+                            val baseList = mutableListOf(
+                                Triple("Block Schedule", "Block", Icons.Outlined.Lock)
+                            )
+                            if (isAppBlockerSelected) {
+                                baseList.add(Triple("Launch Limit", "Launch", Icons.Outlined.Launch))
+                                baseList.add(Triple("Usage Limit", "Usage", Icons.Outlined.HourglassEmpty))
+                            }
+                            baseList.add(Triple("Cheat Window", "Cheat", Icons.Outlined.Star))
+                            baseList
+                        }
                         types.forEach { (typeKey, displayLabel, icon) ->
                             val isSelected = targetType == typeKey
                             Column(
@@ -1235,7 +1289,7 @@ fun CreateRuleScreen(
                         Text("Cancel", fontWeight = FontWeight.Bold)
                     }
 
-                    val saveEnabled = periodsList.isNotEmpty() && ruleName.isNotBlank()
+                    val saveEnabled = ruleName.isNotBlank()
                     Button(
                         onClick = {
                             if (saveEnabled) {
@@ -1255,8 +1309,12 @@ fun CreateRuleScreen(
                                     viewModel.deleteScheduleRule(rule.id)
                                 }
                                 
-                                val fullyMergedPeriods = ScheduleUtils.mergeSchedules(allToMerge)
-                                val firstPeriod = fullyMergedPeriods.firstOrNull() ?: SchedulePeriod("09:00", "17:00", listOf("Mon", "Tue", "Wed", "Thu", "Fri"))
+                                val fullyMergedPeriods = if (allToMerge.isEmpty()) {
+                                    listOf(SchedulePeriod("00:00", "23:59", listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")))
+                                } else {
+                                    ScheduleUtils.mergeSchedules(allToMerge)
+                                }
+                                val firstPeriod = fullyMergedPeriods.first()
                                 
                                 val limitValue = limitValueStr.toIntOrNull() ?: 5
                                 

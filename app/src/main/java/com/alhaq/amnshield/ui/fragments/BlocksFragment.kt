@@ -17,6 +17,8 @@ import com.alhaq.amnshield.receivers.AdminReceiver
 import com.alhaq.amnshield.ui.activity.FragmentActivity
 import com.alhaq.amnshield.ui.fragments.features.BaseFeatureFragment
 import com.alhaq.amnshield.data.blockers.AppBlockScheduleRule
+import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
+import com.alhaq.amnshield.utils.ScheduleUtils
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.alhaq.amnshield.ui.theme.AmnShieldTheme
@@ -103,6 +105,8 @@ class BlocksFragment : BaseFeatureFragment() {
 
         val usageTrackerActive = blocksLoader.isUsageTrackerFeatureEnabled() && serviceEnabled
 
+        val rulesList = loadSchedulesAndLimits()
+
         // Load actual live configurations to AmnShieldState
         viewModel.loadState(
             AmnShieldState(
@@ -118,9 +122,160 @@ class BlocksFragment : BaseFeatureFragment() {
                 isScheduleEnabled = scheduleCount > 0,
                 isUsageLimitEnabled = launchLimitCount > 0,
                 keywords = blocksLoader.loadBlockedKeywords().toList(),
-                isAdvancedMode = blocksLoader.getEnforcementMode() == "ADVANCED"
+                isAdvancedMode = blocksLoader.getEnforcementMode() == "ADVANCED",
+                scheduleRules = rulesList
             )
         )
+    }
+
+    private fun loadSchedulesAndLimits(): List<com.alhaq.amnshield.ui.state.ScheduleRule> {
+        val appSchedules = blocksLoader.loadAppBlockerScheduleRules()
+        val featureSchedules = blocksLoader.loadUnifiedFeatureScheduleRules()
+        val launchLimits = blocksLoader.loadAppLaunchLimitRules()
+
+        val rulesList = mutableListOf<com.alhaq.amnshield.ui.state.ScheduleRule>()
+
+        // 1. Find all unique group IDs across appSchedules and featureSchedules
+        val allAppGroupIds = appSchedules.map { it.groupId ?: it.id }.distinct()
+        val allFeatureGroupIds = featureSchedules.map { it.groupId ?: it.id }.distinct()
+        val allGroupIds = (allAppGroupIds + allFeatureGroupIds).distinct()
+
+        allGroupIds.forEach { groupId ->
+            val associatedApps = appSchedules.filter { (it.groupId ?: it.id) == groupId }
+            val associatedFeatures = featureSchedules.filter { (it.groupId ?: it.id) == groupId }
+
+            if (associatedApps.isNotEmpty() || associatedFeatures.isNotEmpty()) {
+                val firstApp = associatedApps.firstOrNull()
+                val firstFeature = associatedFeatures.firstOrNull()
+
+                val name = firstApp?.groupTitle ?: firstApp?.title
+                    ?: firstFeature?.groupTitle ?: firstFeature?.title
+                    ?: "Unified Rule"
+
+                val isEnabled = firstApp?.isEnabled ?: firstFeature?.isEnabled ?: true
+
+                val restrictionTypeStr = when {
+                    firstApp?.type == AppBlockScheduleRule.RuleType.CHEAT ||
+                    firstFeature?.type == UnifiedFeatureScheduleRule.RuleType.CHEAT -> "Cheat Window"
+                    firstApp != null && firstApp.durationHours > 0 -> "Usage Limit"
+                    else -> "Block Schedule"
+                }
+
+                // Apps
+                val apps = associatedApps.map { it.packageName }.distinct()
+
+                // Blockers list
+                val selectedBlockers = mutableListOf<String>()
+                if (associatedApps.isNotEmpty()) {
+                    selectedBlockers.add("App Blocker")
+                }
+                associatedFeatures.forEach { featRule ->
+                    if (featRule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER)) {
+                        selectedBlockers.add("Keyword Blocker")
+                    }
+                    if (featRule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER)) {
+                        selectedBlockers.add("Website Blocker")
+                    }
+                    if (featRule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER)) {
+                        selectedBlockers.add("Reels Blocker")
+                    }
+                    if (featRule.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE)) {
+                        selectedBlockers.add("Notification Shield")
+                    }
+                }
+                val distinctBlockers = selectedBlockers.distinct()
+
+                // Display blockers / apps string
+                val appOrCategory = if (distinctBlockers.size == 1) {
+                    when (distinctBlockers.first()) {
+                        "App Blocker" -> if (apps.size == 1) {
+                            try {
+                                requireContext().packageManager.getApplicationLabel(
+                                    requireContext().packageManager.getApplicationInfo(apps.first(), 0)
+                                ).toString()
+                            } catch (_: Exception) {
+                                apps.first()
+                            }
+                        } else {
+                            "${apps.size} Apps"
+                        }
+                        else -> distinctBlockers.first()
+                    }
+                } else {
+                    distinctBlockers.joinToString(" • ")
+                }
+
+                // Collect periods
+                val periods = mutableListOf<com.alhaq.amnshield.ui.state.SchedulePeriod>()
+                associatedApps.forEach { item ->
+                    val start = String.format("%02d:%02d", item.startMinute / 60, item.startMinute % 60)
+                    val end = String.format("%02d:%02d", item.endMinute / 60, item.endMinute % 60)
+                    val daysList = item.selectedDays.map { ScheduleUtils.calendarIntToDay(it) }
+                    periods.add(com.alhaq.amnshield.ui.state.SchedulePeriod(start, end, daysList))
+                }
+                associatedFeatures.forEach { item ->
+                    val start = String.format("%02d:%02d", item.startMinute / 60, item.startMinute % 60)
+                    val end = String.format("%02d:%02d", item.endMinute / 60, item.endMinute % 60)
+                    val daysList = item.selectedDays.map { ScheduleUtils.calendarIntToDay(it) }
+                    periods.add(com.alhaq.amnshield.ui.state.SchedulePeriod(start, end, daysList))
+                }
+
+                val distinctPeriods = periods.distinctBy { Triple(it.startTime, it.endTime, it.days.sorted()) }
+                val firstPeriod = distinctPeriods.firstOrNull() ?: com.alhaq.amnshield.ui.state.SchedulePeriod("09:00", "17:00", listOf("Mon", "Tue", "Wed", "Thu", "Fri"))
+
+                val limitVal = when (restrictionTypeStr) {
+                    "Usage Limit" -> firstApp?.durationHours ?: 0
+                    else -> 0
+                }
+
+                rulesList.add(
+                    com.alhaq.amnshield.ui.state.ScheduleRule(
+                        id = groupId,
+                        name = name,
+                        appOrCategory = appOrCategory,
+                        restrictionType = restrictionTypeStr,
+                        startTime = firstPeriod.startTime,
+                        endTime = firstPeriod.endTime,
+                        days = firstPeriod.days,
+                        limitValue = limitVal,
+                        isActive = isEnabled,
+                        periods = distinctPeriods,
+                        targetBlockerType = distinctBlockers.firstOrNull() ?: "App Blocker",
+                        selectedApps = apps,
+                        selectedBlockers = distinctBlockers
+                    )
+                )
+            }
+        }
+
+        // 3. Launch Limits
+        launchLimits.forEach { limit ->
+            val appName = try {
+                requireContext().packageManager.getApplicationLabel(
+                    requireContext().packageManager.getApplicationInfo(limit.packageName, 0)
+                ).toString()
+            } catch (_: Exception) {
+                limit.packageName
+            }
+            rulesList.add(
+                com.alhaq.amnshield.ui.state.ScheduleRule(
+                    id = "limit::${limit.packageName}",
+                    name = "Limit: $appName",
+                    appOrCategory = appName,
+                    restrictionType = "Launch Limit",
+                    startTime = "00:00",
+                    endTime = "23:59",
+                    days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
+                    limitValue = limit.maxLaunches,
+                    isActive = true,
+                    targetBlockerType = "App Blocker",
+                    selectedApps = listOf(limit.packageName),
+                    selectedBlockers = listOf("App Blocker")
+                )
+            )
+        }
+
+        return rulesList
     }
 
     private fun openFeatureConfig(featureType: String, requiresPremium: Boolean) {

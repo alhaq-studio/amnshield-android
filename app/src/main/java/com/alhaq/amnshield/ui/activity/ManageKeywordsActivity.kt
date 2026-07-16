@@ -24,6 +24,10 @@ import com.alhaq.amnshield.R
 import com.alhaq.amnshield.databinding.ActivityManageKeywordsBinding
 import com.alhaq.amnshield.databinding.DialogAddKeywordBinding
 import com.alhaq.amnshield.utils.KeywordPackManager
+import com.alhaq.amnshield.utils.SavedPreferencesLoader
+import com.alhaq.amnshield.services.AmnShieldAccessibilityService
+import com.google.android.material.materialswitch.MaterialSwitch
+import android.content.Intent
 
 
 class ManageKeywordsActivity : AppCompatActivity() {
@@ -112,14 +116,59 @@ class ManageKeywordsActivity : AppCompatActivity() {
     }
 
     private fun showImportDialog() {
-        MaterialAlertDialogBuilder(this)
+        val loader = SavedPreferencesLoader(this)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_import_keywords_merged, null)
+        val switchAdultPack = dialogView.findViewById<MaterialSwitch>(R.id.switch_adult_pack)
+        val btnImportJson = dialogView.findViewById<Button>(R.id.btn_import_json)
+
+        switchAdultPack.isChecked = loader.isKeywordBlockerAdultPackEnabled()
+
+        var userChangedSwitch = false
+        var finalSwitchState = switchAdultPack.isChecked
+
+        val dialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.import_keywords)
-            .setMessage("Import a keyword pack from a JSON file. This will add keywords to your existing list.")
-            .setPositiveButton(R.string.import_pack) { _, _ ->
-                importLauncher.launch(arrayOf("application/json", "text/plain"))
+            .setView(dialogView)
+            .setPositiveButton("Done") { _, _ ->
+                if (userChangedSwitch) {
+                    val wasAdultPackEnabled = loader.isKeywordBlockerAdultPackEnabled()
+                    if (finalSwitchState && !wasAdultPackEnabled) {
+                        val adultKeywords = resources.getStringArray(R.array.adult_keywords)
+                        adultKeywords.forEach { keyword ->
+                            val trimmed = keyword.trim().lowercase()
+                            if (!savedKeywordsList.contains(trimmed)) {
+                                savedKeywordsList.add(trimmed)
+                            }
+                        }
+                        keywordAdapter.notifyDataSetChanged()
+                    } else if (!finalSwitchState && wasAdultPackEnabled) {
+                        val adultKeywords = resources.getStringArray(R.array.adult_keywords)
+                            .map { it.trim().lowercase() }
+                            .toSet()
+                        savedKeywordsList.removeAll { it.lowercase() in adultKeywords }
+                        keywordAdapter.notifyDataSetChanged()
+                    }
+                    loader.setKeywordBlockerAdultPackEnabled(finalSwitchState)
+                    // Send broadcast to accessibility service
+                    val intent = Intent(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST)
+                    intent.setPackage(packageName)
+                    sendBroadcast(intent)
+                }
             }
             .setNegativeButton(R.string.cancel, null)
-            .show()
+            .create()
+
+        switchAdultPack.setOnCheckedChangeListener { _, isChecked ->
+            userChangedSwitch = true
+            finalSwitchState = isChecked
+        }
+
+        btnImportJson.setOnClickListener {
+            dialog.dismiss()
+            importLauncher.launch(arrayOf("application/json", "text/plain"))
+        }
+
+        dialog.show()
     }
 
     private fun exportKeywords(uri: Uri) {

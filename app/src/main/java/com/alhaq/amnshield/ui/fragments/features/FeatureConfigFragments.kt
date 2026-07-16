@@ -594,13 +594,6 @@ class KeywordBlockerConfigFragment : BaseFeatureFragment() {
             selectKeywordsLauncher.launch(intent, activityOptions)
         }
 
-        binding.btnKeywordPacks.setOnClickListener {
-            TweakKeywordPack().show(
-                childFragmentManager,
-                "tweak_keyword_pack"
-            )
-        }
-
         binding.btnKeywordConfig.setOnClickListener {
             TweakKeywordBlocker(savedPreferencesLoader).show(
                 childFragmentManager,
@@ -690,7 +683,6 @@ class KeywordBlockerConfigFragment : BaseFeatureFragment() {
 
     private fun setKeywordBlockerControlsEnabled(enabled: Boolean) {
         binding.btnManageKeywords.isEnabled = true
-        binding.btnKeywordPacks.isEnabled = true
         binding.btnKeywordConfig.isEnabled = true
         binding.btnScheduleKeyword.isEnabled = true
     }
