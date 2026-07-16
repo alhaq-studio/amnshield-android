@@ -43,7 +43,7 @@ object LicenseValidator {
 
             val sig = Signature.getInstance("SHA256withECDSA")
             sig.initVerify(publicKey)
-            sig.update(payloadBase64.toByteArray(Charsets.UTF_8))
+            sig.update(Base64.getDecoder().decode(payloadBase64))
 
             if (sig.verify(signatureBytes)) {
                 return payload

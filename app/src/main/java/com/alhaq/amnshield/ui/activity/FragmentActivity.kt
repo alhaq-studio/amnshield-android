@@ -10,10 +10,12 @@ import androidx.fragment.app.Fragment
 import com.alhaq.amnshield.R
 import com.alhaq.amnshield.ui.fragments.anti_uninstall.ChooseModeFragment
 import com.alhaq.amnshield.ui.fragments.installation.AccessibilityGuide
+import com.alhaq.amnshield.ui.fragments.installation.ModeSelectionFragment
 import com.alhaq.amnshield.ui.fragments.installation.WelcomeFragment
+import com.alhaq.amnshield.ui.fragments.installation.PermissionsFragment
 import com.alhaq.amnshield.ui.fragments.features.PremiumFeaturesFragment
 import com.alhaq.amnshield.ui.fragments.usage.AllAppsUsageFragment
-import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
+import com.alhaq.amnshield.ui.fragments.BlocksManagerFragment
 import com.alhaq.amnshield.ui.fragments.ManageLaunchLimitsFragment
 import com.alhaq.amnshield.ui.fragments.ProfileFragment
 
@@ -87,8 +89,8 @@ class FragmentActivity : AppCompatActivity() {
                 AllAppsUsageFragment.FRAGMENT_ID -> {
                     fragment = AllAppsUsageFragment()
                 }
-                ManageBlockSchedulesFragment.FRAGMENT_ID -> {
-                    fragment = ManageBlockSchedulesFragment()
+                BlocksManagerFragment.FRAGMENT_ID -> {
+                    fragment = BlocksManagerFragment()
                 }
                 ManageLaunchLimitsFragment.FRAGMENT_ID -> {
                     fragment = ManageLaunchLimitsFragment()
@@ -96,10 +98,17 @@ class FragmentActivity : AppCompatActivity() {
                 WelcomeFragment.FRAGMENT_ID -> {
                     fragment = WelcomeFragment()
                 }
+                ModeSelectionFragment.FRAGMENT_ID -> {
+                    fragment = ModeSelectionFragment()
+                }
                 AccessibilityGuide.FRAGMENT_ID ->
                     fragment = AccessibilityGuide()
                 ProfileFragment.FRAGMENT_ID ->
                     fragment = ProfileFragment()
+            }
+            
+            fragment?.arguments = Bundle().apply {
+                intent.extras?.let { putAll(it) }
             }
         }
         
@@ -112,7 +121,7 @@ class FragmentActivity : AppCompatActivity() {
                 else -> {
                     val fragId = intent.getStringExtra("fragment")
                     fragId == ChooseModeFragment.FRAGMENT_ID ||
-                    fragId == ManageBlockSchedulesFragment.FRAGMENT_ID ||
+                    fragId == BlocksManagerFragment.FRAGMENT_ID ||
                     fragId == ManageLaunchLimitsFragment.FRAGMENT_ID
                 }
             }
@@ -157,7 +166,7 @@ class FragmentActivity : AppCompatActivity() {
             var pinText by remember { mutableStateOf("") }
             var errorText by remember { mutableStateOf("") }
             
-            AmnShieldTheme(appTheme = AppTheme.COSMIC_NIGHT) {
+            AmnShieldTheme(appTheme = com.alhaq.amnshield.utils.ThemeUtils.resolveAppTheme(this@FragmentActivity)) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

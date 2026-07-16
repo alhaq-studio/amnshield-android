@@ -27,6 +27,8 @@ class AppBlocker : BaseBlocker() {
 
         // 1. Core exclusions (Never block)
         if (packageName.equals("com.alhaq.amnshield", ignoreCase = true) ||
+            packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
+            packageName.startsWith("com.alhaq.deenshield.", ignoreCase = true) ||
             packageName.equals("com.android.systemui", ignoreCase = true) ||
             packageName.equals("android", ignoreCase = true)
         ) {
@@ -69,8 +71,18 @@ class AppBlocker : BaseBlocker() {
             }
         }
 
-        // B) Block Schedules check
-        val blockRules = packageRules.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK }
+        // A2) Usage Limit check
+        val usageLimitRules = packageRules.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK && it.durationHours > 0 }
+        if (usageLimitRules.isNotEmpty() && savedPrefs != null) {
+            val dailyUsageMs = getDailyAppUsageMillis(packageName, savedPrefs.context)
+            val maxAllowedMs = usageLimitRules.maxOf { it.durationHours } * 60L * 60L * 1000L
+            if (dailyUsageMs >= maxAllowedMs) {
+                shouldBeBlocked = true
+            }
+        }
+
+        // B) Block Schedules check (only check standard schedule windows without usage limits)
+        val blockRules = packageRules.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK && it.durationHours <= 0 }
         if (blockRules.isNotEmpty()) {
             val activeBlockEnd = getActiveRuleEndTime(blockRules)
             if (activeBlockEnd != null) {
@@ -82,12 +94,34 @@ class AppBlocker : BaseBlocker() {
         if (blockedApps.contains(packageName)) {
             // If there are BLOCK rules defined for this app, they override the manual list.
             // If none are active, we don't block. If there are NO rules, we block always.
-            if (blockRules.isEmpty()) {
+            if (blockRules.isEmpty() && usageLimitRules.isEmpty()) {
                 shouldBeBlocked = true
             }
         }
 
         return AppBlockerResult(isBlocked = shouldBeBlocked)
+    }
+
+    private fun getDailyAppUsageMillis(packageName: String, context: android.content.Context): Long {
+        val usageStatsManager = context.getSystemService(android.content.Context.USAGE_STATS_SERVICE) as? android.app.usage.UsageStatsManager ?: return 0L
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val startTime = calendar.timeInMillis
+        val endTime = System.currentTimeMillis()
+        
+        val stats = usageStatsManager.queryUsageStats(
+            android.app.usage.UsageStatsManager.INTERVAL_DAILY,
+            startTime,
+            endTime
+        )
+        if (stats.isNullOrEmpty()) return 0L
+        
+        val packageStat = stats.firstOrNull { it.packageName == packageName }
+        return packageStat?.totalTimeInForeground ?: 0L
     }
 
     fun putCooldownTo(packageName: String, endTime: Long) {

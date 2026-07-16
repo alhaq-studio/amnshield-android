@@ -31,7 +31,7 @@
     <string name="enable_keyword_blocker">Enable Keyword Blocker</string>
     <string name="enable_usage_tracker">Enable Usage Tracker</string>
     <string name="website_blocker">Website/URL Blocker</string>
-    <string name="social_media_blocker">Social Media Blocker</string>
+    <string name="social_media_blocker">Website/URL Blocker</string>
     <string name="enable_website_blocker">Enable Website/URL Blocker</string>
     <string name="blocked_social_apps">Blocked Social Apps</string>
     <string name="blocked_social_websites">Blocked Websites/URLs</string>

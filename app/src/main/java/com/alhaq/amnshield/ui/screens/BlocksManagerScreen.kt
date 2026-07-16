@@ -27,107 +27,17 @@ import com.alhaq.amnshield.ui.state.AmnShieldState
 import com.alhaq.amnshield.ui.state.ScheduleRule
 import com.alhaq.amnshield.ui.state.SchedulePeriod
 import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
+import com.alhaq.amnshield.utils.ScheduleUtils
 
-fun timeToMinutes(timeStr: String): Int {
-    val parts = timeStr.split(":")
-    if (parts.size != 2) return 0
-    val hours = parts[0].toIntOrNull() ?: 0
-    val minutes = parts[1].toIntOrNull() ?: 0
-    return hours * 60 + minutes
-}
-
-fun periodsOverlap(p1: SchedulePeriod, p2: SchedulePeriod): Boolean {
-    val commonDays = p1.days.intersect(p2.days)
-    if (commonDays.isEmpty()) return false
-
-    val s1 = timeToMinutes(p1.startTime)
-    val e1 = timeToMinutes(p1.endTime)
-    val s2 = timeToMinutes(p2.startTime)
-    val e2 = timeToMinutes(p2.endTime)
-
-    fun getIntervals(s: Int, e: Int): List<Pair<Int, Int>> {
-        return if (e >= s) {
-            listOf(Pair(s, e))
-        } else {
-            listOf(Pair(s, 1440), Pair(0, e))
-        }
-    }
-
-    val intervals1 = getIntervals(s1, e1)
-    val intervals2 = getIntervals(s2, e2)
-
-    for (i1 in intervals1) {
-        for (i2 in intervals2) {
-            if (i1.first < i2.second && i2.first < i1.second) {
-                return true
-            }
-        }
-    }
-    return false
-}
-
-fun mergeSchedules(periods: List<SchedulePeriod>): List<SchedulePeriod> {
-    if (periods.size <= 1) return periods
-
-    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    val dayIntervals = daysOfWeek.associateWith { mutableListOf<Pair<Int, Int>>() }.toMutableMap()
-
-    for (p in periods) {
-        val s = timeToMinutes(p.startTime)
-        val e = timeToMinutes(p.endTime)
-        val intervals = if (e >= s) {
-            listOf(Pair(s, e))
-        } else {
-            listOf(Pair(s, 1440), Pair(0, e))
-        }
-        for (day in p.days) {
-            dayIntervals[day]?.addAll(intervals)
-        }
-    }
-
-    val mergedDayIntervals = mutableMapOf<String, List<Pair<Int, Int>>>()
-    for ((day, intervals) in dayIntervals) {
-        if (intervals.isEmpty()) continue
-        intervals.sortBy { it.first }
-        val merged = mutableListOf<Pair<Int, Int>>()
-        var current = intervals[0]
-        for (i in 1 until intervals.size) {
-            val next = intervals[i]
-            if (next.first <= current.second) {
-                current = Pair(current.first, maxOf(current.second, next.second))
-            } else {
-                merged.add(current)
-                current = next
-            }
-        }
-        merged.add(current)
-        mergedDayIntervals[day] = merged
-    }
-
-    val intervalToDays = mutableMapOf<Pair<Int, Int>, MutableList<String>>()
-    for ((day, intervals) in mergedDayIntervals) {
-        for (interval in intervals) {
-            intervalToDays.getOrPut(interval) { mutableListOf() }.add(day)
-        }
-    }
-
-    val result = mutableListOf<SchedulePeriod>()
-    for ((interval, days) in intervalToDays) {
-        val startStr = String.format("%02d:%02d", interval.first / 60, interval.first % 60)
-        val endStr = if (interval.second >= 1440) "23:59" else String.format("%02d:%02d", interval.second / 60, interval.second % 60)
-        result.add(SchedulePeriod(startStr, endStr, days))
-    }
-
-    return result
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ManageSchedulesScreen(
+fun BlocksManagerScreen(
     state: AmnShieldState,
     viewModel: AmnShieldViewModel,
     initialFilter: String = "All",
     onNavigateToCreateRule: (String) -> Unit,
+    onEditRule: (ScheduleRule) -> Unit = {},
     onToggleRule: (String) -> Unit,
     onDeleteRule: (String) -> Unit,
     onBack: () -> Unit
@@ -136,7 +46,7 @@ fun ManageSchedulesScreen(
 
     val filteredRules = when (selectedFilter) {
         "Schedules" -> state.scheduleRules.filter { it.restrictionType == "Block Schedule" }
-        "Limits" -> state.scheduleRules.filter { it.restrictionType == "Launch Limit" }
+        "Limits" -> state.scheduleRules.filter { it.restrictionType == "Launch Limit" || it.restrictionType == "Usage Limit" }
         "Cheat Hours" -> state.scheduleRules.filter { it.restrictionType == "Cheat Window" }
         else -> state.scheduleRules
     }
@@ -147,12 +57,12 @@ fun ManageSchedulesScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Schedules & Rules",
+                            text = "Blocks Screen",
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(
-                            text = "Manage recurring offline restrictions",
+                            text = "Manage your active blocks and rules",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -169,22 +79,24 @@ fun ManageSchedulesScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                text = { Text("Add Rule", fontWeight = FontWeight.Bold) },
-                icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-                onClick = {
-                    val defaultType = when (selectedFilter) {
-                        "Schedules" -> "Block Schedule"
-                        "Limits" -> "Launch Limit"
-                        "Cheat Hours" -> "Cheat Window"
-                        else -> "Block Schedule"
-                    }
-                    onNavigateToCreateRule(defaultType)
-                },
-                shape = RoundedCornerShape(16.dp),
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            if (!state.isAdvancedMode) {
+                ExtendedFloatingActionButton(
+                    text = { Text("Add Rule", fontWeight = FontWeight.Bold) },
+                    icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
+                    onClick = {
+                        val defaultType = when (selectedFilter) {
+                            "Schedules" -> "Block Schedule"
+                            "Limits" -> "Launch Limit"
+                            "Cheat Hours" -> "Cheat Window"
+                            else -> "Block Schedule"
+                        }
+                        onNavigateToCreateRule(defaultType)
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
     ) { paddingValues ->
         Column(
@@ -284,7 +196,8 @@ fun ManageSchedulesScreen(
                         RuleItemCard(
                             rule = rule,
                             onToggleActive = { onToggleRule(rule.id) },
-                            onDelete = { onDeleteRule(rule.id) }
+                            onDelete = { onDeleteRule(rule.id) },
+                            onClick = { onEditRule(rule) }
                         )
                     }
                 }
@@ -297,28 +210,34 @@ fun ManageSchedulesScreen(
 fun RuleItemCard(
     rule: ScheduleRule,
     onToggleActive: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onClick: () -> Unit
 ) {
     val themeColor = when (rule.restrictionType) {
         "Block Schedule" -> Color(0xFFEF4444) // Red
         "Launch Limit" -> Color(0xFF8B5CF6) // Purple
+        "Usage Limit" -> Color(0xFF3B82F6) // Blue
         else -> Color(0xFFF59E0B) // Amber
     }
 
     val iconType = when (rule.restrictionType) {
         "Block Schedule" -> Icons.Outlined.Lock
         "Launch Limit" -> Icons.Outlined.Launch
-        else -> Icons.Outlined.HourglassEmpty
+        "Usage Limit" -> Icons.Outlined.HourglassEmpty
+        else -> Icons.Outlined.Star
     }
 
     val badgeText = when (rule.restrictionType) {
         "Block Schedule" -> "Full Block"
         "Launch Limit" -> "Limit: ${rule.limitValue}x opens"
+        "Usage Limit" -> "Limit: ${rule.limitValue}h usage"
         else -> "Cheat: ${rule.limitValue}m left"
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)

@@ -153,5 +153,6 @@ data class AmnShieldState(
     val isPinProtectionEnabled: Boolean = false,
     val profilePin: String = "",
     val isAppLockEnabled: Boolean = false,
-    val isBypassPinLockEnabled: Boolean = false
+    val isBypassPinLockEnabled: Boolean = false,
+    val isAdvancedMode: Boolean = false
 )

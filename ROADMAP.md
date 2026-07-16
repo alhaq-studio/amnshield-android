@@ -1,8 +1,14 @@
 # AmnShield Roadmap
 
-Last updated: 2026-07-15
+Last updated: 2026-07-16
 
 ## Recently Completed
+- **Simple vs Advanced Mode Enforcement & Usage Limits (July 2026)**
+  - Implemented Simple vs Advanced Mode toggle, synchronized in both Settings and Profile screens.
+  - In Simple Mode, the warning screen is a hard blocked overlay with no configuration and no proceed button. All rule configurations are hidden/simplified but enforced in the background.
+  - Implemented "Usage Limit" rule type, allowing users to define daily foreground usage duration limits (screen time) in hours for selected apps.
+  - Built foreground app usage duration checks inside `AppBlocker` by querying `UsageStatsManager` daily stats.
+  - Redesigned individual App Blocker Configuration fragment to support selecting blocking modes (Block Schedule, Launch Limit, Usage Limit, Cheat Window) by navigating directly to rule creator prefilled with correct parameters.
 - **Focus Mode & Shortform Content Blocker (July 2026)**
   - Re-implemented Focus Mode start experience using a modern Compose-based `StartFocusSessionDialog` featuring custom duration sliders, whitelisting/blacklisting option cards, and background-loaded app list pickers.
   - Implemented Reels/Shorts shortform content tracking in YouTube, Instagram, Facebook, and TikTok within `AmnShieldAccessibilityService` (counting scrolls and watch time, blocking once limits are hit).

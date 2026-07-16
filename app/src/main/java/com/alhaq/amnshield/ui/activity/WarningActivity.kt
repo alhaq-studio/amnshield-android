@@ -37,39 +37,50 @@ class WarningActivity : AppCompatActivity() {
         val isReelBlockerWarning = intent.getBooleanExtra("is_reel_blocker", false)
         val isAppBlockerMode = mode == Constants.WARNING_SCREEN_MODE_APP_BLOCKER
 
-        binding.warningTitle.text = if (isAppBlockerMode) {
-            getString(R.string.warning_title_app_blocker)
-        } else {
-            getString(R.string.warning_title_reels_blocker)
-        }
+        val isSimpleMode = savedPreferencesLoader.getEnforcementMode() == "SIMPLE"
+        val blockedFeature = intent.getStringExtra("blocked_by_feature") ?: if (isReelBlockerWarning) "Reels Blocker" else "App Blocker"
 
         binding.minsPicker.setValue(3)
         binding.minsPicker.minValue = 2
-        val isDialogCancelable = !isAppBlockerMode || isHomePressRequested
+        var isDialogCancelable = !isAppBlockerMode || isHomePressRequested
 
-        if (warningScreenConfig.isProceedDisabled) {
+        if (isSimpleMode) {
+            binding.warningTitle.text = "Access Blocked"
+            binding.warningMsg.text = "This content has been blocked permanently under Simple Mode by the $blockedFeature feature."
             binding.btnProceed.visibility = View.GONE
             binding.proceedSeconds.visibility = View.GONE
-
+            binding.minsPicker.visibility = View.GONE
+            isDialogCancelable = false
         } else {
-            proceedTimer =
-                object : CountDownTimer(warningScreenConfig.proceedDelayInSecs * 1000L, 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    binding.proceedSeconds.text =
-                        getString(R.string.proceed_in, millisUntilFinished / 1000)
-                }
+            binding.warningTitle.text = if (isAppBlockerMode) {
+                getString(R.string.warning_title_app_blocker)
+            } else {
+                getString(R.string.warning_title_reels_blocker)
+            }
 
-                override fun onFinish() {
-                    binding.btnProceed.let { button ->
-                        button.isEnabled = true
-                        if (warningScreenConfig.isDynamicIntervalSettingAllowed) {
-                            binding.minsPicker.visibility = View.VISIBLE
-                        }
-                        button.setText(R.string.proceed)
+            if (warningScreenConfig.isProceedDisabled) {
+                binding.btnProceed.visibility = View.GONE
+                binding.proceedSeconds.visibility = View.GONE
+            } else {
+                proceedTimer =
+                    object : CountDownTimer(warningScreenConfig.proceedDelayInSecs * 1000L, 1000) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        binding.proceedSeconds.text =
+                            getString(R.string.proceed_in, millisUntilFinished / 1000)
                     }
-                    binding.proceedSeconds.visibility = View.GONE
-                }
-            }.start()
+
+                    override fun onFinish() {
+                        binding.btnProceed.let { button ->
+                            button.isEnabled = true
+                            if (warningScreenConfig.isDynamicIntervalSettingAllowed) {
+                                binding.minsPicker.visibility = View.VISIBLE
+                            }
+                            button.setText(R.string.proceed)
+                        }
+                        binding.proceedSeconds.visibility = View.GONE
+                    }
+                }.start()
+            }
         }
 
         dialog = MaterialAlertDialogBuilder(this)
@@ -86,17 +97,21 @@ class WarningActivity : AppCompatActivity() {
             getString(R.string.warning_default_message_reels)
         }
         val configuredMessage = warningScreenConfig.message.trim()
-        binding.warningMsg.text = if (configuredMessage.isNotEmpty()) configuredMessage else fallbackMessage
 
-        binding.minsPicker.setValue(warningScreenConfig.timeInterval / 60000)
-        binding.btnCancel.text = if (isAppBlockerMode || isHomePressRequested) {
-            getString(R.string.warning_cancel_go_home)
+        if (isSimpleMode) {
+            binding.btnCancel.text = "Go Home"
         } else {
-            getString(R.string.warning_cancel_stay_safe)
+            binding.warningMsg.text = if (configuredMessage.isNotEmpty()) configuredMessage else fallbackMessage
+            binding.minsPicker.setValue(warningScreenConfig.timeInterval / 60000)
+            binding.btnCancel.text = if (isAppBlockerMode || isHomePressRequested) {
+                getString(R.string.warning_cancel_go_home)
+            } else {
+                getString(R.string.warning_cancel_stay_safe)
+            }
         }
 
         binding.btnCancel.setOnClickListener {
-            if (isAppBlockerMode || isHomePressRequested) {
+            if (isSimpleMode || isAppBlockerMode || isHomePressRequested) {
                 val intent = Intent(Intent.ACTION_MAIN)
                 intent.addCategory(Intent.CATEGORY_HOME)
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

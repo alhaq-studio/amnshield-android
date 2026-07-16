@@ -49,16 +49,16 @@ class BlocksFragment : BaseFeatureFragment() {
                     BlocksScreen(
                         state = state,
                         viewModel = viewModel,
-                        onNavigateToAppBlocker = { openFeatureConfig("app_blocker", requiresPremium = true) },
+                        onNavigateToAppBlocker = { openFeatureConfig("app_blocker", requiresPremium = false) },
                         onNavigateToKeywordBlocker = { openFeatureConfig("keyword_blocker", requiresPremium = false) },
-                        onNavigateToWebBlocker = { openFeatureConfig("social_media_blocker", requiresPremium = true) },
-                        onNavigateToFocusMode = { openFeatureConfig("focus_mode", requiresPremium = true) },
+                        onNavigateToWebBlocker = { openFeatureConfig("social_media_blocker", requiresPremium = false) },
+                        onNavigateToFocusMode = { openFeatureConfig("focus_mode", requiresPremium = false) },
                         onNavigateToCheatHours = { openCheatHours() },
                         onNavigateToSchedules = { openSchedules() },
                         onNavigateToLaunchLimits = { openLaunchLimits() },
                         onNavigateToAntiUninstall = { openFeatureConfig("anti_uninstall", requiresPremium = true) },
                         onNavigateToUsageTracker = { openFeatureConfig("usage_tracker", requiresPremium = false) },
-                        onNavigateToReelsBlocker = { openFeatureConfig("reel_blocker", requiresPremium = true) },
+                        onNavigateToReelsBlocker = { openFeatureConfig("reel_blocker", requiresPremium = false) },
                         onNavigateToPremium = { openFeatureConfig("premium_features", requiresPremium = false) }
                     )
                 }
@@ -117,7 +117,8 @@ class BlocksFragment : BaseFeatureFragment() {
                 isFocusModeActive = focusActive,
                 isScheduleEnabled = scheduleCount > 0,
                 isUsageLimitEnabled = launchLimitCount > 0,
-                keywords = blocksLoader.loadBlockedKeywords().toList()
+                keywords = blocksLoader.loadBlockedKeywords().toList(),
+                isAdvancedMode = blocksLoader.getEnforcementMode() == "ADVANCED"
             )
         )
     }
@@ -139,21 +140,13 @@ class BlocksFragment : BaseFeatureFragment() {
     }
 
     private fun openSchedules() {
-        if (!premiumManager.isPremium()) {
-            showPremiumUpsell()
-            return
-        }
         val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-            putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+            putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
         }
         startActivity(intent, activityOptions.toBundle())
     }
 
     private fun openLaunchLimits() {
-        if (!premiumManager.isPremium()) {
-            showPremiumUpsell()
-            return
-        }
         val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
             putExtra("fragment", ManageLaunchLimitsFragment.FRAGMENT_ID)
         }

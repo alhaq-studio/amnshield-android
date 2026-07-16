@@ -165,12 +165,16 @@ class SettingsFragment : Fragment() {
         val name = account?.displayName ?: "Alhaq DST"
         val email = account?.email ?: "alhaq.dst@gmail.com"
         
+        val enforcementPrefs = requireContext().getSharedPreferences("enforcement_prefs", Context.MODE_PRIVATE)
+        val isAdvanced = enforcementPrefs.getString("enforcement_mode", "SIMPLE") == "ADVANCED"
+        
         viewModel.loadState(
             viewModel.state.value.copy(
                 isWebFilterEnabled = webFilterEnabled,
                 isUsageLimitEnabled = usageTrackerEnabled,
                 userName = name,
-                userEmail = email
+                userEmail = email,
+                isAdvancedMode = isAdvanced
             )
         )
     }

@@ -12,7 +12,7 @@ import com.alhaq.amnshield.databinding.FragmentWebsiteBlockerConfigBinding
 import com.alhaq.amnshield.databinding.ItemSocialBlockCardBinding
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.premium.PremiumManager
-import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
+import com.alhaq.amnshield.ui.fragments.BlocksManagerFragment
 import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
 import com.alhaq.amnshield.utils.ScheduleUtils
 import java.util.Locale
@@ -82,8 +82,20 @@ class WebsiteBlockerConfigFragment : BaseFeatureFragment() {
         // Schedule Blocker Button
         binding.btnScheduleWebBlocker.setOnClickListener {
             val intent = Intent(requireContext(), com.alhaq.amnshield.ui.activity.FragmentActivity::class.java).apply {
-                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("action", "create")
                 putExtra("prefill_target", "WEBSITE_BLOCKER")
+                putExtra("prefill_type", "Block Schedule")
+            }
+            startActivity(intent, activityOptions.toBundle())
+        }
+
+        binding.btnCheatHours.setOnClickListener {
+            val intent = Intent(requireContext(), com.alhaq.amnshield.ui.activity.FragmentActivity::class.java).apply {
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("action", "create")
+                putExtra("prefill_target", "WEBSITE_BLOCKER")
+                putExtra("prefill_type", "Cheat Window")
             }
             startActivity(intent, activityOptions.toBundle())
         }

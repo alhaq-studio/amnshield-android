@@ -50,8 +50,8 @@ class WelcomeFragment : Fragment() {
             requireActivity().supportFragmentManager.beginTransaction()
                 .replace(
                     R.id.fragment_holder,
-                    PermissionsFragment()
-                ) // Replace with FragmentB
+                    ModeSelectionFragment()
+                )
                 .addToBackStack(null)
                 .commit()
         }

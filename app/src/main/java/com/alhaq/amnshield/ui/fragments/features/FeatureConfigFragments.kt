@@ -19,7 +19,7 @@ import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.ui.activity.SelectAppsActivity
 import com.alhaq.amnshield.ui.activity.ManageKeywordsActivity
 import com.alhaq.amnshield.ui.activity.FragmentActivity
-import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
+import com.alhaq.amnshield.ui.fragments.BlocksManagerFragment
 import com.alhaq.amnshield.ui.dialogs.TweakAppBlockerWarning
 import com.alhaq.amnshield.ui.dialogs.TweakViewBlockerWarning
 import com.alhaq.amnshield.ui.dialogs.TweakUsageTracker
@@ -102,23 +102,40 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
 
         binding.btnCheatHours.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("action", "create")
                 putExtra("prefill_target", "APP_BLOCKER")
+                putExtra("prefill_type", "Cheat Window")
             }
             startActivity(intent)
         }
 
         binding.btnBlockSchedules.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("action", "create")
                 putExtra("prefill_target", "APP_BLOCKER")
+                putExtra("prefill_type", "Block Schedule")
             }
             startActivity(intent)
         }
 
         binding.btnLaunchLimits.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", com.alhaq.amnshield.ui.fragments.ManageLaunchLimitsFragment.FRAGMENT_ID)
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("action", "create")
+                putExtra("prefill_target", "APP_BLOCKER")
+                putExtra("prefill_type", "Launch Limit")
+            }
+            startActivity(intent)
+        }
+
+        binding.btnUsageLimits.setOnClickListener {
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("action", "create")
+                putExtra("prefill_target", "APP_BLOCKER")
+                putExtra("prefill_type", "Usage Limit")
             }
             startActivity(intent)
         }
@@ -366,8 +383,10 @@ class ReelBlockerConfigFragment : BaseFeatureFragment() {
 
         binding.btnCheatHours.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("action", "create")
                 putExtra("prefill_target", "REEL_BLOCKER")
+                putExtra("prefill_type", "Cheat Window")
             }
             startActivity(intent)
         }
@@ -591,8 +610,20 @@ class KeywordBlockerConfigFragment : BaseFeatureFragment() {
 
         binding.btnScheduleKeyword.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("action", "create")
                 putExtra("prefill_target", "KEYWORD_BLOCKER")
+                putExtra("prefill_type", "Block Schedule")
+            }
+            startActivity(intent)
+        }
+
+        binding.btnCheatHours.setOnClickListener {
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("action", "create")
+                putExtra("prefill_target", "KEYWORD_BLOCKER")
+                putExtra("prefill_type", "Cheat Window")
             }
             startActivity(intent)
         }

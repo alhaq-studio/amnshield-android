@@ -333,8 +333,9 @@ class AppUsageBreakdown(private val stat: AllAppsUsageFragment.Stat) : Fragment(
         val appName = binding.appName.text?.toString().orEmpty().ifBlank { stat.packageName }
         val title = "$appName • ${type.name} • ${recurrence.name}"
 
+        val ruleId = existingRule?.id ?: UUID.randomUUID().toString()
         val rule = AppBlockScheduleRule(
-            id = existingRule?.id ?: UUID.randomUUID().toString(),
+            id = ruleId,
             title = title,
             packageName = stat.packageName,
             type = type,
@@ -344,7 +345,10 @@ class AppUsageBreakdown(private val stat: AllAppsUsageFragment.Stat) : Fragment(
             selectedDays = selectedDays,
             durationHours = durationHours,
             activeUntilMillis = activeUntilMillis,
-            createdAt = existingRule?.createdAt ?: System.currentTimeMillis()
+            createdAt = existingRule?.createdAt ?: System.currentTimeMillis(),
+            groupId = existingRule?.groupId ?: ruleId,
+            groupTitle = existingRule?.groupTitle ?: title,
+            isEnabled = existingRule?.isEnabled ?: true
         )
 
         // Ensure app is in blocked set so schedule rules can govern it.

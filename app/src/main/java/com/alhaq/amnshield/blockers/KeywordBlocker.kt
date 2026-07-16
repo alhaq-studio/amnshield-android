@@ -144,8 +144,15 @@ class KeywordBlocker(val service: AccessibilityService) : BaseBlocker() {
         val rootPackage = rootNode.packageName?.toString()
         
         // Never let keyword blocker act on AmnShield itself
-        if ((packageName != null && packageName.equals("com.alhaq.amnshield", ignoreCase = true)) ||
-            (rootPackage != null && rootPackage.equals("com.alhaq.amnshield", ignoreCase = true))) {
+        if ((packageName != null && (
+            packageName.equals("com.alhaq.amnshield", ignoreCase = true) ||
+            packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
+            packageName.startsWith("com.alhaq.deenshield.", ignoreCase = true)
+        )) || (rootPackage != null && (
+            rootPackage.equals("com.alhaq.amnshield", ignoreCase = true) ||
+            rootPackage.equals("com.alhaq.deenshield", ignoreCase = true) ||
+            rootPackage.startsWith("com.alhaq.deenshield.", ignoreCase = true)
+        ))) {
             return KeywordBlockerResult()
         }
         

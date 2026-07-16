@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.alhaq.amnshield.data.AmnShieldProductDetails
+import com.alhaq.amnshield.premium.PremiumProducts
 import com.android.billingclient.api.*
 
 class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListener {
@@ -36,29 +37,74 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
     }
 
     fun queryProducts(productIds: List<String>, onProductsQueried: (List<AmnShieldProductDetails>) -> Unit) {
-        val productList = productIds.map { productId ->
+        val inAppProductList = productIds.filter { it in PremiumProducts.allInAppProducts }.map { productId ->
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(productId)
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         }
 
-        val params = QueryProductDetailsParams.newBuilder().setProductList(productList).build()
+        val subProductList = productIds.filter { it in PremiumProducts.allSubscriptionProducts }.map { productId ->
+            QueryProductDetailsParams.Product.newBuilder()
+                .setProductId(productId)
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+        }
 
-        billingClient.queryProductDetailsAsync(params) { billingResult, queryResult ->
-            val productDetailsList = queryResult.productDetailsList
-            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val mapped = productDetailsList.map { details ->
-                    cachedProductDetails[details.productId] = details
-                    val price = details.oneTimePurchaseOfferDetails?.formattedPrice
-                        ?: details.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
-                        ?: ""
-                    AmnShieldProductDetails(details.productId, price)
+        val results = mutableListOf<AmnShieldProductDetails>()
+        var pendingQueries = 0
+        if (inAppProductList.isNotEmpty()) pendingQueries++
+        if (subProductList.isNotEmpty()) pendingQueries++
+
+        if (pendingQueries == 0) {
+            onProductsQueried(emptyList())
+            return
+        }
+
+        val checkAndCallback = {
+            pendingQueries--
+            if (pendingQueries == 0) {
+                onProductsQueried(results)
+            }
+        }
+
+        if (inAppProductList.isNotEmpty()) {
+            val params = QueryProductDetailsParams.newBuilder().setProductList(inAppProductList).build()
+            billingClient.queryProductDetailsAsync(params) { billingResult, queryResult ->
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    val productDetailsList = queryResult.productDetailsList
+                    val mapped = productDetailsList.map { details ->
+                        cachedProductDetails[details.productId] = details
+                        val price = details.oneTimePurchaseOfferDetails?.formattedPrice
+                            ?: details.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
+                            ?: ""
+                        AmnShieldProductDetails(details.productId, price)
+                    }
+                    synchronized(results) { results.addAll(mapped) }
+                } else {
+                    Log.w(TAG, "Failed to query INAPP products: ${billingResult.debugMessage}")
                 }
-                onProductsQueried(mapped)
-            } else {
-                Log.w(TAG, "Failed to query products: ${billingResult.debugMessage}")
-                onProductsQueried(emptyList())
+                checkAndCallback()
+            }
+        }
+
+        if (subProductList.isNotEmpty()) {
+            val params = QueryProductDetailsParams.newBuilder().setProductList(subProductList).build()
+            billingClient.queryProductDetailsAsync(params) { billingResult, queryResult ->
+                if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                    val productDetailsList = queryResult.productDetailsList
+                    val mapped = productDetailsList.map { details ->
+                        cachedProductDetails[details.productId] = details
+                        val price = details.oneTimePurchaseOfferDetails?.formattedPrice
+                            ?: details.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice
+                            ?: ""
+                        AmnShieldProductDetails(details.productId, price)
+                    }
+                    synchronized(results) { results.addAll(mapped) }
+                } else {
+                    Log.w(TAG, "Failed to query SUBS products: ${billingResult.debugMessage}")
+                }
+                checkAndCallback()
             }
         }
     }
@@ -87,18 +133,44 @@ class BillingClientWrapper(private val context: Context) : PurchasesUpdatedListe
      * Test accounts will see their test purchases here without being charged.
      */
     fun queryPurchases(onPurchasesQueried: (List<String>) -> Unit) {
+        val activePurchases = mutableListOf<String>()
+        var pendingQueries = 2
+
+        val checkAndCallback = {
+            pendingQueries--
+            if (pendingQueries == 0) {
+                onPurchasesQueried(activePurchases)
+            }
+        }
+
         billingClient.queryPurchasesAsync(
             QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.INAPP)
                 .build()
         ) { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                Log.d(TAG, "Found ${purchases.size} existing purchase(s)")
-                onPurchasesQueried(purchases.mapNotNull { it.products.firstOrNull() })
+                Log.d(TAG, "Found ${purchases.size} active INAPP purchase(s)")
+                val mapped = purchases.mapNotNull { it.products.firstOrNull() }
+                synchronized(activePurchases) { activePurchases.addAll(mapped) }
             } else {
-                Log.w(TAG, "Failed to query purchases: ${billingResult.debugMessage}")
-                onPurchasesQueried(emptyList())
+                Log.w(TAG, "Failed to query INAPP purchases: ${billingResult.debugMessage}")
             }
+            checkAndCallback()
+        }
+
+        billingClient.queryPurchasesAsync(
+            QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+        ) { billingResult, purchases ->
+            if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                Log.d(TAG, "Found ${purchases.size} active SUBS purchase(s)")
+                val mapped = purchases.mapNotNull { it.products.firstOrNull() }
+                synchronized(activePurchases) { activePurchases.addAll(mapped) }
+            } else {
+                Log.w(TAG, "Failed to query SUBS purchases: ${billingResult.debugMessage}")
+            }
+            checkAndCallback()
         }
     }
 

@@ -8,7 +8,7 @@
         android:shortcutLongLabel="@string/focus_mode">
         <intent
             android:action="android.intent.action.MAIN"
-            android:targetPackage="com.alhaq.amnshield"
+            android:targetPackage="@string/app_package_id"
             android:targetClass="com.alhaq.amnshield.ui.activity.ShortcutActivity" />
         <categories android:name="com.alhaq.amnshield.shortcuts" />
         <capability-binding android:key="actions.intent.CREATE_MESSAGE" />

@@ -12,7 +12,7 @@ object ThemeUtils {
         activity.setTheme(resolveTheme(activity))
     }
 
-    private fun resolveTheme(context: Context): Int {
+    fun resolveTheme(context: Context): Int {
         val themeStyle = context
             .getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
             .getString(KEY_THEME_STYLE, "default")
@@ -23,6 +23,19 @@ object ThemeUtils {
             "emerald" -> R.style.Theme_AmnShield_Emerald
             "sunset" -> R.style.Theme_AmnShield_Sunset
             else -> R.style.Theme_AmnShield
+        }
+    }
+
+    fun resolveAppTheme(context: Context): com.alhaq.amnshield.ui.state.AppTheme {
+        val themeStyle = context
+            .getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+            .getString(KEY_THEME_STYLE, "default")
+
+        return when (themeStyle) {
+            "sunset" -> com.alhaq.amnshield.ui.state.AppTheme.SUNSET_GLOW
+            "emerald" -> com.alhaq.amnshield.ui.state.AppTheme.EMERALD_CALM
+            "purple" -> com.alhaq.amnshield.ui.state.AppTheme.COSMIC_NIGHT
+            else -> com.alhaq.amnshield.ui.state.AppTheme.SUNSET_GLOW
         }
     }
 }

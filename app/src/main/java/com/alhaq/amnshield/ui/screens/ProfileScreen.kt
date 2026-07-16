@@ -339,6 +339,115 @@ fun ProfileScreen(
                 }
             }
 
+            // BLOCK PROTECTION MODE SECTION
+            item {
+                Text(
+                    text = "BLOCK ENFORCEMENT MODE",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 0.8.sp
+                    )
+                )
+            }
+
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        var showConfirmDialog by remember { mutableStateOf(false) }
+                        var confirmInput by remember { mutableStateOf("") }
+                        val context = LocalContext.current
+                        val preferences = remember { context.getSharedPreferences("enforcement_prefs", android.content.Context.MODE_PRIVATE) }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Advanced Mode",
+                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Enables custom blocking schedules and launch limits.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = state.isAdvancedMode,
+                                onCheckedChange = { checked ->
+                                    if (checked) {
+                                        showConfirmDialog = true
+                                    } else {
+                                        preferences.edit().putString("enforcement_mode", "SIMPLE").apply()
+                                        viewModel.setAdvancedMode(false)
+                                    }
+                                }
+                            )
+                        }
+
+                        if (showConfirmDialog) {
+                            AlertDialog(
+                                onDismissRequest = {
+                                    showConfirmDialog = false
+                                    confirmInput = ""
+                                },
+                                title = { Text("Enable Advanced Mode?") },
+                                text = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Text("Advanced mode allows schedules and bypasses. Please type \"I CONFIRM\" below to proceed.")
+                                        OutlinedTextField(
+                                            value = confirmInput,
+                                            onValueChange = { confirmInput = it },
+                                            placeholder = { Text("I CONFIRM") },
+                                            singleLine = true
+                                        )
+                                    }
+                                },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            if (confirmInput == "I CONFIRM") {
+                                                preferences.edit().putString("enforcement_mode", "ADVANCED").apply()
+                                                viewModel.setAdvancedMode(true)
+                                                showConfirmDialog = false
+                                                confirmInput = ""
+                                            }
+                                        },
+                                        enabled = confirmInput == "I CONFIRM"
+                                    ) {
+                                        Text("Confirm")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = {
+                                        showConfirmDialog = false
+                                        confirmInput = ""
+                                    }) {
+                                        Text("Cancel")
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             // GENERAL DETAILS SECTION
             item {
                 Text(

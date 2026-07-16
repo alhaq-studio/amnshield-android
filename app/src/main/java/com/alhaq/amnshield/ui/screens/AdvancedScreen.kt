@@ -73,77 +73,79 @@ fun AdvancedScreen(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp)
     ) {
-        // Section: Core Protection
-        item {
-            Text(
-                text = "CORE PROTECTION",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 0.8.sp
-            )
-        }
+        if (state.isAdvancedMode) {
+            // Section: Core Protection
+            item {
+                Text(
+                    text = "CORE PROTECTION",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 0.8.sp
+                )
+            }
 
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            ) {
-                Column {
-                    AdvancedItemRow(
-                        icon = Icons.Outlined.Lock,
-                        title = "App Blocker",
-                        summary = "Blocked apps and categories",
-                        statusText = if (state.isAppBlockerEnabled) "ON" else "OFF",
-                        onChecked = onNavigateToAppBlocker,
-                        iconColor = Color(0xFF6366F1)
-                    )
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                ) {
+                    Column {
+                        AdvancedItemRow(
+                            icon = Icons.Outlined.Lock,
+                            title = "App Blocker",
+                            summary = "Blocked apps and categories",
+                            statusText = if (state.isAppBlockerEnabled) "ON" else "OFF",
+                            onChecked = onNavigateToAppBlocker,
+                            iconColor = Color(0xFF6366F1)
+                        )
 
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
 
-                    AdvancedItemRow(
-                        icon = Icons.Outlined.Label,
-                        title = "Keyword Blocker",
-                        summary = "Keywords and adult content packs",
-                        statusText = "${state.keywords.size} keywords",
-                        onChecked = onNavigateToKeywordBlocker,
-                        iconColor = Color(0xFFEF4444)
-                    )
+                        AdvancedItemRow(
+                            icon = Icons.Outlined.Label,
+                            title = "Keyword Blocker",
+                            summary = "Keywords and adult content packs",
+                            statusText = "${state.keywords.size} keywords",
+                            onChecked = onNavigateToKeywordBlocker,
+                            iconColor = Color(0xFFEF4444)
+                        )
 
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
 
-                    AdvancedItemRow(
-                        icon = Icons.Outlined.PublicOff,
-                        title = "Website/URL Blocker",
-                        summary = "Block websites and custom URLs",
-                        statusText = if (state.isWebFilterEnabled) "ON" else "OFF",
-                        onChecked = onNavigateToWebBlocker,
-                        iconColor = Color(0xFFEC4899)
-                    )
+                        AdvancedItemRow(
+                            icon = Icons.Outlined.PublicOff,
+                            title = "Website/URL Blocker",
+                            summary = "Block websites and custom URLs",
+                            statusText = if (state.isWebFilterEnabled) "ON" else "OFF",
+                            onChecked = onNavigateToWebBlocker,
+                            iconColor = Color(0xFFEC4899)
+                        )
 
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
 
-                    AdvancedItemRow(
-                        icon = Icons.Outlined.VideoLibrary,
-                        title = "Reels Blocker",
-                        summary = "Block short-form video algorithms",
-                        statusText = if (state.isReelsBlockerEnabled) "ON" else "OFF",
-                        onChecked = onNavigateToReelsBlocker,
-                        iconColor = Color(0xFFF43F5E)
-                    )
+                        AdvancedItemRow(
+                            icon = Icons.Outlined.VideoLibrary,
+                            title = "Reels Blocker",
+                            summary = "Block short-form video algorithms",
+                            statusText = if (state.isReelsBlockerEnabled) "ON" else "OFF",
+                            onChecked = onNavigateToReelsBlocker,
+                            iconColor = Color(0xFFF43F5E)
+                        )
+                    }
                 }
             }
         }
@@ -238,10 +240,14 @@ fun AdvancedScreen(
                         summary = "Protect blockers with a 4-digit PIN",
                         checked = state.isPinProtectionEnabled,
                         onCheckedChange = { checked ->
-                            if (checked) {
-                                showPinSetupDialog = true
+                            if (!state.isPremiumUser) {
+                                onNavigateToPremium()
                             } else {
-                                showPinVerifyDialog = true
+                                if (checked) {
+                                    showPinSetupDialog = true
+                                } else {
+                                    showPinVerifyDialog = true
+                                }
                             }
                         },
                         iconColor = Color(0xFF8B5CF6)
@@ -259,7 +265,13 @@ fun AdvancedScreen(
                             title = "App Lock",
                             summary = "Require PIN to open AmnShield",
                             checked = state.isAppLockEnabled,
-                            onCheckedChange = onToggleAppLock,
+                            onCheckedChange = { checked ->
+                                if (!state.isPremiumUser) {
+                                    onNavigateToPremium()
+                                } else {
+                                    onToggleAppLock(checked)
+                                }
+                            },
                             iconColor = Color(0xFF10B981)
                         )
 
@@ -274,7 +286,13 @@ fun AdvancedScreen(
                             title = "Bypass PIN Lock",
                             summary = "Require PIN to modify settings while active",
                             checked = state.isBypassPinLockEnabled,
-                            onCheckedChange = onToggleBypassPinLock,
+                            onCheckedChange = { checked ->
+                                if (!state.isPremiumUser) {
+                                    onNavigateToPremium()
+                                } else {
+                                    onToggleBypassPinLock(checked)
+                                }
+                            },
                             iconColor = Color(0xFFF59E0B)
                         )
                     }

@@ -57,7 +57,7 @@ import com.alhaq.amnshield.databinding.DialogPermissionInfoBinding
 import com.alhaq.amnshield.databinding.DialogRemoveAntiUninstallBinding
 import com.alhaq.amnshield.receivers.AdminReceiver
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
-import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
+import com.alhaq.amnshield.ui.fragments.BlocksManagerFragment
 import com.alhaq.amnshield.ui.fragments.StatsFragment
 import com.alhaq.amnshield.ui.fragments.SettingsFragment
 import com.alhaq.amnshield.ui.fragments.AdvancedFragment
@@ -235,7 +235,7 @@ class MainActivity : AppCompatActivity() {
             val startTab = intent.getIntExtra("start_tab", R.id.navigation_stats)
             val initialFragment = when (startTab) {
                 R.id.navigation_advanced -> AdvancedFragment()
-                R.id.navigation_blocks -> ManageBlockSchedulesFragment()
+                R.id.navigation_blocks -> BlocksManagerFragment()
                 R.id.navigation_focus -> FocusFragment()
                 else -> StatsFragment()
             }
@@ -258,7 +258,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_blocks -> {
                     supportFragmentManager.beginTransaction()
                         .setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
-                        .replace(R.id.nav_host_fragment, ManageBlockSchedulesFragment())
+                        .replace(R.id.nav_host_fragment, BlocksManagerFragment())
                         .commit()
                     true
                 }
@@ -1254,7 +1254,7 @@ class MainActivity : AppCompatActivity() {
             var pinText by remember { mutableStateOf("") }
             var errorText by remember { mutableStateOf("") }
             
-            AmnShieldTheme(appTheme = AppTheme.COSMIC_NIGHT) {
+            AmnShieldTheme(appTheme = ThemeUtils.resolveAppTheme(this@MainActivity)) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -1705,7 +1705,7 @@ class MainActivity : AppCompatActivity() {
             var pinText by remember { mutableStateOf("") }
             var errorText by remember { mutableStateOf("") }
             
-            AmnShieldTheme(appTheme = AppTheme.COSMIC_NIGHT) {
+            AmnShieldTheme(appTheme = ThemeUtils.resolveAppTheme(this@MainActivity)) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

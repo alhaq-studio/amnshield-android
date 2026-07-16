@@ -48,10 +48,10 @@ class AdvancedFragment : BaseFeatureFragment() {
                 AmnShieldTheme(appTheme = state.currentTheme) {
                     AdvancedScreen(
                         state = state,
-                        onNavigateToAppBlocker = { openFeatureConfig("app_blocker", requiresPremium = true) },
+                        onNavigateToAppBlocker = { openFeatureConfig("app_blocker", requiresPremium = false) },
                         onNavigateToKeywordBlocker = { openFeatureConfig("keyword_blocker", requiresPremium = false) },
-                        onNavigateToWebBlocker = { openFeatureConfig("website_blocker", requiresPremium = true) },
-                        onNavigateToReelsBlocker = { openFeatureConfig("reel_blocker", requiresPremium = true) },
+                        onNavigateToWebBlocker = { openFeatureConfig("website_blocker", requiresPremium = false) },
+                        onNavigateToReelsBlocker = { openFeatureConfig("reel_blocker", requiresPremium = false) },
                         onNavigateToAntiUninstall = { openFeatureConfig("anti_uninstall", requiresPremium = true) },
                         onNavigateToUsageTracker = { openFeatureConfig("usage_tracker", requiresPremium = false) },
                         onNavigateToPremium = { openFeatureConfig("premium_features", requiresPremium = false) },
@@ -122,7 +122,8 @@ class AdvancedFragment : BaseFeatureFragment() {
                 isPinProtectionEnabled = pinEnabled,
                 profilePin = pinCode,
                 isAppLockEnabled = appLockActive,
-                isBypassPinLockEnabled = bypassPinLockActive
+                isBypassPinLockEnabled = bypassPinLockActive,
+                isAdvancedMode = loader.getEnforcementMode() == "ADVANCED"
             )
         )
     }

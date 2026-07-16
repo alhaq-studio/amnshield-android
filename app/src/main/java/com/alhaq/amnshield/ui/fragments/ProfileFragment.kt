@@ -121,6 +121,9 @@ class ProfileFragment : Fragment() {
         val bio = sharedPrefs.getString("profile_bio", "") ?: ""
         val profileType = sharedPrefs.getString("profile_type", "Deep Focus") ?: "Deep Focus"
         
+        val enforcementPrefs = requireContext().getSharedPreferences("enforcement_prefs", Context.MODE_PRIVATE)
+        val isAdvanced = enforcementPrefs.getString("enforcement_mode", "SIMPLE") == "ADVANCED"
+        
         viewModel.updateProfile(
             name = name,
             email = email,
@@ -131,10 +134,10 @@ class ProfileFragment : Fragment() {
             pin = viewModel.state.value.profilePin
         )
 
-        // Ensure ViewModel state has the correct premium status as well
+        // Ensure ViewModel state has the correct premium status and advanced mode as well
         val isPremium = com.alhaq.amnshield.premium.PremiumManager.getInstance(requireContext().applicationContext).isPremium()
-        if (viewModel.state.value.isPremiumUser != isPremium) {
-            viewModel.loadState(viewModel.state.value.copy(isPremiumUser = isPremium))
+        if (viewModel.state.value.isPremiumUser != isPremium || viewModel.state.value.isAdvancedMode != isAdvanced) {
+            viewModel.loadState(viewModel.state.value.copy(isPremiumUser = isPremium, isAdvancedMode = isAdvanced))
         }
     }
 

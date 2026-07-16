@@ -25,6 +25,8 @@ import com.alhaq.amnshield.ui.state.AmnShieldState
 import com.alhaq.amnshield.ui.state.ScheduleRule
 import com.alhaq.amnshield.ui.state.SchedulePeriod
 import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
+import com.alhaq.amnshield.utils.SavedPreferencesLoader
+import com.alhaq.amnshield.utils.ScheduleUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,25 +34,114 @@ fun CreateRuleScreen(
     state: AmnShieldState,
     viewModel: AmnShieldViewModel,
     initialType: String = "Block Schedule",
+    prefillTarget: String? = null,
+    editingRule: ScheduleRule? = null,
     onSaveRule: (ScheduleRule) -> Unit,
     onBack: () -> Unit
 ) {
-    var ruleName by remember { mutableStateOf("") }
-    var targetType by remember { mutableStateOf(initialType) } // "Block Schedule", "Launch Limit", "Cheat Window"
-    val selectedBlockerTypes = remember { mutableStateListOf("App Blocker") }
+    val context = LocalContext.current
+    val initialBlockerType = remember(prefillTarget, editingRule) {
+        if (editingRule != null) {
+            editingRule.selectedBlockers.firstOrNull() ?: editingRule.targetBlockerType
+        } else {
+            when (prefillTarget) {
+                "APP_BLOCKER" -> "App Blocker"
+                "WEBSITE_BLOCKER" -> "Website Blocker"
+                "REEL_BLOCKER" -> "Reels Blocker"
+                "KEYWORD_BLOCKER" -> "Keyword Blocker"
+                "FOCUS_MODE" -> "Focus Mode"
+                else -> "App Blocker"
+            }
+        }
+    }
+    
+    val defaultRuleName = remember(initialType, prefillTarget, editingRule) {
+        if (editingRule != null) {
+            editingRule.name
+        } else {
+            val targetName = when (prefillTarget) {
+                "APP_BLOCKER" -> "App Blocker"
+                "WEBSITE_BLOCKER" -> "Website Blocker"
+                "REEL_BLOCKER" -> "Reels Blocker"
+                "KEYWORD_BLOCKER" -> "Keyword Blocker"
+                "FOCUS_MODE" -> "Focus Mode"
+                else -> "Protection"
+            }
+            "$targetName Rule"
+        }
+    }
+
+    var ruleName by remember(defaultRuleName) { mutableStateOf(defaultRuleName) }
+    var targetType by remember(initialType, editingRule) {
+        mutableStateOf(editingRule?.restrictionType ?: initialType)
+    } // "Block Schedule", "Launch Limit", "Usage Limit", "Cheat Window"
+    
+    val selectedBlockerTypes = remember(editingRule) {
+        mutableStateListOf<String>().apply {
+            if (editingRule != null) {
+                addAll(editingRule.selectedBlockers)
+                if (isEmpty()) add(editingRule.targetBlockerType)
+            } else {
+                add(initialBlockerType)
+            }
+        }
+    }
     
     // Feature configurations
-    val selectedApps = remember { mutableStateListOf<String>("com.instagram.android", "com.google.android.youtube") }
-    val selectedKeywords = remember { mutableStateListOf<String>() }
-    val selectedWebsites = remember { mutableStateListOf<String>() }
-    val selectedPlatforms = remember { mutableStateListOf<String>("Instagram", "TikTok") }
+    val prefilledApps = remember(prefillTarget) {
+        if (prefillTarget == "APP_BLOCKER" || prefillTarget == "FOCUS_MODE") {
+            val loader = SavedPreferencesLoader(context)
+            val apps = if (prefillTarget == "APP_BLOCKER") loader.loadBlockedApps() else loader.getFocusModeSelectedApps()
+            if (apps.isNotEmpty()) apps.toList() else listOf("com.instagram.android", "com.google.android.youtube")
+        } else {
+            listOf("com.instagram.android", "com.google.android.youtube")
+        }
+    }
+    val selectedApps = remember(editingRule) {
+        mutableStateListOf<String>().apply {
+            if (editingRule != null) {
+                addAll(editingRule.selectedApps)
+            } else {
+                addAll(prefilledApps)
+            }
+        }
+    }
+    val selectedKeywords = remember(editingRule) {
+        mutableStateListOf<String>().apply {
+            if (editingRule != null) {
+                addAll(editingRule.selectedKeywords)
+            }
+        }
+    }
+    val selectedWebsites = remember(editingRule) {
+        mutableStateListOf<String>().apply {
+            if (editingRule != null) {
+                addAll(editingRule.selectedWebsites)
+            }
+        }
+    }
+    val selectedPlatforms = remember(editingRule) {
+        mutableStateListOf<String>().apply {
+            if (editingRule != null) {
+                addAll(editingRule.selectedPlatforms)
+            } else {
+                addAll(listOf("Instagram", "TikTok"))
+            }
+        }
+    }
     
     var customAppInput by remember { mutableStateOf("") }
     var customKeywordInput by remember { mutableStateOf("") }
     var customWebsiteInput by remember { mutableStateOf("") }
     
     // Multiple periods
-    val periodsList = remember { mutableStateListOf<SchedulePeriod>() }
+    val periodsList = remember(editingRule) {
+        mutableStateListOf<SchedulePeriod>().apply {
+            if (editingRule != null && editingRule.periods.isNotEmpty()) {
+                addAll(editingRule.periods)
+            }
+        }
+    }
     
     // New period builder fields
     var newStartTime by remember { mutableStateOf("09:00") }
@@ -59,19 +150,27 @@ fun CreateRuleScreen(
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
     
-    var limitValueStr by remember { mutableStateOf("5") }
-
+    var limitValueStr by remember(editingRule) {
+        mutableStateOf(editingRule?.limitValue?.toString() ?: "5")
+    }
+    
     // On initial launch, pre-populate one default period
-    LaunchedEffect(Unit) {
+    LaunchedEffect(editingRule) {
         if (periodsList.isEmpty()) {
-            periodsList.add(SchedulePeriod("09:00", "17:00", listOf("Mon", "Tue", "Wed", "Thu", "Fri")))
+            if (editingRule != null) {
+                periodsList.add(SchedulePeriod(editingRule.startTime, editingRule.endTime, editingRule.days))
+            } else {
+                periodsList.add(SchedulePeriod("09:00", "17:00", listOf("Mon", "Tue", "Wed", "Thu", "Fri")))
+            }
         }
-        // Initialize from global state lists if empty
-        if (selectedKeywords.isEmpty() && state.keywords.isNotEmpty()) {
-            selectedKeywords.addAll(state.keywords.take(2))
-        }
-        if (selectedWebsites.isEmpty() && state.customBlockedWebsites.isNotEmpty()) {
-            selectedWebsites.addAll(state.customBlockedWebsites.take(2))
+        // Initialize from global state lists if empty and not editing
+        if (editingRule == null) {
+            if (selectedKeywords.isEmpty() && state.keywords.isNotEmpty()) {
+                selectedKeywords.addAll(state.keywords.take(2))
+            }
+            if (selectedWebsites.isEmpty() && state.customBlockedWebsites.isNotEmpty()) {
+                selectedWebsites.addAll(state.customBlockedWebsites.take(2))
+            }
         }
     }
 
@@ -615,8 +714,9 @@ fun CreateRuleScreen(
                     ) {
                         val types = listOf(
                             Triple("Block Schedule", "Block", Icons.Outlined.Lock),
-                            Triple("Launch Limit", "Limit", Icons.Outlined.Launch),
-                            Triple("Cheat Window", "Cheat", Icons.Outlined.HourglassEmpty)
+                            Triple("Launch Limit", "Launch", Icons.Outlined.Launch),
+                            Triple("Usage Limit", "Usage", Icons.Outlined.HourglassEmpty),
+                            Triple("Cheat Window", "Cheat", Icons.Outlined.Star)
                         )
                         types.forEach { (typeKey, displayLabel, icon) ->
                             val isSelected = targetType == typeKey
@@ -635,7 +735,7 @@ fun CreateRuleScreen(
                                         else Color.Transparent,
                                         shape = RoundedCornerShape(12.dp)
                                     )
-                                    .padding(vertical = 12.dp, horizontal = 4.dp),
+                                    .padding(vertical = 12.dp, horizontal = 2.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
@@ -657,8 +757,8 @@ fun CreateRuleScreen(
                         }
                     }
 
-                    // Dynamically show parameter for Launch Limit or Cheat Window
-                    AnimatedVisibility(visible = targetType == "Launch Limit" || targetType == "Cheat Window") {
+                    // Dynamically show parameter for Launch Limit, Usage Limit, or Cheat Window
+                    AnimatedVisibility(visible = targetType == "Launch Limit" || targetType == "Usage Limit" || targetType == "Cheat Window") {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
@@ -676,12 +776,20 @@ fun CreateRuleScreen(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = if (targetType == "Launch Limit") "Maximum Launches" else "Allowance Period",
+                                        text = when (targetType) {
+                                            "Launch Limit" -> "Maximum Launches"
+                                            "Usage Limit" -> "Maximum Daily Usage"
+                                            else -> "Allowance Period"
+                                        },
                                         style = MaterialTheme.typography.bodySmall,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = if (targetType == "Launch Limit") "Allow up to N launches per app daily." else "Allow unblocked apps for specified minutes.",
+                                        text = when (targetType) {
+                                            "Launch Limit" -> "Allow up to N launches per app daily."
+                                            "Usage Limit" -> "Allow up to N hours of daily usage."
+                                            else -> "Allow unblocked apps for specified minutes."
+                                        },
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -689,7 +797,15 @@ fun CreateRuleScreen(
                                 OutlinedTextField(
                                     value = limitValueStr,
                                     onValueChange = { limitValueStr = it },
-                                    label = { Text(if (targetType == "Launch Limit") "Launches" else "Minutes") },
+                                    label = { 
+                                        Text(
+                                            when (targetType) {
+                                                "Launch Limit" -> "Launches"
+                                                "Usage Limit" -> "Hours"
+                                                else -> "Minutes"
+                                            }
+                                        )
+                                    },
                                     singleLine = true,
                                     modifier = Modifier.width(100.dp),
                                     shape = RoundedCornerShape(8.dp)
@@ -782,7 +898,7 @@ fun CreateRuleScreen(
                         var conflict = false
                         for (i in 0 until periodsList.size) {
                             for (j in i + 1 until periodsList.size) {
-                                if (periodsOverlap(periodsList[i], periodsList[j])) {
+                                if (ScheduleUtils.periodsOverlap(periodsList[i], periodsList[j])) {
                                     conflict = true
                                     break
                                 }
@@ -805,7 +921,7 @@ fun CreateRuleScreen(
                             val rulePeriods = if (rule.periods.isNotEmpty()) rule.periods else listOf(SchedulePeriod(rule.startTime, rule.endTime, rule.days))
                             for (p1 in rulePeriods) {
                                 for (p2 in periodsList) {
-                                    if (periodsOverlap(p1, p2)) {
+                                    if (ScheduleUtils.periodsOverlap(p1, p2)) {
                                         conflict = true
                                         break
                                     }
@@ -860,7 +976,7 @@ fun CreateRuleScreen(
                                 Button(
                                     onClick = {
                                         val currentPeriods = periodsList.toList()
-                                        val internalsMerged = mergeSchedules(currentPeriods)
+                                        val internalsMerged = ScheduleUtils.mergeSchedules(currentPeriods)
                                         val allToMerge = mutableListOf<SchedulePeriod>()
                                         allToMerge.addAll(internalsMerged)
                                         for (rule in existingConflictingRules) {
@@ -868,7 +984,7 @@ fun CreateRuleScreen(
                                             allToMerge.addAll(rulePeriods)
                                         }
                                         
-                                        val fullyResolved = mergeSchedules(allToMerge)
+                                        val fullyResolved = ScheduleUtils.mergeSchedules(allToMerge)
                                         periodsList.clear()
                                         periodsList.addAll(fullyResolved)
                                         for (rule in existingConflictingRules) {
@@ -1057,15 +1173,28 @@ fun CreateRuleScreen(
                                 }
                             }
                             
+                            val context = LocalContext.current
+                            val timeRegex = remember { Regex("^(?:[01]\\d|2[0-3]):[0-5]\\d$") }
                             Button(
                                 onClick = {
                                     if (newStartTime.isNotBlank() && newEndTime.isNotBlank() && newSelectedDays.isNotEmpty()) {
+                                        if (!timeRegex.matches(newStartTime) || !timeRegex.matches(newEndTime)) {
+                                            android.widget.Toast.makeText(context, "Invalid time format. Please use HH:mm", android.widget.Toast.LENGTH_SHORT).show()
+                                            return@Button
+                                        }
                                         val newPeriod = SchedulePeriod(
                                             startTime = newStartTime,
                                             endTime = newEndTime,
                                             days = newSelectedDays.toList()
                                         )
+                                        val hasOverlap = periodsList.any { ScheduleUtils.periodsOverlap(it, newPeriod) }
+                                        if (hasOverlap) {
+                                            android.widget.Toast.makeText(context, "This window overlaps with an existing window in this rule.", android.widget.Toast.LENGTH_SHORT).show()
+                                            return@Button
+                                        }
                                         periodsList.add(newPeriod)
+                                    } else {
+                                        android.widget.Toast.makeText(context, "Please select times and at least one day.", android.widget.Toast.LENGTH_SHORT).show()
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
@@ -1110,7 +1239,7 @@ fun CreateRuleScreen(
                     Button(
                         onClick = {
                             if (saveEnabled) {
-                                val finalPeriods = mergeSchedules(periodsList.toList())
+                                val finalPeriods = ScheduleUtils.mergeSchedules(periodsList.toList())
                                 val allToMerge = mutableListOf<SchedulePeriod>()
                                 allToMerge.addAll(finalPeriods)
                                 
@@ -1126,7 +1255,7 @@ fun CreateRuleScreen(
                                     viewModel.deleteScheduleRule(rule.id)
                                 }
                                 
-                                val fullyMergedPeriods = mergeSchedules(allToMerge)
+                                val fullyMergedPeriods = ScheduleUtils.mergeSchedules(allToMerge)
                                 val firstPeriod = fullyMergedPeriods.firstOrNull() ?: SchedulePeriod("09:00", "17:00", listOf("Mon", "Tue", "Wed", "Thu", "Fri"))
                                 
                                 val limitValue = limitValueStr.toIntOrNull() ?: 5
@@ -1145,7 +1274,7 @@ fun CreateRuleScreen(
                                 }
 
                                 val newRule = ScheduleRule(
-                                    id = UUID.randomUUID().toString(),
+                                    id = editingRule?.id ?: UUID.randomUUID().toString(),
                                     name = ruleName,
                                     appOrCategory = appOrCategoryDisplay,
                                     restrictionType = targetType,

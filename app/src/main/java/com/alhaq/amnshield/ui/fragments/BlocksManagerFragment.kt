@@ -22,7 +22,7 @@ import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
 import com.alhaq.amnshield.data.blockers.AppLaunchLimitRule
 import com.alhaq.amnshield.premium.PremiumManager
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
-import com.alhaq.amnshield.ui.screens.ManageSchedulesScreen
+import com.alhaq.amnshield.ui.screens.BlocksManagerScreen
 import com.alhaq.amnshield.ui.screens.CreateRuleScreen
 import com.alhaq.amnshield.ui.theme.AmnShieldTheme
 import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
@@ -30,7 +30,7 @@ import com.alhaq.amnshield.utils.SavedPreferencesLoader
 import java.util.Calendar
 import java.util.UUID
 
-class ManageBlockSchedulesFragment : Fragment() {
+class BlocksManagerFragment : Fragment() {
 
     private lateinit var viewModel: AmnShieldViewModel
     private lateinit var savedPreferencesLoader: SavedPreferencesLoader
@@ -48,36 +48,60 @@ class ManageBlockSchedulesFragment : Fragment() {
         return ComposeView(requireContext()).apply {
             setContent {
                 val state by viewModel.state.collectAsState()
-                var currentScreen by remember { mutableStateOf("manage") } // "manage" or "create"
-                var initialType by remember { mutableStateOf("Block Schedule") }
+                val action = remember { arguments?.getString("action") }
+                val prefillTarget = remember { arguments?.getString("prefill_target") }
+                val prefillType = remember { arguments?.getString("prefill_type") }
+
+                var currentScreen by remember { mutableStateOf(if (action == "create") "create" else "manage") } // "manage" or "create"
+                var initialType by remember { mutableStateOf(prefillType ?: "Block Schedule") }
+                var editingRule by remember { mutableStateOf<com.alhaq.amnshield.ui.state.ScheduleRule?>(null) }
 
                 AmnShieldTheme(appTheme = state.currentTheme) {
                     if (currentScreen == "manage") {
-                        ManageSchedulesScreen(
+                        BlocksManagerScreen(
                             state = state,
                             viewModel = viewModel,
                             onNavigateToCreateRule = { type ->
+                                editingRule = null
                                 initialType = type
+                                currentScreen = "create"
+                            },
+                            onEditRule = { rule ->
+                                editingRule = rule
+                                initialType = rule.restrictionType
                                 currentScreen = "create"
                             },
                             onToggleRule = { id -> toggleScheduleRuleActive(id) },
                             onDeleteRule = { id -> deleteScheduleRule(id) },
-                             onBack = {
-                                 if (!parentFragmentManager.popBackStackImmediate()) {
-                                     requireActivity().finish()
-                                 }
-                             }
+                            onBack = {
+                                if (!parentFragmentManager.popBackStackImmediate()) {
+                                    requireActivity().finish()
+                                }
+                            }
                         )
                     } else {
                         CreateRuleScreen(
                             state = state,
                             viewModel = viewModel,
                             initialType = initialType,
+                            prefillTarget = prefillTarget,
+                            editingRule = editingRule,
                             onSaveRule = { rule ->
+                                if (editingRule != null) {
+                                    deleteScheduleRule(editingRule!!.id)
+                                }
                                 saveScheduleRule(rule)
+                                editingRule = null
                             },
                             onBack = {
-                                currentScreen = "manage"
+                                editingRule = null
+                                if (action == "create") {
+                                    if (!parentFragmentManager.popBackStackImmediate()) {
+                                        requireActivity().finish()
+                                    }
+                                } else {
+                                    currentScreen = "manage"
+                                }
                             }
                         )
                     }
@@ -145,6 +169,7 @@ class ManageBlockSchedulesFragment : Fragment() {
                 val restrictionTypeStr = when {
                     firstApp?.type == AppBlockScheduleRule.RuleType.CHEAT ||
                     firstFeature?.type == UnifiedFeatureScheduleRule.RuleType.CHEAT -> "Cheat Window"
+                    firstApp != null && firstApp.durationHours > 0 -> "Usage Limit"
                     else -> "Block Schedule"
                 }
 
@@ -210,6 +235,11 @@ class ManageBlockSchedulesFragment : Fragment() {
                 val distinctPeriods = periods.distinctBy { Triple(it.startTime, it.endTime, it.days.sorted()) }
                 val firstPeriod = distinctPeriods.firstOrNull() ?: com.alhaq.amnshield.ui.state.SchedulePeriod("09:00", "17:00", listOf("Mon", "Tue", "Wed", "Thu", "Fri"))
 
+                val limitVal = when (restrictionTypeStr) {
+                    "Usage Limit" -> firstApp?.durationHours ?: 0
+                    else -> 0
+                }
+
                 rulesList.add(
                     com.alhaq.amnshield.ui.state.ScheduleRule(
                         id = groupId,
@@ -219,6 +249,7 @@ class ManageBlockSchedulesFragment : Fragment() {
                         startTime = firstPeriod.startTime,
                         endTime = firstPeriod.endTime,
                         days = firstPeriod.days,
+                        limitValue = limitVal,
                         isActive = isEnabled,
                         periods = distinctPeriods,
                         targetBlockerType = distinctBlockers.firstOrNull() ?: "App Blocker",
@@ -256,9 +287,13 @@ class ManageBlockSchedulesFragment : Fragment() {
             )
         }
 
+        val enforcementPrefs = requireContext().getSharedPreferences("enforcement_prefs", Context.MODE_PRIVATE)
+        val isAdvanced = enforcementPrefs.getString("enforcement_mode", "SIMPLE") == "ADVANCED"
+
         viewModel.loadState(
             viewModel.state.value.copy(
-                scheduleRules = rulesList
+                scheduleRules = rulesList,
+                isAdvancedMode = isAdvanced
             )
         )
     }
@@ -277,6 +312,43 @@ class ManageBlockSchedulesFragment : Fragment() {
             sendRefreshRequest()
             loadSchedulesAndLimits()
             Toast.makeText(requireContext(), "Rule applied successfully", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (rule.restrictionType == "Usage Limit") {
+            // Delete existing rules with the same groupId to avoid conflicts
+            savedPreferencesLoader.removeAppBlockerScheduleGroup(rule.id)
+            savedPreferencesLoader.removeAppBlockerScheduleRule(rule.id)
+
+            rule.selectedApps.forEach { appPkg ->
+                val appName = try {
+                    requireContext().packageManager.getApplicationLabel(
+                        requireContext().packageManager.getApplicationInfo(appPkg, 0)
+                    ).toString()
+                } catch (_: Exception) {
+                    appPkg
+                }
+
+                val appRule = AppBlockScheduleRule(
+                    id = UUID.randomUUID().toString(),
+                    title = "Usage Limit • $appName • ${rule.limitValue}h",
+                    packageName = appPkg,
+                    type = AppBlockScheduleRule.RuleType.BLOCK,
+                    recurrence = AppBlockScheduleRule.Recurrence.DAILY,
+                    startMinute = 0,
+                    endMinute = 0,
+                    selectedDays = emptySet(),
+                    durationHours = rule.limitValue,
+                    createdAt = System.currentTimeMillis(),
+                    groupId = rule.id,
+                    groupTitle = rule.name,
+                    isEnabled = rule.isActive
+                )
+                savedPreferencesLoader.upsertAppBlockerScheduleRule(appRule)
+            }
+            sendRefreshRequest()
+            loadSchedulesAndLimits()
+            Toast.makeText(requireContext(), "Usage limit rule applied successfully", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -488,6 +560,6 @@ class ManageBlockSchedulesFragment : Fragment() {
         private const val FEATURE_RULE_PREFIX = "ufs::"
         private const val APP_GROUP_RULE_PREFIX = "app_group::"
         private const val FEATURE_GROUP_RULE_PREFIX = "feature_group::"
-        const val FRAGMENT_ID = "manage_block_schedules"
+        const val FRAGMENT_ID = "blocks_manager_fragment"
     }
 }

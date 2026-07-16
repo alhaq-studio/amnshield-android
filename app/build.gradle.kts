@@ -62,6 +62,7 @@ android {
             versionNameSuffix = "-DEBUG"
             isDebuggable = true
             isMinifyEnabled = false
+            resValue("string", "app_package_id", "com.alhaq.deenshield.debug")
         }
 
         create("staging") {
@@ -69,6 +70,7 @@ android {
             applicationIdSuffix = ".staging"
             versionNameSuffix = "-STAGING"
             matchingFallbacks.add("debug")
+            resValue("string", "app_package_id", "com.alhaq.deenshield.staging")
         }
         
         release {
@@ -80,6 +82,7 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
+            resValue("string", "app_package_id", "com.alhaq.deenshield")
         }
     }
 
@@ -109,6 +112,7 @@ android {
         buildConfig = true
         aidl = true
         compose = true
+        resValues = true
     }
     lint {
         baseline = file("lint-baseline.xml")

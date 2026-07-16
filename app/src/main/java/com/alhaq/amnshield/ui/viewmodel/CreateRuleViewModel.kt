@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.alhaq.amnshield.ui.state.SchedulePeriod
+import com.alhaq.amnshield.utils.ScheduleUtils
 
 class CreateRuleViewModel : ViewModel() {
     var ruleName by mutableStateOf("")
@@ -115,12 +116,20 @@ class CreateRuleViewModel : ViewModel() {
     }
 
     fun addPeriod() {
+        val timeRegex = Regex("^(?:[01]\\d|2[0-3]):[0-5]\\d$")
         if (newStartTime.isNotBlank() && newEndTime.isNotBlank() && newSelectedDays.isNotEmpty()) {
+            if (!timeRegex.matches(newStartTime) || !timeRegex.matches(newEndTime)) {
+                return
+            }
             val newPeriod = SchedulePeriod(
                 startTime = newStartTime,
                 endTime = newEndTime,
                 days = newSelectedDays.toList()
             )
+            val hasOverlap = periodsList.any { ScheduleUtils.periodsOverlap(it, newPeriod) }
+            if (hasOverlap) {
+                return
+            }
             periodsList.add(newPeriod)
         }
     }

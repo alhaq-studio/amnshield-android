@@ -29,7 +29,7 @@ class AppInstallReceiver : BroadcastReceiver() {
         val packageName = intent.data?.schemeSpecificPart ?: return
         
         // Don't auto-block AmnShield itself
-        if (packageName == "com.alhaq.amnshield") return
+        if (packageName == context.packageName || packageName == "com.alhaq.amnshield") return
         
         // Get enabled auto-block categories
         val autoBlockCategories = prefsLoader.getAutoBlockCategories()

@@ -516,6 +516,44 @@ Export available: CSV, TXT
 - Blocked website domain is detected in the browser URL bar, causing the browser to immediately minimize/minimize to home.
 - Disabling the feature allows normal access to both the app and website.
 
+### Test 20: Simple vs Advanced Mode Toggle & Warning Screen
+
+**Objective**: Verify the Simple vs Advanced Mode toggle state is synchronized across screens and enforces strict blocking.
+
+**Steps**:
+1. Open **Settings** or **Profile** and toggle on **Simple Mode**.
+2. Open the other screen (Settings or Profile) and verify the toggle is also updated to **Simple Mode**.
+3. Verify that the floating "+ Add Rule" button on the **Blocks** dashboard has disappeared.
+4. Try to launch a blocked app (e.g. Instagram).
+5. On the warning screen overlay, verify that:
+   - The screen shows why the app is blocked.
+   - The "Proceed" button is hidden.
+   - There are no configuration options (e.g., Cheat Hours/cooldown is hard-blocked).
+6. Switch back to **Advanced Mode** and verify that the floating "+ Add Rule" button is visible again on the **Blocks** dashboard, and the warning screen shows a customizable "Proceed" option.
+
+**Expected Results**:
+- Toggle status remains synchronized.
+- Simple Mode limits customization of blocks and prevents bypassing block screens.
+- Advanced Mode restores proceed choices and block creation entry points.
+
+---
+
+### Test 21: App Usage Limits (Daily screen time duration)
+
+**Objective**: Verify App Usage Limit rule configuration, save flow, persistence as AppBlockScheduleRule daily limit, and Accessibility Service enforcement.
+
+**Steps**:
+1. Open **Blocks** tab and tap **App Blocker** configuration.
+2. Tap **Manage Usage Limits** (which navigates directly to the rule creator with "Usage Limit" selected).
+3. Select an app, set the limit to "1" hour, and save.
+4. Verify the rule appears under the "Limits" tab in the **Blocks Screen** with a blue badge showing "Limit: 1h usage".
+5. Run the app for over 1 hour (or simulate foreground time of over 3600000ms using system shell mock/testing tools).
+6. Try to launch the app and verify it is blocked.
+
+**Expected Results**:
+- Usage Limit is saved as an AppBlockScheduleRule with `durationHours = 1` and `recurrence = DAILY`.
+- Accessibility Service calculates foreground usage time and intercepts the app once the duration is reached.
+
 ---
 
 ## Debugging Commands

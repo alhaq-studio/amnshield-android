@@ -11,7 +11,7 @@ import com.alhaq.amnshield.databinding.FragmentFocusModeConfigBinding
 import com.alhaq.amnshield.services.AmnShieldAccessibilityService
 import com.alhaq.amnshield.ui.activity.SelectAppsActivity
 import com.alhaq.amnshield.ui.activity.FragmentActivity
-import com.alhaq.amnshield.ui.fragments.ManageBlockSchedulesFragment
+import com.alhaq.amnshield.ui.fragments.BlocksManagerFragment
 import com.alhaq.amnshield.ui.dialogs.StartFocusMode
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
 import com.alhaq.amnshield.premium.PremiumManager
@@ -93,7 +93,7 @@ class FocusModeConfigFragment : BaseFeatureFragment() {
 
         binding.btnAutoFocus.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
                 putExtra("prefill_target", "FOCUS_MODE")
             }
             startActivity(intent)

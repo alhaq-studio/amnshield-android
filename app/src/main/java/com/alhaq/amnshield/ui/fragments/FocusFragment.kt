@@ -250,7 +250,7 @@ class FocusFragment : BaseFeatureFragment() {
             return
         }
         val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-            putExtra("fragment", ManageBlockSchedulesFragment.FRAGMENT_ID)
+            putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
             putExtra("prefill_target", "FOCUS_MODE")
         }
         startActivity(intent, activityOptions.toBundle())

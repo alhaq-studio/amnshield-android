@@ -75,7 +75,7 @@ class LicenseValidatorTest {
         val privateKey = keyFactory.generatePrivate(keySpec)
         
         sig.initSign(privateKey)
-        sig.update(payloadBase64.toByteArray(Charsets.UTF_8))
+        sig.update(Base64.getDecoder().decode(payloadBase64))
         val signatureBase64 = Base64.getEncoder().encodeToString(sig.sign())
 
         val licenseString = "$payloadBase64.$signatureBase64"
@@ -117,7 +117,7 @@ class LicenseValidatorTest {
         val privateKey = keyFactory.generatePrivate(keySpec)
 
         sig.initSign(privateKey)
-        sig.update(payloadBase64.toByteArray(Charsets.UTF_8))
+        sig.update(Base64.getDecoder().decode(payloadBase64))
         val signatureBytes = sig.sign()
         val signatureBase64 = Base64.getEncoder().encodeToString(signatureBytes)
 

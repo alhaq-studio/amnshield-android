@@ -2,7 +2,10 @@ package com.alhaq.amnshield.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -55,17 +58,19 @@ fun BlocksScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (state.isMainServiceEnabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 ),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             ) {
                 Row(
-                    modifier = Modifier.padding(20.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(52.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
                             .background(
                                 if (state.isMainServiceEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
@@ -99,82 +104,88 @@ fun BlocksScreen(
             }
         }
 
-        item {
-            Text(
-                text = "CORE PROTECTION",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                letterSpacing = 0.8.sp
-            )
-        }
-
-        // Core protection list cards grouped inside a single Card Container
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            ) {
-                Column {
-                    BlockItemRow(
-                        icon = Icons.Outlined.Lock,
-                        title = "App Blocker",
-                        summary = "Blocked apps and categories",
-                        statusText = if (state.isAppBlockerEnabled) "ON" else "OFF",
-                        onChecked = onNavigateToAppBlocker,
-                        iconColor = Color(0xFF6366F1)
+        if (state.isAdvancedMode) {
+            item {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "QUICK ACTIONS",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 0.8.sp
                     )
 
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-
-                    BlockItemRow(
-                        icon = Icons.Outlined.Label,
-                        title = "Keyword Blocker",
-                        summary = "Keywords and adult content packs",
-                        statusText = "${state.keywords.size} keywords",
-                        onChecked = onNavigateToKeywordBlocker,
-                        iconColor = Color(0xFFEF4444)
-                    )
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-
-                    BlockItemRow(
-                        icon = Icons.Outlined.PublicOff,
-                        title = "Website/URL Blocker",
-                        summary = "Block websites and custom URLs",
-                        statusText = if (state.isWebFilterEnabled) "ON" else "OFF",
-                        onChecked = onNavigateToWebBlocker,
-                        iconColor = Color(0xFFEC4899)
-                    )
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-
-                    BlockItemRow(
-                        icon = Icons.Outlined.VideoLibrary,
-                        title = "Reels Blocker",
-                        summary = "Block short-form video algorithms",
-                        statusText = if (state.isReelsBlockerEnabled) "ON" else "OFF",
-                        onChecked = onNavigateToReelsBlocker,
-                        iconColor = Color(0xFFF43F5E)
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        QuickActionChip(
+                            icon = Icons.Outlined.Lock,
+                            label = "App Blocker",
+                            color = Color(0xFF6366F1),
+                            onClick = onNavigateToAppBlocker
+                        )
+                        QuickActionChip(
+                            icon = Icons.Outlined.Label,
+                            label = "Keywords",
+                            color = Color(0xFFEF4444),
+                            onClick = onNavigateToKeywordBlocker
+                        )
+                        QuickActionChip(
+                            icon = Icons.Outlined.PublicOff,
+                            label = "Websites",
+                            color = Color(0xFFEC4899),
+                            onClick = onNavigateToWebBlocker
+                        )
+                        QuickActionChip(
+                            icon = Icons.Outlined.VideoLibrary,
+                            label = "Reels",
+                            color = Color(0xFFF43F5E),
+                            onClick = onNavigateToReelsBlocker
+                        )
+                    }
                 }
             }
         }
+    }
+}
 
-
+@Composable
+fun QuickActionChip(
+    icon: ImageVector,
+    label: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(color.copy(alpha = 0.08f))
+            .border(BorderStroke(1.dp, color.copy(alpha = 0.4f)), RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = color
+        )
     }
 }
 

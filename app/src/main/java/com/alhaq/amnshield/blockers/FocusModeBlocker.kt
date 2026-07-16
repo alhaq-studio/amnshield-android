@@ -106,12 +106,19 @@ class FocusModeBlocker : BaseBlocker() {
      * @return
      */
     fun doesAppNeedToBeBlocked(
+        context: android.content.Context,
         packageName: String,
         savedPreferencesLoader: SavedPreferencesLoader,
         defaultLauncher: String? = null
     ): FocusModeResult {
         // NEVER block essential system apps to prevent system instability
-        if (ESSENTIAL_SYSTEM_APPS.contains(packageName) || (defaultLauncher != null && packageName == defaultLauncher)) {
+        if (ESSENTIAL_SYSTEM_APPS.contains(packageName) ||
+            packageName.equals("com.alhaq.amnshield", ignoreCase = true) ||
+            packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
+            packageName.startsWith("com.alhaq.deenshield.", ignoreCase = true) ||
+            (defaultLauncher != null && packageName == defaultLauncher) ||
+            isSystemApp(context, packageName)
+        ) {
             return FocusModeResult(isBlocked = false)
         }
 
@@ -183,6 +190,14 @@ class FocusModeBlocker : BaseBlocker() {
         val focusModeEndTime: Long = -1,
         val isRequestingToUpdateSPData: Boolean = false
     )
-
+    private fun isSystemApp(context: android.content.Context, packageName: String): Boolean {
+        return try {
+            val pm = context.packageManager
+            val appInfo = pm.getApplicationInfo(packageName, 0)
+            (appInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+        } catch (e: Exception) {
+            false
+        }
+    }
 
 }

@@ -11,12 +11,13 @@ import com.google.gson.reflect.TypeToken
 import com.alhaq.amnshield.blockers.FocusModeBlocker
 import com.alhaq.amnshield.data.blockers.AppBlockScheduleRule
 import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
+import com.alhaq.amnshield.data.blockers.AppLaunchLimitRule
 import com.alhaq.amnshield.ui.activity.MainActivity
 import java.util.Calendar
 import java.util.UUID
 import java.util.ArrayList
 
-class SavedPreferencesLoader(private val context: Context) {
+class SavedPreferencesLoader(val context: Context) {
 
     fun loadPinnedApps(): Set<String> {
         val sharedPreferences =
@@ -90,7 +91,7 @@ class SavedPreferencesLoader(private val context: Context) {
         return Gson().fromJson(json, type)
     }
 
-    fun isReelBlockerEnabled(defaultValue: Boolean = false): Boolean {
+    fun isReelBlockerEnabled(defaultValue: Boolean = true): Boolean {
         val sharedPreferences =
             context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
         return sharedPreferences.getBoolean("is_enabled", defaultValue)
@@ -768,7 +769,7 @@ class SavedPreferencesLoader(private val context: Context) {
         getFeatureTogglesPrefs().edit().putBoolean("usage_tracker_enabled", enabled).apply()
     }
 
-    fun isFocusModeFeatureEnabled(default: Boolean = true): Boolean {
+    fun isFocusModeFeatureEnabled(default: Boolean = false): Boolean {
         return getFeatureTogglesPrefs().getBoolean("focus_mode_enabled", default)
     }
 
@@ -782,14 +783,14 @@ class SavedPreferencesLoader(private val context: Context) {
 
     // ==================== App Launch Limit Rules ====================
 
-    fun loadAppLaunchLimitRules(): List<com.alhaq.amnshield.data.blockers.AppLaunchLimitRule> {
+    fun loadAppLaunchLimitRules(): List<AppLaunchLimitRule> {
         val sharedPreferences =
             context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
         val json = sharedPreferences.getString("launch_limit_rules", null)
         if (json.isNullOrEmpty()) return emptyList()
 
         return try {
-            val type = object : TypeToken<List<com.alhaq.amnshield.data.blockers.AppLaunchLimitRule>>() {}.type
+            val type = object : TypeToken<List<AppLaunchLimitRule>>() {}.type
             Gson().fromJson(json, type) ?: emptyList()
         } catch (e: Exception) {
             Log.e("SavedPreferencesLoader", "Error loading launch limit rules", e)
@@ -797,7 +798,7 @@ class SavedPreferencesLoader(private val context: Context) {
         }
     }
 
-    fun saveAppLaunchLimitRules(rules: List<com.alhaq.amnshield.data.blockers.AppLaunchLimitRule>) {
+    fun saveAppLaunchLimitRules(rules: List<AppLaunchLimitRule>) {
         val sharedPreferences =
             context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
         val json = Gson().toJson(rules)
@@ -805,7 +806,7 @@ class SavedPreferencesLoader(private val context: Context) {
     }
 
     @Synchronized
-    fun addAppLaunchLimitRule(rule: com.alhaq.amnshield.data.blockers.AppLaunchLimitRule) {
+    fun addAppLaunchLimitRule(rule: AppLaunchLimitRule) {
         val rules = loadAppLaunchLimitRules().toMutableList()
         rules.removeAll { it.packageName == rule.packageName }
         rules.add(rule)
@@ -819,7 +820,7 @@ class SavedPreferencesLoader(private val context: Context) {
         saveAppLaunchLimitRules(rules)
     }
 
-    fun getAppLaunchLimitRule(packageName: String): com.alhaq.amnshield.data.blockers.AppLaunchLimitRule? {
+    fun getAppLaunchLimitRule(packageName: String): AppLaunchLimitRule? {
         return loadAppLaunchLimitRules().firstOrNull { it.packageName == packageName }
     }
 
@@ -843,7 +844,7 @@ class SavedPreferencesLoader(private val context: Context) {
 
     fun getCurrentLaunchCount(
         packageName: String,
-        rule: com.alhaq.amnshield.data.blockers.AppLaunchLimitRule? = getAppLaunchLimitRule(packageName)
+        rule: AppLaunchLimitRule? = getAppLaunchLimitRule(packageName)
     ): Int {
         if (rule == null) {
             resetLaunchCount(packageName)
@@ -890,24 +891,24 @@ class SavedPreferencesLoader(private val context: Context) {
 
     private fun isLaunchDataExpired(
         launchData: LaunchCountData,
-        rule: com.alhaq.amnshield.data.blockers.AppLaunchLimitRule,
+        rule: AppLaunchLimitRule,
         nowMillis: Long
     ): Boolean {
         if (launchData.period != rule.timePeriod.name) return true
 
         return when (rule.timePeriod) {
-            com.alhaq.amnshield.data.blockers.AppLaunchLimitRule.TimePeriod.HOURLY -> {
+            AppLaunchLimitRule.TimePeriod.HOURLY -> {
                 nowMillis - launchData.firstLaunchTime >= 60L * 60L * 1000L
             }
 
-            com.alhaq.amnshield.data.blockers.AppLaunchLimitRule.TimePeriod.DAILY -> {
+            AppLaunchLimitRule.TimePeriod.DAILY -> {
                 val first = Calendar.getInstance().apply { timeInMillis = launchData.firstLaunchTime }
                 val now = Calendar.getInstance().apply { timeInMillis = nowMillis }
                 first.get(Calendar.YEAR) != now.get(Calendar.YEAR) ||
                     first.get(Calendar.DAY_OF_YEAR) != now.get(Calendar.DAY_OF_YEAR)
             }
 
-            com.alhaq.amnshield.data.blockers.AppLaunchLimitRule.TimePeriod.WEEKLY -> {
+            AppLaunchLimitRule.TimePeriod.WEEKLY -> {
                 launchData.firstLaunchTime < getWeeklyWindowStartMillis(nowMillis, rule.dayOfWeek)
             }
         }
@@ -938,7 +939,7 @@ class SavedPreferencesLoader(private val context: Context) {
         sharedPreferences.edit().putBoolean("adult_blocker", enabled).apply()
     }
 
-    fun isWebsiteBlockerEnabled(defaultValue: Boolean = false): Boolean {
+    fun isWebsiteBlockerEnabled(defaultValue: Boolean = true): Boolean {
         val sharedPreferences = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
         if (sharedPreferences.contains("is_enabled")) {
             return sharedPreferences.getBoolean("is_enabled", defaultValue)
@@ -983,17 +984,17 @@ class SavedPreferencesLoader(private val context: Context) {
             com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER -> {
                 val prefs = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
                 if (prefs.contains("is_enabled_manual")) {
-                    prefs.getBoolean("is_enabled_manual", false)
+                    prefs.getBoolean("is_enabled_manual", true)
                 } else {
-                    prefs.getBoolean("is_enabled", false)
+                    prefs.getBoolean("is_enabled", true)
                 }
             }
             com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE -> {
                 val prefs = getFeatureTogglesPrefs()
                 if (prefs.contains("focus_mode_enabled_manual")) {
-                    prefs.getBoolean("focus_mode_enabled_manual", true)
+                    prefs.getBoolean("focus_mode_enabled_manual", false)
                 } else {
-                    prefs.getBoolean("focus_mode_enabled", true)
+                    prefs.getBoolean("focus_mode_enabled", false)
                 }
             }
             com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER -> {
@@ -1001,9 +1002,9 @@ class SavedPreferencesLoader(private val context: Context) {
                 val legacyPrefs = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
                 val activePrefs = if (prefs.contains("is_enabled_manual") || prefs.contains("is_enabled")) prefs else legacyPrefs
                 if (activePrefs.contains("is_enabled_manual")) {
-                    activePrefs.getBoolean("is_enabled_manual", false)
+                    activePrefs.getBoolean("is_enabled_manual", true)
                 } else {
-                    activePrefs.getBoolean("is_enabled", false)
+                    activePrefs.getBoolean("is_enabled", true)
                 }
             }
         }
@@ -1061,7 +1062,7 @@ class SavedPreferencesLoader(private val context: Context) {
     )
 
     private fun checkAndResetReelsStatsDaily(sharedPreferences: SharedPreferences) {
-        val today = com.alhaq.amnshield.utils.TimeTools.getCurrentDate()
+        val today = TimeTools.getCurrentDate()
         val savedDate = sharedPreferences.getString("reels_stats_date", "")
         if (savedDate != today) {
             val editor = sharedPreferences.edit()
@@ -1145,5 +1146,15 @@ class SavedPreferencesLoader(private val context: Context) {
         val intent = Intent(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_ANTI_UNINSTALL)
             .setPackage(context.packageName)
         context.sendBroadcast(intent)
+    }
+
+    fun getEnforcementMode(): String {
+        return context.getSharedPreferences("enforcement_prefs", Context.MODE_PRIVATE)
+            .getString("enforcement_mode", "SIMPLE") ?: "SIMPLE"
+    }
+
+    fun setEnforcementMode(mode: String) {
+        context.getSharedPreferences("enforcement_prefs", Context.MODE_PRIVATE)
+            .edit().putString("enforcement_mode", mode).apply()
     }
 }

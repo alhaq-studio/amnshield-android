@@ -84,6 +84,36 @@ object ScheduleUtils {
         return endCal.timeInMillis.coerceAtLeast(nowMillis + 60_000L)
     }
 
+    fun periodsOverlap(p1: SchedulePeriod, p2: SchedulePeriod): Boolean {
+        val commonDays = p1.days.intersect(p2.days.toSet())
+        if (commonDays.isEmpty()) return false
+
+        val s1 = timeToMinutes(p1.startTime)
+        val e1 = timeToMinutes(p1.endTime)
+        val s2 = timeToMinutes(p2.startTime)
+        val e2 = timeToMinutes(p2.endTime)
+
+        fun getIntervals(s: Int, e: Int): List<Pair<Int, Int>> {
+            return if (e >= s) {
+                listOf(Pair(s, e))
+            } else {
+                listOf(Pair(s, 1440), Pair(0, e))
+            }
+        }
+
+        val intervals1 = getIntervals(s1, e1)
+        val intervals2 = getIntervals(s2, e2)
+
+        for (i1 in intervals1) {
+            for (i2 in intervals2) {
+                if (i1.first < i2.second && i2.first < i1.second) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     fun timeToMinutes(timeStr: String): Int {
         val parts = timeStr.split(":")
         if (parts.size != 2) return 0
@@ -166,7 +196,7 @@ object ScheduleUtils {
         val result = mutableListOf<SchedulePeriod>()
         for ((interval, days) in intervalToDays) {
             val startStr = String.format("%02d:%02d", interval.first / 60, interval.first % 60)
-            val endStr = if (interval.second >= 1440) "23:59" else String.format("%02d:%02d", interval.second / 60, interval.second % 60)
+            val endStr = if (interval.second >= 1440) "00:00" else String.format("%02d:%02d", interval.second / 60, interval.second % 60)
             result.add(SchedulePeriod(startStr, endStr, days))
         }
 

@@ -170,4 +170,8 @@ class AmnShieldViewModel : ViewModel() {
             )
         }
     }
+
+    fun setAdvancedMode(enabled: Boolean) {
+        _state.update { it.copy(isAdvancedMode = enabled) }
+    }
 }

@@ -83,6 +83,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
     private var isPasswordVerified = false
     private var lastUnifiedScheduleEvalTime = 0L
     private var cachedDefaultLauncher: String? = null
+    private var lastTrackedLaunchPackage: String? = null
 
     private var lastReelScrollTime = 0L
     private val reelsTrackingHandler = Handler(Looper.getMainLooper())
@@ -182,7 +183,10 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
 
         var rootNode: AccessibilityNodeInfo? = null
         try {
-            if (packageName.equals("com.alhaq.amnshield", ignoreCase = true)) {
+            val myPackageName = this.packageName
+            if (packageName.equals(myPackageName, ignoreCase = true) ||
+                packageName.equals("com.alhaq.amnshield", ignoreCase = true)
+            ) {
                 return
             }
 
@@ -193,7 +197,20 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             evaluateUnifiedFeatureSchedulesIfNeeded()
 
             if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-                trackAppLaunch(packageName)
+                val isSystemOrSelf = packageName.equals("com.android.systemui", ignoreCase = true) ||
+                        packageName.equals("android", ignoreCase = true) ||
+                        packageName.equals(this.packageName, ignoreCase = true) ||
+                        packageName.equals("com.alhaq.amnshield", ignoreCase = true) ||
+                        packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
+                        packageName.startsWith("com.alhaq.deenshield.", ignoreCase = true)
+                
+                if (!isSystemOrSelf && packageName != lastTrackedLaunchPackage) {
+                    lastTrackedLaunchPackage = packageName
+                    val launcher = cachedDefaultLauncher ?: getDefaultLauncherPackage()
+                    if (packageName != launcher) {
+                        trackAppLaunch(packageName)
+                    }
+                }
                 cachedDefaultLauncher = getDefaultLauncherPackage()
             }
 
@@ -217,7 +234,8 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             rootNode = rootInActiveWindow
             val rootPackage = rootNode?.packageName?.toString() ?: packageName
 
-            if (rootPackage.equals("com.alhaq.amnshield", ignoreCase = true) ||
+            if (rootPackage.equals(myPackageName, ignoreCase = true) ||
+                rootPackage.equals("com.alhaq.amnshield", ignoreCase = true) ||
                 rootPackage.equals("com.android.systemui", ignoreCase = true)
             ) {
                 return
@@ -233,7 +251,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
 
             val isPremiumUser = premiumManager.isPremium()
 
-            val isFocusModeActive = isPremiumUser && (savedPreferencesLoader.isFocusModeFeatureEnabled() || focusModeBlocker.focusModeData.isTurnedOn)
+            val isFocusModeActive = (savedPreferencesLoader.isFocusModeFeatureEnabled() || focusModeBlocker.focusModeData.isTurnedOn)
             val activeFocusModeType = if (focusModeBlocker.focusModeData.isTurnedOn) {
                 focusModeBlocker.focusModeData.modeType
             } else if (savedPreferencesLoader.isFocusModeFeatureEnabled()) {
@@ -244,7 +262,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             val isFocusBlockAllExSelectedActive = isFocusModeActive && activeFocusModeType == Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED
 
             if (isFocusModeActive) {
-                val focusModeResult = focusModeBlocker.doesAppNeedToBeBlocked(packageName, savedPreferencesLoader, cachedDefaultLauncher)
+                val focusModeResult = focusModeBlocker.doesAppNeedToBeBlocked(this, packageName, savedPreferencesLoader, cachedDefaultLauncher)
                 if (focusModeResult.isRequestingToUpdateSPData) {
                     savedPreferencesLoader.completeFocusSession()
                     savedPreferencesLoader.saveFocusModeData(focusModeBlocker.focusModeData)
@@ -257,7 +275,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 }
             }
 
-            if (isPremiumUser && savedPreferencesLoader.isWebsiteBlockerEnabled()) {
+            if (savedPreferencesLoader.isWebsiteBlockerEnabled()) {
                 val blockedSocialApps = savedPreferencesLoader.loadBlockedWebsitesApps()
                 if (blockedSocialApps.contains(packageName)) {
                     blockingStatsManager.recordAppBlock(packageName, "Blocked by Website Blocker")
@@ -265,6 +283,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         putExtra("mode", Constants.WARNING_SCREEN_MODE_APP_BLOCKER)
                         putExtra("result_id", packageName)
+                        putExtra("blocked_by_feature", "Website Blocker")
                     }
                     startActivity(intent)
                     return
@@ -272,7 +291,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             }
 
             if (!isFocusBlockAllExSelectedActive) {
-                if (isPremiumUser && savedPreferencesLoader.isAppBlockerFeatureEnabled()) {
+                if (savedPreferencesLoader.isAppBlockerFeatureEnabled()) {
                     val appBlockerResult = appBlocker.doesAppNeedToBeBlocked(packageName, savedPreferencesLoader)
                     if (appBlockerResult.isBlocked) {
                         blockingStatsManager.recordAppBlock(packageName, "Blocked by App Blocker")
@@ -280,6 +299,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             putExtra("mode", Constants.WARNING_SCREEN_MODE_APP_BLOCKER)
                             putExtra("result_id", packageName)
+                            putExtra("blocked_by_feature", "App Blocker")
                         }
                         startActivity(intent)
                         return
@@ -327,7 +347,10 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         try {
             val rootPackage = rootNode.packageName?.toString() ?: packageName
 
-            if (packageName.equals("com.alhaq.amnshield", ignoreCase = true) ||
+            val myPackageName = this.packageName
+            if (packageName.equals(myPackageName, ignoreCase = true) ||
+                packageName.equals("com.alhaq.amnshield", ignoreCase = true) ||
+                rootPackage.equals(myPackageName, ignoreCase = true) ||
                 rootPackage.equals("com.alhaq.amnshield", ignoreCase = true) ||
                 packageName.equals("com.android.systemui", ignoreCase = true) ||
                 rootPackage.equals("com.android.systemui", ignoreCase = true)
@@ -350,7 +373,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 }
             }
 
-            if (premiumManager.isPremium() && savedPreferencesLoader.isWebsiteBlockerEnabled()) {
+            if (savedPreferencesLoader.isWebsiteBlockerEnabled()) {
                 try {
                     if (checkBlockedWebsites(rootNode, packageName)) {
                         blockingStatsManager.recordAppBlock(packageName, "Website Blocked: $packageName")
@@ -362,17 +385,15 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 }
             }
 
-            if (premiumManager.isPremium()) {
-                try {
-                    val reelBlockerResult = reelBlocker.doesReelNeedToBeBlocked(rootNode, packageName)
-                    if (reelBlockerResult != null && reelBlockerResult.isBlocked) {
-                        blockingStatsManager.recordViewBlock(packageName, reelBlockerResult.viewId)
-                        handleReelBlockerResult(reelBlockerResult)
-                        return
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("AmnShield", "Reel blocker error", e)
+            try {
+                val reelBlockerResult = reelBlocker.doesReelNeedToBeBlocked(rootNode, packageName)
+                if (reelBlockerResult != null && reelBlockerResult.isBlocked) {
+                    blockingStatsManager.recordViewBlock(packageName, reelBlockerResult.viewId)
+                    handleReelBlockerResult(reelBlockerResult)
+                    return
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("AmnShield", "Reel blocker error", e)
             }
         } finally {
             rootNode.recycle()
@@ -391,6 +412,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         dialogIntent.putExtra("result_id", result.viewId)
         dialogIntent.putExtra("is_press_home", result.requestHomePressInstead)
         dialogIntent.putExtra("is_reel_blocker", true)
+        dialogIntent.putExtra("blocked_by_feature", "Reels Blocker")
         startActivity(dialogIntent)
     }
 
@@ -469,6 +491,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             .filter { it.isNotEmpty() }
             .toMutableSet()
 
+        userIgnoredPackages.add(this.packageName)
         userIgnoredPackages.add("com.alhaq.amnshield")
         userIgnoredPackages.add("com.android.settings")
         userIgnoredPackages.add("com.google.android.settings")
@@ -643,7 +666,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         savedUnlockAtMillis = info.getLong("unlock_at_millis", 0L)
         isConfiguringBlocked = info.getBoolean("is_configuring_blocked", false)
 
-        protectedApps = if (isAntiUninstallOn) setOf("com.alhaq.amnshield") else emptySet()
+        protectedApps = if (isAntiUninstallOn) setOf(this.packageName, "com.alhaq.amnshield") else emptySet()
     }
 
     private fun checkAndBlockDangerousSettingsScreens(node: AccessibilityNodeInfo?) {
