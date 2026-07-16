@@ -1016,9 +1016,7 @@ class SavedPreferencesLoader(val context: Context) {
         val activePrefs = if (sharedPreferences.contains("blocked_apps")) sharedPreferences else legacyPreferences
         val hasKey = activePrefs.contains("blocked_apps")
         if (!hasKey) {
-            val defaults = setOf("com.instagram.android", "com.sec.android.app.sbrowser")
-            sharedPreferences.edit().putStringSet("blocked_apps", defaults).apply()
-            return defaults
+            return emptySet()
         }
         return activePrefs.getStringSet("blocked_apps", emptySet()) ?: emptySet()
     }

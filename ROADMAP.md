@@ -1,6 +1,12 @@
 # AmnShield Roadmap
 
-Last updated: 2026-07-16
+Last updated: 2026-07-17
+
+## Strategic Architectural Decisions (July 2026)
+- **Web Administration Portal Transition:**
+  - **Decision:** Suspended development on the native Android **AmnShield Guardian** app in favor of a centralized **Web Administration Console** (React/Next.js + Supabase DB/Auth).
+  - **Rationale:** A web portal provides platform-agnostic parental and administrative controls (accessible from iOS, Android, and Desktop browsers). It eliminates native Android IPC Binder dependencies and conforms to Google Play's strict security/policy guidelines regarding administrative control permissions.
+  - **Client Impact:** The main `AmnShield-Android` app retains its local bound API (`IAmnShieldApi.aidl` and `AmnShieldApiService.kt`) for local extensibility, but will utilize HTTPS REST sync against Supabase for parental remote configuration instead of native inter-app IPC.
 
 ## Recently Completed
 - **Simple vs Advanced Mode Enforcement & Usage Limits (July 2026)**

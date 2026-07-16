@@ -444,7 +444,10 @@ class BlocksManagerFragment : Fragment() {
                     createdAt = System.currentTimeMillis(),
                     groupId = groupId,
                     groupTitle = groupTitle,
-                    isEnabled = rule.isActive
+                    isEnabled = rule.isActive,
+                    selectedWebsites = rule.selectedWebsites,
+                    selectedKeywords = rule.selectedKeywords,
+                    selectedPlatforms = rule.selectedPlatforms
                 )
                 savedPreferencesLoader.upsertUnifiedFeatureScheduleRule(ufsRule)
             }

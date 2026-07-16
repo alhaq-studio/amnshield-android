@@ -17,7 +17,10 @@ data class UnifiedFeatureScheduleRule(
     val createdAt: Long = System.currentTimeMillis(),
     val groupId: String? = null,
     val groupTitle: String? = null,
-    val isEnabled: Boolean? = true
+    val isEnabled: Boolean? = true,
+    val selectedWebsites: List<String> = emptyList(),
+    val selectedKeywords: List<String> = emptyList(),
+    val selectedPlatforms: List<String> = emptyList()
 ) {
     val isRuleEnabled: Boolean
         get() = isEnabled ?: true
