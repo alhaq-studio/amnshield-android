@@ -103,3 +103,33 @@ Last updated: 2026-07-17
 - [ ] Manual sanity checks complete (navigation + blocks/schedules/groups flows)
 - [ ] Regression checks complete for existing feature configs
 
+## Future Roadmap: Global Cloud Sync Architecture (Supabase)
+
+A multi-phase implementation roadmap to establish cross-platform synchronization of rules, schedules, and active focus sessions across Android, Windows, and Web Extension clients using Supabase as the central authority:
+
+### Phase 1: Database Schema & RLS Setup
+- Provision tables in Supabase: `profiles`, `devices`, and `sync_rules`.
+- Implement Row-Level Security (RLS) policies to isolate user device rules.
+- Set up signup triggers linking parental accounts.
+
+### Phase 2: Android App Integration
+- Migrate legacy `src/sync` worker code to the active namespace (`com.alhaq.amnshield.data.sync`).
+- Bind Google Account authentication in Compose settings to Supabase Auth.
+- Implement background `SyncWorker` scheduling via `WorkManager`.
+- Configure silent Firebase Cloud Messaging (FCM) wakeup receivers to trigger real-time updates.
+- Fire local IPC broadcasts to keep the companion FireWall app in sync offline.
+
+### Phase 3: Windows Client Integration
+- Implement Supabase API REST polling in the Flutter client.
+- Securely write synced settings updates to `C:\ProgramData\AmnShield\config.json`.
+- Let the background C# Guardian Service watch and apply these rules locally.
+
+### Phase 4: Browser Web Extension Integration
+- Wire periodic fetch queries inside the background worker script.
+- Synchronize configurations into `chrome.storage.local`.
+- Let content scripts intercept page loads matching the blocked domains.
+
+### Phase 5: Web Administration Console
+- Build the Next.js parent administration dashboard.
+- Display registered devices and their current status.
+- Allow parents to edit blocking rules, schedules, and start focus sessions remotely.
