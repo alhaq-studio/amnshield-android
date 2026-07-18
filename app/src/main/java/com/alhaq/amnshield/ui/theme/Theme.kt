@@ -71,7 +71,7 @@ private val CosmicColorScheme = darkColorScheme(
 
 @Composable
 fun AmnShieldTheme(
-    appTheme: AppTheme = AppTheme.SUNSET_GLOW,
+    appTheme: AppTheme = AppTheme.EMERALD_CALM,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when (appTheme) {
