@@ -66,8 +66,12 @@ class AmnShieldApiService : Service() {
 
     private fun callerAllowed(): Boolean {
         val packages = packageManager.getPackagesForUid(Binder.getCallingUid())
-        // For development, always allow the Guardian app and standard debug applications.
-        if (packages != null && (packages.contains("com.alhaq.amnshield.guardian") || packages.contains("com.alhaq.amnshield.guardian.debug"))) {
+        // For development, always allow the Guardian/Firewall apps and standard debug applications.
+        if (packages != null && (
+            packages.contains("com.alhaq.amnshield.guardian") ||
+            packages.contains("com.alhaq.amnshield.guardian.debug") ||
+            packages.contains("org.alhaq.deenshield.netblock")
+        )) {
             return true
         }
         return ApiAuthStore.isAnyGranted(applicationContext, packages)
