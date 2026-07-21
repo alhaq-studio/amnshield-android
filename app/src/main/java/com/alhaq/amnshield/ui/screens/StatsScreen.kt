@@ -35,6 +35,7 @@ import com.alhaq.amnshield.ui.state.ScreenTimeDay
 
 data class AppUsageItem(
     val name: String,
+    val packageName: String,
     val timeFormatted: String,
     val progress: Float,
     val icon: android.graphics.Bitmap? = null
@@ -50,7 +51,8 @@ fun StatsScreen(
     topApps: List<AppUsageItem>,
     onRefresh: () -> Unit,
     onViewDetailedUsage: () -> Unit,
-    onViewReelsMetrics: () -> Unit
+    onViewReelsMetrics: () -> Unit,
+    onAppClick: (String) -> Unit
 ) {
     val userGoal = 120 // Default 2 hours limit in minutes
     // Parse total hours & minutes to calculate progress ratio
@@ -390,7 +392,8 @@ fun StatsScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 4.dp)
+                        .clickable { onAppClick(app.packageName) },
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface

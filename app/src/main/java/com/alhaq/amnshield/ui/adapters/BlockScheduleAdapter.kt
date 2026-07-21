@@ -59,7 +59,8 @@ class BlockScheduleAdapter(
                 binding.scheduleGroupBadge.text = rule.groupTitle?.takeIf { it.isNotBlank() } ?: "Batch schedule"
             }
 
-            val timeWindow = when (rule.recurrence) {
+            val recurrence = rule.recurrence ?: AppBlockScheduleRule.Recurrence.DAILY
+            val timeWindow = when (recurrence) {
                 AppBlockScheduleRule.Recurrence.ALWAYS -> "Always active"
                 AppBlockScheduleRule.Recurrence.HOURLY -> {
                     if (rule.activeUntilMillis > System.currentTimeMillis()) {
@@ -81,7 +82,7 @@ class BlockScheduleAdapter(
             }
             binding.scheduleTimeWindow.text = timeWindow
 
-            binding.scheduleRecurrence.text = when (rule.recurrence) {
+            binding.scheduleRecurrence.text = when (recurrence) {
                 AppBlockScheduleRule.Recurrence.HOURLY -> "Repeats hourly"
                 AppBlockScheduleRule.Recurrence.DAILY -> "Repeats daily"
                 AppBlockScheduleRule.Recurrence.WEEKLY -> {
@@ -89,7 +90,7 @@ class BlockScheduleAdapter(
                         1 to "Sun", 2 to "Mon", 3 to "Tue", 4 to "Wed",
                         5 to "Thu", 6 to "Fri", 7 to "Sat"
                     )
-                    val selectedDayNames = rule.selectedDays
+                    val selectedDayNames = (rule.selectedDays ?: emptySet())
                         .map { days[it] ?: "" }
                         .filter { it.isNotEmpty() }
                         .joinToString(", ")

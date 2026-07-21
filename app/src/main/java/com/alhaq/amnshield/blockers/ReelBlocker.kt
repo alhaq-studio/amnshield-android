@@ -23,9 +23,13 @@ class ReelBlocker : BaseBlocker() {
 
         // Map of native (non-browser) reel surface view IDs to their platform.
         private val NATIVE_SURFACE_PLATFORM = linkedMapOf(
-            "com.instagram.android:id/root_clips_layout" to PLATFORM_INSTAGRAM,
+            "com.instagram.android:id/clips_viewer_view_pager" to PLATFORM_INSTAGRAM,
+            "com.myinsta.android:id/clips_viewer_view_pager" to PLATFORM_INSTAGRAM,
             "com.google.android.youtube:id/reel_recycler" to PLATFORM_YOUTUBE,
-            "app.revanced.android.youtube:id/reel_recycler" to PLATFORM_YOUTUBE
+            "app.revanced.android.youtube:id/reel_recycler" to PLATFORM_YOUTUBE,
+            "app.morphe.android.youtube:id/reel_recycler" to PLATFORM_YOUTUBE,
+            "desc:Tap to show video controls" to PLATFORM_INSTAGRAM,
+            "desc:Spotlight" to PLATFORM_INSTAGRAM
         )
 
         // Backwards-compat alias kept for older code paths.
@@ -264,10 +268,31 @@ class ReelBlocker : BaseBlocker() {
     }
 
     private fun isViewOpened(rootNode: AccessibilityNodeInfo, viewId: String): Boolean {
+        if (viewId.startsWith("desc:")) {
+            val desc = viewId.substring(5)
+            val node = findElementByDescription(rootNode, desc)
+            val opened = node != null
+            node?.recycle()
+            return opened
+        }
         val node = ViewBlocker.findElementById(rootNode, viewId)
         val opened = node != null
         node?.recycle()
         return opened
+    }
+
+    private fun findElementByDescription(node: AccessibilityNodeInfo?, desc: String): AccessibilityNodeInfo? {
+        if (node == null) return null
+        if (node.contentDescription?.toString() == desc) {
+            return AccessibilityNodeInfo.obtain(node)
+        }
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val found = findElementByDescription(child, desc)
+            child.recycle()
+            if (found != null) return found
+        }
+        return null
     }
 
     private fun isBlockingDeferredByCountMode(): Boolean {

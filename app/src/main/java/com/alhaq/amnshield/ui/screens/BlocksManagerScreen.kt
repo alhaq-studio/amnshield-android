@@ -45,9 +45,9 @@ fun BlocksManagerScreen(
     var selectedFilter by remember { mutableStateOf(initialFilter) }
 
     val filteredRules = when (selectedFilter) {
-        "Schedules" -> state.scheduleRules.filter { it.restrictionType == "Block Schedule" }
-        "Limits" -> state.scheduleRules.filter { it.restrictionType == "Launch Limit" || it.restrictionType == "Usage Limit" }
-        "Cheat Hours" -> state.scheduleRules.filter { it.restrictionType == "Cheat Window" }
+        "Schedules" -> state.scheduleRules.filter { it.isScheduleEnabled }
+        "Limits" -> state.scheduleRules.filter { it.isUsageLimitEnabled || it.isLaunchLimitEnabled }
+        "Cheat Hours" -> state.scheduleRules.filter { it.isCheatEnabled }
         else -> state.scheduleRules
     }
 
@@ -79,24 +79,16 @@ fun BlocksManagerScreen(
             )
         },
         floatingActionButton = {
-            if (!state.isAdvancedMode) {
-                ExtendedFloatingActionButton(
-                    text = { Text("Add Rule", fontWeight = FontWeight.Bold) },
-                    icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
-                    onClick = {
-                        val defaultType = when (selectedFilter) {
-                            "Schedules" -> "Block Schedule"
-                            "Limits" -> "Launch Limit"
-                            "Cheat Hours" -> "Cheat Window"
-                            else -> "Block Schedule"
-                        }
-                        onNavigateToCreateRule(defaultType)
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
+            ExtendedFloatingActionButton(
+                text = { Text("Add Rule", fontWeight = FontWeight.Bold) },
+                icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
+                onClick = {
+                    onNavigateToCreateRule("Block Schedule")
+                },
+                shape = RoundedCornerShape(16.dp),
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
     ) { paddingValues ->
         Column(
@@ -206,6 +198,7 @@ fun BlocksManagerScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RuleItemCard(
     rule: ScheduleRule,
@@ -213,25 +206,18 @@ fun RuleItemCard(
     onDelete: () -> Unit,
     onClick: () -> Unit
 ) {
-    val themeColor = when (rule.restrictionType) {
-        "Block Schedule" -> Color(0xFFEF4444) // Red
-        "Launch Limit" -> Color(0xFF8B5CF6) // Purple
-        "Usage Limit" -> Color(0xFF3B82F6) // Blue
-        else -> Color(0xFFF59E0B) // Amber
+    val blockerColor = when (rule.targetBlockerType) {
+        "Keyword Blocker" -> Color(0xFF10B981) // Emerald
+        "Website Blocker" -> Color(0xFF3B82F6) // Blue
+        "Reels Blocker" -> Color(0xFFEC4899) // Pink
+        else -> Color(0xFF8B5CF6) // Purple
     }
 
-    val iconType = when (rule.restrictionType) {
-        "Block Schedule" -> Icons.Outlined.Lock
-        "Launch Limit" -> Icons.Outlined.Launch
-        "Usage Limit" -> Icons.Outlined.HourglassEmpty
-        else -> Icons.Outlined.Star
-    }
-
-    val badgeText = when (rule.restrictionType) {
-        "Block Schedule" -> "Full Block"
-        "Launch Limit" -> "Limit: ${rule.limitValue}x opens"
-        "Usage Limit" -> "Limit: ${rule.limitValue}h usage"
-        else -> "Cheat: ${rule.limitValue}m left"
+    val blockerIcon = when (rule.targetBlockerType) {
+        "Keyword Blocker" -> Icons.Outlined.Search
+        "Website Blocker" -> Icons.Outlined.Language
+        "Reels Blocker" -> Icons.Outlined.PlayCircleOutline
+        else -> Icons.Outlined.AppShortcut
     }
 
     Card(
@@ -257,13 +243,13 @@ fun RuleItemCard(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(themeColor.copy(alpha = 0.15f)),
+                        .background(blockerColor.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = iconType,
+                        imageVector = blockerIcon,
                         contentDescription = null,
-                        tint = themeColor,
+                        tint = blockerColor,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -284,8 +270,8 @@ fun RuleItemCard(
                         Text(
                             text = rule.appOrCategory,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
+                            color = blockerColor,
+                            fontWeight = FontWeight.SemiBold
                         )
                         Box(
                             modifier = Modifier
@@ -294,10 +280,10 @@ fun RuleItemCard(
                                 .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                         )
                         Text(
-                            text = badgeText,
+                            text = rule.targetBlockerType,
                             style = MaterialTheme.typography.bodySmall,
-                            color = themeColor,
-                            fontWeight = FontWeight.SemiBold
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
@@ -312,7 +298,72 @@ fun RuleItemCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Display active modes as premium badges/chips in a FlowRow
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (rule.isScheduleEnabled) {
+                    SuggestionChip(
+                        onClick = {},
+                        label = { Text("Active: ${rule.startTime}-${rule.endTime}", fontSize = 11.sp) },
+                        icon = { Icon(imageVector = Icons.Outlined.Lock, contentDescription = null, modifier = Modifier.size(12.dp)) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = Color(0xFFEF4444).copy(alpha = 0.08f),
+                            labelColor = Color(0xFFEF4444),
+                            iconContentColor = Color(0xFFEF4444)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.2f))
+                    )
+                }
+
+                if (rule.isCheatEnabled) {
+                    SuggestionChip(
+                        onClick = {},
+                        label = { Text("Cheat: ${rule.cheatStartTime}-${rule.cheatEndTime}", fontSize = 11.sp) },
+                        icon = { Icon(imageVector = Icons.Outlined.HourglassEmpty, contentDescription = null, modifier = Modifier.size(12.dp)) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = Color(0xFFF59E0B).copy(alpha = 0.08f),
+                            labelColor = Color(0xFFF59E0B),
+                            iconContentColor = Color(0xFFF59E0B)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFFF59E0B).copy(alpha = 0.2f))
+                    )
+                }
+
+                if (rule.isUsageLimitEnabled) {
+                    SuggestionChip(
+                        onClick = {},
+                        label = { Text("Usage: ${rule.usageLimitHours}h/day", fontSize = 11.sp) },
+                        icon = { Icon(imageVector = Icons.Outlined.Timer, contentDescription = null, modifier = Modifier.size(12.dp)) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = Color(0xFF3B82F6).copy(alpha = 0.08f),
+                            labelColor = Color(0xFF3B82F6),
+                            iconContentColor = Color(0xFF3B82F6)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFF3B82F6).copy(alpha = 0.2f))
+                    )
+                }
+
+                if (rule.isLaunchLimitEnabled) {
+                    SuggestionChip(
+                        onClick = {},
+                        label = { Text("Launch: ${rule.launchLimitCount}x/day", fontSize = 11.sp) },
+                        icon = { Icon(imageVector = Icons.Outlined.Launch, contentDescription = null, modifier = Modifier.size(12.dp)) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = Color(0xFF8B5CF6).copy(alpha = 0.08f),
+                            labelColor = Color(0xFF8B5CF6),
+                            iconContentColor = Color(0xFF8B5CF6)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFF8B5CF6).copy(alpha = 0.2f))
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -327,33 +378,24 @@ fun RuleItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    val displayPeriods = if (rule.periods.isNotEmpty()) rule.periods else listOf(SchedulePeriod(rule.startTime, rule.endTime, rule.days))
-                    displayPeriods.forEachIndexed { index, period ->
+                    val daysList = (if (rule.isScheduleEnabled) rule.days else if (rule.isCheatEnabled) rule.cheatDays else emptyList()) ?: emptyList()
+                    if (daysList.isNotEmpty()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Outlined.AccessTime,
+                                imageVector = Icons.Outlined.CalendarMonth,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = "${period.startTime} - ${period.endTime}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = daysList.joinToString(" • "),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                fontWeight = FontWeight.Medium
                             )
-                        }
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = period.days.joinToString(" • "),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Medium
-                        )
-                        if (index < displayPeriods.lastIndex) {
-                            Spacer(modifier = Modifier.height(10.dp))
                         }
                     }
                 }

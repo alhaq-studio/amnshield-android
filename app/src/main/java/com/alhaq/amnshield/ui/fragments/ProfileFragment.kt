@@ -121,8 +121,7 @@ class ProfileFragment : Fragment() {
         val bio = sharedPrefs.getString("profile_bio", "") ?: ""
         val profileType = sharedPrefs.getString("profile_type", "Deep Focus") ?: "Deep Focus"
         
-        val enforcementPrefs = requireContext().getSharedPreferences("enforcement_prefs", Context.MODE_PRIVATE)
-        val isAdvanced = enforcementPrefs.getString("enforcement_mode", "SIMPLE") == "ADVANCED"
+        val isAdvanced = true
         
         viewModel.updateProfile(
             name = name,

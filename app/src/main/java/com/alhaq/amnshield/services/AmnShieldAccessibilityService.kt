@@ -16,11 +16,11 @@ import com.alhaq.amnshield.Constants
 import com.alhaq.amnshield.CrashLogger
 import com.alhaq.amnshield.R
 import com.alhaq.amnshield.blockers.AppBlocker
+import com.alhaq.amnshield.data.blockers.AppBlockScheduleRule
 import com.alhaq.amnshield.blockers.FocusModeBlocker
 import com.alhaq.amnshield.blockers.KeywordBlocker
 import com.alhaq.amnshield.blockers.ReelBlocker
 import com.alhaq.amnshield.blockers.ViewBlocker
-import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
 import com.alhaq.amnshield.premium.PremiumManager
 import com.alhaq.amnshield.ui.activity.MainActivity
 import com.alhaq.amnshield.ui.activity.WarningActivity
@@ -51,7 +51,6 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         const val INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES = "amnshield.refresh.unified.feature.schedules"
         const val INTENT_ACTION_REFRESH_ANTI_UNINSTALL = ".amnshield.refresh.anti_uninstall"
         const val INTENT_ACTION_PASSWORD_VERIFIED = "amnshield.password.verified"
-        private const val UNIFIED_SCHEDULE_EVAL_INTERVAL_MS = 15_000L
     }
 
     private lateinit var appBlocker: AppBlocker
@@ -81,7 +80,6 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
     private var lastPasswordVerificationTime = 0L
     private val PASSWORD_VERIFICATION_COOLDOWN = 5 * 60 * 1000L
     private var isPasswordVerified = false
-    private var lastUnifiedScheduleEvalTime = 0L
     private var cachedDefaultLauncher: String? = null
     private var lastTrackedLaunchPackage: String? = null
 
@@ -154,8 +152,6 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             registerReceiver(refreshReceiver, filter)
         }
 
-        evaluateUnifiedFeatureSchedulesIfNeeded(force = true)
-
         startBackgroundWorker()
     }
 
@@ -194,7 +190,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 return
             }
 
-            evaluateUnifiedFeatureSchedulesIfNeeded()
+
 
             if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                 val isSystemOrSelf = packageName.equals("com.android.systemui", ignoreCase = true) ||
@@ -275,44 +271,18 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 }
             }
 
-            if (savedPreferencesLoader.isWebsiteBlockerEnabled()) {
-                val now = System.currentTimeMillis()
-                val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules().filter {
-                    it.isRuleEnabled && it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER)
-                }
-
-                var hasActiveBlock = false
-                var hasActiveCheat = false
-                rules.forEach { rule ->
-                    val isActive = isUnifiedRuleActive(rule, now)
-                    if (isActive) {
-                        if (rule.type == UnifiedFeatureScheduleRule.RuleType.BLOCK) {
-                            hasActiveBlock = true
-                        } else if (rule.type == UnifiedFeatureScheduleRule.RuleType.CHEAT) {
-                            hasActiveCheat = true
-                        }
+            if (savedPreferencesLoader.isWebsiteBlockerEnabled() && isFeatureCurrentlyActive("website_blocker")) {
+                val blockedSocialApps = savedPreferencesLoader.loadBlockedWebsitesApps()
+                if (blockedSocialApps.contains(packageName)) {
+                    blockingStatsManager.recordAppBlock(packageName, "Blocked by Website Blocker")
+                    val intent = Intent(this, WarningActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        putExtra("mode", Constants.WARNING_SCREEN_MODE_APP_BLOCKER)
+                        putExtra("result_id", packageName)
+                        putExtra("blocked_by_feature", "Website Blocker")
                     }
-                }
-
-                val isWebsiteBlockerCurrentlyActive = if (rules.isNotEmpty()) {
-                    hasActiveBlock && !hasActiveCheat
-                } else {
-                    true
-                }
-
-                if (isWebsiteBlockerCurrentlyActive) {
-                    val blockedSocialApps = savedPreferencesLoader.loadBlockedWebsitesApps()
-                    if (blockedSocialApps.contains(packageName)) {
-                        blockingStatsManager.recordAppBlock(packageName, "Blocked by Website Blocker")
-                        val intent = Intent(this, WarningActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            putExtra("mode", Constants.WARNING_SCREEN_MODE_APP_BLOCKER)
-                            putExtra("result_id", packageName)
-                            putExtra("blocked_by_feature", "Website Blocker")
-                        }
-                        startActivity(intent)
-                        return
-                    }
+                    startActivity(intent)
+                    return
                 }
             }
 
@@ -385,66 +355,27 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             }
 
             val isKeywordEnabled = savedPreferencesLoader.isKeywordBlockerFeatureEnabled()
-            if (isKeywordEnabled) {
-                val now = System.currentTimeMillis()
-                val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules().filter {
-                    it.isRuleEnabled && it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER)
-                }
+            if (isKeywordEnabled && isFeatureCurrentlyActive("keyword_blocker")) {
+                val manualKeywords = savedPreferencesLoader.loadBlockedKeywords()
+                    .map { it.trim().lowercase(Locale.ROOT) }
+                    .filter { it.isNotEmpty() }
 
-                var hasActiveBlock = false
-                var hasActiveCheat = false
-                val activeKeywords = mutableSetOf<String>()
-                val allScheduledKeywords = mutableSetOf<String>()
-
-                rules.forEach { rule ->
-                    val isActive = isUnifiedRuleActive(rule, now)
-                    allScheduledKeywords.addAll(rule.selectedKeywords.map { it.trim().lowercase(Locale.ROOT) })
-                    if (isActive) {
-                        if (rule.type == UnifiedFeatureScheduleRule.RuleType.BLOCK) {
-                            activeKeywords.addAll(rule.selectedKeywords.map { it.trim().lowercase(Locale.ROOT) })
-                            hasActiveBlock = true
-                        } else if (rule.type == UnifiedFeatureScheduleRule.RuleType.CHEAT) {
-                            hasActiveCheat = true
+                if (manualKeywords.isNotEmpty()) {
+                    keywordBlocker.blockedKeyword = HashSet(manualKeywords)
+                    try {
+                        val keywordResult = keywordBlocker.checkIfUserGettingFreaky(rootNode, event)
+                        if (keywordResult.resultDetectWord != null) {
+                            blockingStatsManager.recordKeywordBlock(keywordResult.resultDetectWord, packageName)
+                            pressBack()
+                            return
                         }
-                    }
-                }
-
-                val isKeywordCurrentlyActive = if (rules.isNotEmpty()) {
-                    hasActiveBlock && !hasActiveCheat
-                } else {
-                    true
-                }
-
-                if (isKeywordCurrentlyActive && !hasActiveCheat) {
-                    val manualKeywords = savedPreferencesLoader.loadBlockedKeywords()
-                        .map { it.trim().lowercase(Locale.ROOT) }
-                        .filter { it.isNotEmpty() }
-
-                    val finalKeywords = mutableSetOf<String>()
-                    finalKeywords.addAll(activeKeywords)
-                    manualKeywords.forEach { kw ->
-                        if (!allScheduledKeywords.contains(kw)) {
-                            finalKeywords.add(kw)
-                        }
-                    }
-
-                    if (finalKeywords.isNotEmpty()) {
-                        keywordBlocker.blockedKeyword = HashSet(finalKeywords)
-                        try {
-                            val keywordResult = keywordBlocker.checkIfUserGettingFreaky(rootNode, event)
-                            if (keywordResult.resultDetectWord != null) {
-                                blockingStatsManager.recordKeywordBlock(keywordResult.resultDetectWord, packageName)
-                                pressBack()
-                                return
-                            }
-                        } catch (e: Exception) {
-                            android.util.Log.e("AmnShield", "Core Keyword blocker error", e)
-                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("AmnShield", "Core Keyword blocker error", e)
                     }
                 }
             }
 
-            if (savedPreferencesLoader.isWebsiteBlockerEnabled()) {
+            if (savedPreferencesLoader.isWebsiteBlockerEnabled() && isFeatureCurrentlyActive("website_blocker")) {
                 try {
                     if (checkBlockedWebsites(rootNode, packageName)) {
                         blockingStatsManager.recordAppBlock(packageName, "Website Blocked: $packageName")
@@ -457,73 +388,24 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             }
 
             val isReelsEnabled = savedPreferencesLoader.isReelBlockerEnabled()
-            if (isReelsEnabled) {
-                val now = System.currentTimeMillis()
-                val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules().filter {
-                    it.isRuleEnabled && it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER)
-                }
+            if (isReelsEnabled && isFeatureCurrentlyActive("reel_blocker")) {
+                reelBlocker.isYoutubeEnabled = savedPreferencesLoader.isReelBlockerYoutubeEnabled()
+                reelBlocker.isInstagramEnabled = savedPreferencesLoader.isReelBlockerInstagramEnabled()
+                reelBlocker.isTiktokEnabled = savedPreferencesLoader.isReelBlockerTiktokEnabled()
+                reelBlocker.isBrowserShortsEnabled = savedPreferencesLoader.isReelBlockerBrowserEnabled()
+                reelBlocker.modeType = savedPreferencesLoader.getReelBlockerMode()
+                reelBlocker.dailyReelLimit = savedPreferencesLoader.getReelBlockerDailyLimit()
+                reelBlocker.reelsScrolledToday = savedPreferencesLoader.getReelsScrolledToday()
 
-                var hasActiveBlock = false
-                var hasActiveCheat = false
-                val activePlatforms = mutableSetOf<String>()
-                val allScheduledPlatforms = mutableSetOf<String>()
-
-                rules.forEach { rule ->
-                    val isActive = isUnifiedRuleActive(rule, now)
-                    allScheduledPlatforms.addAll(rule.selectedPlatforms)
-                    if (isActive) {
-                        if (rule.type == UnifiedFeatureScheduleRule.RuleType.BLOCK) {
-                            activePlatforms.addAll(rule.selectedPlatforms)
-                            hasActiveBlock = true
-                        } else if (rule.type == UnifiedFeatureScheduleRule.RuleType.CHEAT) {
-                            hasActiveCheat = true
-                        }
+                try {
+                    val reelBlockerResult = reelBlocker.doesReelNeedToBeBlocked(rootNode, packageName)
+                    if (reelBlockerResult != null && reelBlockerResult.isBlocked) {
+                        blockingStatsManager.recordViewBlock(packageName, reelBlockerResult.viewId)
+                        handleReelBlockerResult(reelBlockerResult)
+                        return
                     }
-                }
-
-                val isReelsCurrentlyActive = if (rules.isNotEmpty()) {
-                    hasActiveBlock && !hasActiveCheat
-                } else {
-                    true
-                }
-
-                if (isReelsCurrentlyActive && !hasActiveCheat) {
-                    val manualYoutube = savedPreferencesLoader.isReelBlockerYoutubeEnabled()
-                    val manualInstagram = savedPreferencesLoader.isReelBlockerInstagramEnabled()
-                    val manualTiktok = savedPreferencesLoader.isReelBlockerTiktokEnabled()
-
-                    val isYTBlocked = if (allScheduledPlatforms.contains("YouTube")) {
-                        activePlatforms.contains("YouTube")
-                    } else {
-                        manualYoutube
-                    }
-
-                    val isIGBlocked = if (allScheduledPlatforms.contains("Instagram")) {
-                        activePlatforms.contains("Instagram")
-                    } else {
-                        manualInstagram
-                    }
-
-                    val isTTBlocked = if (allScheduledPlatforms.contains("TikTok")) {
-                        activePlatforms.contains("TikTok")
-                    } else {
-                        manualTiktok
-                    }
-
-                    reelBlocker.isYoutubeEnabled = isYTBlocked
-                    reelBlocker.isInstagramEnabled = isIGBlocked
-                    reelBlocker.isTiktokEnabled = isTTBlocked
-
-                    try {
-                        val reelBlockerResult = reelBlocker.doesReelNeedToBeBlocked(rootNode, packageName)
-                        if (reelBlockerResult != null && reelBlockerResult.isBlocked) {
-                            blockingStatsManager.recordViewBlock(packageName, reelBlockerResult.viewId)
-                            handleReelBlockerResult(reelBlockerResult)
-                            return
-                        }
-                    } catch (e: Exception) {
-                        android.util.Log.e("AmnShield", "Reel blocker error", e)
-                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("AmnShield", "Reel blocker error", e)
                 }
             }
         } finally {
@@ -556,7 +438,12 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                 INTENT_ACTION_REFRESH_VIEW_BLOCKER -> setupViewBlocker()
                 INTENT_ACTION_REFRESH_REEL_BLOCKER -> setupReelBlocker()
                 INTENT_ACTION_REFRESH_FOCUS_MODE -> setupFocusMode()
-                INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES -> evaluateUnifiedFeatureSchedulesIfNeeded(force = true)
+                INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES -> {
+                    setupAppBlocker()
+                    setupReelBlocker()
+                    setupKeywordBlocker()
+                    setupViewBlocker()
+                }
                 INTENT_ACTION_REFRESH_ANTI_UNINSTALL -> setupAntiUninstall()
                 INTENT_ACTION_REFRESH_VIEW_BLOCKER_COOLDOWN -> {
                     val interval = intent.getIntExtra("selected_time", viewBlockerWarningConfig.timeInterval)
@@ -672,7 +559,8 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         reelBlocker.isYoutubeEnabled = reelBlockerPrefs.getBoolean("is_youtube_enabled", true)
         reelBlocker.isInstagramEnabled = reelBlockerPrefs.getBoolean("is_instagram_enabled", true)
         reelBlocker.isTiktokEnabled = reelBlockerPrefs.getBoolean("is_tiktok_enabled", true)
-        reelBlocker.isBrowserShortsEnabled = reelBlockerPrefs.getBoolean("is_browser_enabled", false)
+        reelBlocker.isBrowserShortsEnabled = savedPreferencesLoader.isReelBlockerBrowserEnabled()
+        reelBlocker.reelsScrolledToday = savedPreferencesLoader.getReelsScrolledToday()
 
         reelBlocker.restoreCooldowns(savedPreferencesLoader.loadReelBlockerCooldownData())
         savedPreferencesLoader.saveReelBlockerCooldownData(reelBlocker.getCooldownSnapshot())
@@ -704,89 +592,9 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         focusModeBlocker.update(focusModeData)
     }
 
-    private fun evaluateUnifiedFeatureSchedulesIfNeeded(force: Boolean = false) {
-        val now = System.currentTimeMillis()
-        if (!force && (now - lastUnifiedScheduleEvalTime) < UNIFIED_SCHEDULE_EVAL_INTERVAL_MS) {
-            return
-        }
-        lastUnifiedScheduleEvalTime = now
 
-        val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules()
-        val activeRules = rules.filter { it.isRuleEnabled }
 
-        UnifiedFeatureScheduleRule.FeatureTarget.entries.forEach { target ->
-            val targetRules = activeRules.filter { it.targets.contains(target) }
 
-            val activeCheat = targetRules.firstOrNull {
-                it.type == UnifiedFeatureScheduleRule.RuleType.CHEAT && isUnifiedRuleActive(it, now)
-            }
-            val activeBlock = targetRules.firstOrNull {
-                it.type == UnifiedFeatureScheduleRule.RuleType.BLOCK && isUnifiedRuleActive(it, now)
-            }
-
-            val targetEnabled = when {
-                activeCheat != null -> false
-                activeBlock != null -> true
-                else -> savedPreferencesLoader.getManualFeatureState(target)
-            }
-
-            applyUnifiedFeatureState(target, targetEnabled)
-        }
-    }
-
-    private fun applyUnifiedFeatureState(
-        target: UnifiedFeatureScheduleRule.FeatureTarget,
-        enabled: Boolean
-    ) {
-        when (target) {
-            UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER -> {
-                if (savedPreferencesLoader.isAppBlockerFeatureEnabled() != enabled) {
-                    savedPreferencesLoader.setAppBlockerFeatureEnabled(enabled, updateManual = false)
-                    setupAppBlocker()
-                }
-            }
-
-            UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER -> {
-                if (savedPreferencesLoader.isKeywordBlockerFeatureEnabled() != enabled) {
-                    savedPreferencesLoader.setKeywordBlockerFeatureEnabled(enabled, updateManual = false)
-                    setupKeywordBlocker()
-                }
-            }
-
-            UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER -> {
-                if (savedPreferencesLoader.isReelBlockerEnabled() != enabled) {
-                    savedPreferencesLoader.setReelBlockerEnabled(enabled, updateManual = false)
-                    setupReelBlocker()
-                }
-            }
-
-            UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE -> {
-                if (savedPreferencesLoader.isFocusModeFeatureEnabled() != enabled) {
-                    savedPreferencesLoader.setFocusModeFeatureEnabled(enabled, updateManual = false)
-                    setupFocusMode()
-                }
-            }
-
-            UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER -> {
-                if (savedPreferencesLoader.isWebsiteBlockerEnabled() != enabled) {
-                    savedPreferencesLoader.setWebsiteBlockerEnabled(enabled, updateManual = false)
-                }
-            }
-        }
-    }
-
-    private fun isUnifiedRuleActive(rule: UnifiedFeatureScheduleRule, nowMillis: Long): Boolean {
-        return when (rule.recurrence) {
-            UnifiedFeatureScheduleRule.Recurrence.ALWAYS -> true
-            UnifiedFeatureScheduleRule.Recurrence.HOURLY -> rule.activeUntilMillis > nowMillis
-            UnifiedFeatureScheduleRule.Recurrence.DAILY -> {
-                ScheduleUtils.isDailyWindowActive(rule.startMinute, rule.endMinute, nowMillis)
-            }
-            UnifiedFeatureScheduleRule.Recurrence.WEEKLY -> {
-                ScheduleUtils.isWeeklyWindowActive(rule.startMinute, rule.endMinute, rule.selectedDays, nowMillis)
-            }
-        }
-    }
 
     private fun setupAntiUninstall() {
         val info = getSharedPreferences("anti_uninstall", Context.MODE_PRIVATE)
@@ -1285,44 +1093,11 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         return try {
             val urlText = urlNode.text?.toString()?.lowercase(java.util.Locale.ROOT).orEmpty()
             if (urlText.isNotBlank()) {
-                val now = System.currentTimeMillis()
-                val rules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules().filter { 
-                    it.isRuleEnabled && it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER)
-                }
-
-                var hasActiveCheat = false
-                val activeWebsites = mutableSetOf<String>()
-                val allScheduledWebsites = mutableSetOf<String>()
-
-                rules.forEach { rule ->
-                    val isActive = isUnifiedRuleActive(rule, now)
-                    allScheduledWebsites.addAll(rule.selectedWebsites.map { it.trim().lowercase(Locale.ROOT) })
-                    if (isActive) {
-                        if (rule.type == UnifiedFeatureScheduleRule.RuleType.BLOCK) {
-                            activeWebsites.addAll(rule.selectedWebsites.map { it.trim().lowercase(Locale.ROOT) })
-                        } else if (rule.type == UnifiedFeatureScheduleRule.RuleType.CHEAT) {
-                            hasActiveCheat = true
-                        }
-                    }
-                }
-
-                if (hasActiveCheat) return false
-
-                // 1. Check active scheduled websites
-                for (site in activeWebsites) {
-                    if (urlText.contains(site)) {
-                        return true
-                    }
-                }
-
-                // 2. Check manual websites (only if not overridden by an inactive schedule rule)
                 val manualWebsites = savedPreferencesLoader.loadBlockedWebsites()
                 for (site in manualWebsites) {
                     val siteLower = site.trim().lowercase(Locale.ROOT)
-                    if (urlText.contains(siteLower)) {
-                        if (!allScheduledWebsites.contains(siteLower)) {
-                            return true
-                        }
+                    if (siteLower.isNotEmpty() && urlText.contains(siteLower)) {
+                        return true
                     }
                 }
             }
@@ -1333,6 +1108,61 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
     }
 
     override fun onInterrupt() {
+    }
+
+    private fun isFeatureCurrentlyActive(featureKey: String): Boolean {
+        val allRules = savedPreferencesLoader.loadAppBlockerScheduleRules()
+            .filter { it.packageName == featureKey }
+
+        if (allRules.isEmpty()) {
+            return true // Fallback: If no custom feature schedule rules are set, feature is ACTIVE 24/7 when enabled
+        }
+
+        val enabledRules = allRules.filter { it.isRuleEnabled }
+        if (enabledRules.isEmpty()) {
+            return true // Fallback: If all defined feature schedule rules are disabled, fallback to ACTIVE 24/7
+        }
+
+        // Check cheat hours (cheat window bypasses blocking)
+        val cheatRules = enabledRules.filter { it.type == AppBlockScheduleRule.RuleType.CHEAT }
+        val activeCheatEnd = getActiveRuleEndTimeLocal(cheatRules)
+        if (activeCheatEnd != null) {
+            return false // Bypassed during active cheat window
+        }
+
+        // Check block schedules
+        val blockRules = enabledRules.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK }
+        if (blockRules.isNotEmpty()) {
+            val activeBlockEnd = getActiveRuleEndTimeLocal(blockRules)
+            return activeBlockEnd != null // Active only inside scheduled block window
+        }
+
+        return true // Active 24/7 outside cheat windows
+    }
+
+    private fun getActiveRuleEndTimeLocal(rules: List<AppBlockScheduleRule>): Long? {
+        if (rules.isEmpty()) return null
+        val nowMillis = System.currentTimeMillis()
+        var latestEnd: Long? = null
+        rules.forEach { rule ->
+            val recurrence = rule.recurrence ?: AppBlockScheduleRule.Recurrence.DAILY
+            val candidateEnd = when (recurrence) {
+                AppBlockScheduleRule.Recurrence.ALWAYS -> nowMillis + (24L * 60L * 60L * 1000L)
+                AppBlockScheduleRule.Recurrence.HOURLY -> {
+                    if (rule.activeUntilMillis > nowMillis) rule.activeUntilMillis else null
+                }
+                AppBlockScheduleRule.Recurrence.DAILY -> {
+                    ScheduleUtils.getDailyWindowEndTime(rule.startMinute, rule.endMinute, nowMillis)
+                }
+                AppBlockScheduleRule.Recurrence.WEEKLY -> {
+                    ScheduleUtils.getWeeklyWindowEndTime(rule.startMinute, rule.endMinute, rule.selectedDays ?: emptySet(), nowMillis)
+                }
+            }
+            if (candidateEnd != null) {
+                latestEnd = if (latestEnd == null) candidateEnd else maxOf(latestEnd, candidateEnd)
+            }
+        }
+        return latestEnd
     }
 
     override fun onDestroy() {

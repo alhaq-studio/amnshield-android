@@ -35,7 +35,19 @@ class AppBlocker : BaseBlocker() {
             return AppBlockerResult(isBlocked = false)
         }
 
-        val packageRules = scheduleRules.filter { it.packageName == packageName && it.isRuleEnabled }
+        if (scheduleRules.isEmpty()) {
+            return AppBlockerResult(isBlocked = false)
+        }
+
+        val allPackageRules = scheduleRules.filter { it.packageName == packageName }
+        if (allPackageRules.isEmpty()) {
+            return AppBlockerResult(isBlocked = false)
+        }
+
+        val packageRules = allPackageRules.filter { it.isRuleEnabled }
+        if (packageRules.isEmpty()) {
+            return AppBlockerResult(isBlocked = false)
+        }
 
         // 2. Check for active CHEAT rules (highest priority bypass)
         val activeCheatEnd = getActiveRuleEndTime(
@@ -90,14 +102,7 @@ class AppBlocker : BaseBlocker() {
             }
         }
 
-        // C) Manual Block List check
-        if (blockedApps.contains(packageName)) {
-            // If there are BLOCK rules defined for this app, they override the manual list.
-            // If none are active, we don't block. If there are NO rules, we block always.
-            if (blockRules.isEmpty() && usageLimitRules.isEmpty()) {
-                shouldBeBlocked = true
-            }
-        }
+
 
         return AppBlockerResult(isBlocked = shouldBeBlocked)
     }
@@ -155,7 +160,8 @@ class AppBlocker : BaseBlocker() {
         var latestEnd: Long? = null
 
         rules.forEach { rule ->
-            val candidateEnd = when (rule.recurrence) {
+            val recurrence = rule.recurrence ?: AppBlockScheduleRule.Recurrence.DAILY
+            val candidateEnd = when (recurrence) {
                 AppBlockScheduleRule.Recurrence.ALWAYS -> nowMillis + (24L * 60L * 60L * 1000L)
                 AppBlockScheduleRule.Recurrence.HOURLY -> {
                     if (rule.activeUntilMillis > nowMillis) rule.activeUntilMillis else null
@@ -164,7 +170,7 @@ class AppBlocker : BaseBlocker() {
                     ScheduleUtils.getDailyWindowEndTime(rule.startMinute, rule.endMinute, nowMillis)
                 }
                 AppBlockScheduleRule.Recurrence.WEEKLY -> {
-                    ScheduleUtils.getWeeklyWindowEndTime(rule.startMinute, rule.endMinute, rule.selectedDays, nowMillis)
+                    ScheduleUtils.getWeeklyWindowEndTime(rule.startMinute, rule.endMinute, rule.selectedDays ?: emptySet(), nowMillis)
                 }
             }
 

@@ -82,6 +82,17 @@ class StatsFragment : Fragment() {
                         },
                         onViewReelsMetrics = {
                             (activity as? MainActivity)?.selectTab(R.id.navigation_blocks)
+                        },
+                        onAppClick = { packageName ->
+                            val intent = Intent(requireContext(), FragmentActivity::class.java)
+                            intent.putExtra("fragment", AllAppsUsageFragment.FRAGMENT_ID)
+                            intent.putExtra("target_package_name", packageName)
+                            val options = ActivityOptionsCompat.makeCustomAnimation(
+                                requireContext(),
+                                R.anim.fade_in,
+                                R.anim.fade_out
+                            )
+                            startActivity(intent, options.toBundle())
                         }
                     )
                 }
@@ -171,7 +182,7 @@ class StatsFragment : Fragment() {
                             
                             val iconBitmap = getAppIconBitmap(ctx, appStat.packageName)
                             
-                            AppUsageItem(appName, appTimeFormatted, progress, iconBitmap)
+                            AppUsageItem(appName, appStat.packageName, appTimeFormatted, progress, iconBitmap)
                         }
 
                         withContext(Dispatchers.Main) {

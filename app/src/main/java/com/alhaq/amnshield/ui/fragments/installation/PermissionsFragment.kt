@@ -18,12 +18,13 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity.POWER_SERVICE
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.alhaq.amnshield.R
 import com.alhaq.amnshield.databinding.FragmentPermissionsBinding
+import com.alhaq.amnshield.utils.PermissionGuideHelper
 import com.alhaq.amnshield.utils.ZipUtils
 import com.alhaq.amnshield.utils.ZipUtils.unzipSharedPreferencesFromUri
-
 
 class PermissionsFragment : Fragment() {
 
@@ -34,28 +35,32 @@ class PermissionsFragment : Fragment() {
     private var _binding: FragmentPermissionsBinding? = null
     private val binding get() = _binding!!  // Safe getter for binding
 
-    private var nGivenPermissions = 0
+    private lateinit var permissionGuideHelper: PermissionGuideHelper
+
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            setPermissionIcon(isGranted, binding.notifPermIcon)
+            setPermissionIconState(isGranted, binding.notifPermIcon)
+            updateNextButtonState()
         }
 
     private val batteryOptimizationLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            setPermissionIcon(isBackgroundPermissionGiven(), binding.bgPermIcon)
-
+            setPermissionIconState(isBackgroundPermissionGiven(), binding.bgPermIcon)
+            updateNextButtonState()
         }
 
+    private val accessibilityLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            setPermissionIconState(isAccessibilityPermissionGiven(), binding.accessPermIcon)
+            updateNextButtonState()
+        }
 
     private val restorePicker: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             result.data?.data?.let { uri ->
-                // Take persistent permissions if needed
                 val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 activity?.contentResolver?.takePersistableUriPermission(uri, takeFlags)
-
                 unzipSharedPreferencesFromUri(requireContext(), uri)
-
             }
         }
 
@@ -65,13 +70,14 @@ class PermissionsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentPermissionsBinding.inflate(inflater, container, false)
-
         return binding.root
     }
 
     @SuppressLint("BatteryLife")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        permissionGuideHelper = PermissionGuideHelper(requireActivity())
+
         binding.btnNext.setOnClickListener {
             val sharedPreferences =
                 requireContext().getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
@@ -81,12 +87,10 @@ class PermissionsFragment : Fragment() {
                 .replace(
                     R.id.fragment_holder,
                     AccessibilityGuide()
-                ) // Replace with FragmentB
+                )
                 .addToBackStack(null)
                 .commit()
         }
-        setPermissionIcon(isBackgroundPermissionGiven(), binding.bgPermIcon)
-        setPermissionIcon(isNotificationPermissionGiven(), binding.notifPermIcon)
 
         binding.notifPermRoot.setOnClickListener {
             if (isNotificationPermissionGiven()) return@setOnClickListener
@@ -94,6 +98,7 @@ class PermissionsFragment : Fragment() {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
+
         binding.bgPermRoot.setOnClickListener {
             if (isBackgroundPermissionGiven()) return@setOnClickListener
             val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
@@ -102,35 +107,60 @@ class PermissionsFragment : Fragment() {
             batteryOptimizationLauncher.launch(intent)
         }
 
+        binding.accessPermRoot.setOnClickListener {
+            if (isAccessibilityPermissionGiven()) return@setOnClickListener
+            try {
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                accessibilityLauncher.launch(intent)
+            } catch (e: Exception) {
+                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                startActivity(intent)
+            }
+        }
+
         binding.restoreRoot.setOnClickListener {
             ZipUtils.showRestorePicker(restorePicker)
         }
-
-
-
     }
 
+    override fun onResume() {
+        super.onResume()
+        refreshPermissions()
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
+    private fun refreshPermissions() {
+        val isBgOk = isBackgroundPermissionGiven()
+        val isNotifOk = isNotificationPermissionGiven()
+        val isAccessOk = isAccessibilityPermissionGiven()
 
-    private fun setPermissionIcon(isEnabled: Boolean, icon: ImageView) {
-        if (isEnabled) {
-            icon.setImageResource(R.drawable.baseline_done_24)
-            icon.setColorFilter(R.color.md_theme_onSurface)
-            nGivenPermissions++
-            if (nGivenPermissions > 1) {
-                binding.btnNext.isEnabled = true
-            }
-        } else {
-            icon.setImageResource(R.drawable.baseline_close_24)
-            icon.setColorFilter(R.color.error_color)
-        }
+        setPermissionIconState(isBgOk, binding.bgPermIcon)
+        setPermissionIconState(isNotifOk, binding.notifPermIcon)
+        setPermissionIconState(isAccessOk, binding.accessPermIcon)
+
+        updateNextButtonState()
     }
 
+    private fun updateNextButtonState() {
+        val isBgOk = isBackgroundPermissionGiven()
+        val isAccessOk = isAccessibilityPermissionGiven()
+        // Enabled next button if background and accessibility service permissions are granted
+        binding.btnNext.isEnabled = isBgOk && isAccessOk
+    }
+
+    private fun setPermissionIconState(isEnabled: Boolean, icon: ImageView) {
+        if (isEnabled) {
+            icon.setImageResource(R.drawable.baseline_done_24)
+            icon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.md_theme_onSurface))
+        } else {
+            icon.setImageResource(R.drawable.baseline_close_24)
+            icon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.error_color))
+        }
+    }
 
     private fun isBackgroundPermissionGiven(): Boolean {
         val powerManager =
@@ -140,7 +170,6 @@ class PermissionsFragment : Fragment() {
     }
 
     private fun isNotificationPermissionGiven(): Boolean {
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             return ActivityCompat.checkSelfPermission(
                 requireContext(), Manifest.permission.POST_NOTIFICATIONS
@@ -149,4 +178,10 @@ class PermissionsFragment : Fragment() {
         return true
     }
 
+    private fun isAccessibilityPermissionGiven(): Boolean {
+        if (!::permissionGuideHelper.isInitialized) {
+            permissionGuideHelper = PermissionGuideHelper(requireActivity())
+        }
+        return permissionGuideHelper.isAccessibilityEnabled(com.alhaq.amnshield.services.AmnShieldAccessibilityService::class.java)
+    }
 }

@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment
 import com.alhaq.amnshield.R
 import com.alhaq.amnshield.ui.fragments.anti_uninstall.ChooseModeFragment
 import com.alhaq.amnshield.ui.fragments.installation.AccessibilityGuide
-import com.alhaq.amnshield.ui.fragments.installation.ModeSelectionFragment
+
 import com.alhaq.amnshield.ui.fragments.installation.WelcomeFragment
 import com.alhaq.amnshield.ui.fragments.installation.PermissionsFragment
 import com.alhaq.amnshield.ui.fragments.features.PremiumFeaturesFragment
@@ -98,9 +98,7 @@ class FragmentActivity : AppCompatActivity() {
                 WelcomeFragment.FRAGMENT_ID -> {
                     fragment = WelcomeFragment()
                 }
-                ModeSelectionFragment.FRAGMENT_ID -> {
-                    fragment = ModeSelectionFragment()
-                }
+
                 AccessibilityGuide.FRAGMENT_ID ->
                     fragment = AccessibilityGuide()
                 ProfileFragment.FRAGMENT_ID ->

@@ -10,7 +10,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.alhaq.amnshield.blockers.FocusModeBlocker
 import com.alhaq.amnshield.data.blockers.AppBlockScheduleRule
-import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
 import com.alhaq.amnshield.data.blockers.AppLaunchLimitRule
 import com.alhaq.amnshield.ui.activity.MainActivity
 import java.util.Calendar
@@ -244,60 +243,18 @@ class SavedPreferencesLoader(val context: Context) {
             }
         }
 
-        // 2. Migrate Focus Mode Auto-Focus Hours
-        val focusHoursPrefs = context.getSharedPreferences("auto_focus_hours", Context.MODE_PRIVATE)
-        val legacyFocusJson = focusHoursPrefs.getString("auto_focus_list", null)
-        if (!legacyFocusJson.isNullOrEmpty()) {
-            try {
-                val legacyType = object : TypeToken<List<LegacyAutoTimedActionItem>>() {}.type
-                val legacyList = Gson().fromJson<List<LegacyAutoTimedActionItem>>(legacyFocusJson, legacyType) ?: emptyList()
-                val currentUnifiedRules = loadUnifiedFeatureScheduleRules()
-                legacyList.forEach { item ->
-                    val rule = UnifiedFeatureScheduleRule(
-                        id = UUID.randomUUID().toString(),
-                        title = item.title,
-                        type = UnifiedFeatureScheduleRule.RuleType.BLOCK,
-                        recurrence = UnifiedFeatureScheduleRule.Recurrence.DAILY,
-                        targets = setOf(UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE),
-                        startMinute = item.startTimeInMins,
-                        endMinute = item.endTimeInMins
-                    )
-                    currentUnifiedRules.add(rule)
-                }
-                saveUnifiedFeatureScheduleRules(currentUnifiedRules)
-            } catch (e: Exception) {
-                Log.e("SavedPreferencesLoader", "Error migrating focus mode auto-focus hours", e)
-            }
-        }
-
-        // 3. Migrate Reel Blocker Cheat Hours
-        val reelBlockerStartTime = cheatHoursPrefs.getInt("view_blocker_start_time", -1)
-        val reelBlockerEndTime = cheatHoursPrefs.getInt("view_blocker_end_time", -1)
-        if (reelBlockerStartTime != -1 && reelBlockerEndTime != -1) {
-            try {
-                val currentUnifiedRules = loadUnifiedFeatureScheduleRules()
-                val rule = UnifiedFeatureScheduleRule(
-                    id = UUID.randomUUID().toString(),
-                    title = "Reel Blocker Cheat Hours",
-                    type = UnifiedFeatureScheduleRule.RuleType.CHEAT,
-                    recurrence = UnifiedFeatureScheduleRule.Recurrence.DAILY,
-                    targets = setOf(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER),
-                    startMinute = reelBlockerStartTime,
-                    endMinute = reelBlockerEndTime
-                )
-                currentUnifiedRules.add(rule)
-                saveUnifiedFeatureScheduleRules(currentUnifiedRules)
-            } catch (e: Exception) {
-                Log.e("SavedPreferencesLoader", "Error migrating reel blocker cheat hours", e)
-            }
-        }
-
         // 4. Mark migration as complete
         migrationPrefs.edit().putBoolean("migrated_v2", true).apply()
 
         // 5. Clean up old preferences keys/files
-        cheatHoursPrefs.edit().remove("cheatHoursList").remove("view_blocker_start_time").remove("view_blocker_end_time").apply()
-        focusHoursPrefs.edit().remove("auto_focus_list").apply()
+        context.getSharedPreferences("cheat_hours", Context.MODE_PRIVATE).edit()
+            .remove("cheatHoursList")
+            .remove("view_blocker_start_time")
+            .remove("view_blocker_end_time")
+            .apply()
+        context.getSharedPreferences("auto_focus_hours", Context.MODE_PRIVATE).edit()
+            .remove("auto_focus_list")
+            .apply()
     }
 
     fun saveAppBlockerWarningInfo(warningData: MainActivity.WarningData) {
@@ -596,55 +553,7 @@ class SavedPreferencesLoader(val context: Context) {
         return before - rules.size
     }
 
-    fun loadUnifiedFeatureScheduleRules(): MutableList<UnifiedFeatureScheduleRule> {
-        val sharedPreferences = context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
-        val json = sharedPreferences.getString("unified_feature_schedule_rules", null)
-        if (json.isNullOrEmpty()) return mutableListOf()
 
-        val type = object : TypeToken<MutableList<UnifiedFeatureScheduleRule>>() {}.type
-        return runCatching {
-            Gson().fromJson<MutableList<UnifiedFeatureScheduleRule>>(json, type) ?: mutableListOf()
-        }.getOrElse {
-            Log.e("SavedPreferencesLoader", "Failed to load unified feature schedule rules", it)
-            mutableListOf()
-        }
-    }
-
-    fun saveUnifiedFeatureScheduleRules(rules: MutableList<UnifiedFeatureScheduleRule>) {
-        val sharedPreferences = context.getSharedPreferences("app_blocker", Context.MODE_PRIVATE)
-        val json = Gson().toJson(rules)
-        sharedPreferences.edit().putString("unified_feature_schedule_rules", json).apply()
-    }
-
-    @Synchronized
-    fun upsertUnifiedFeatureScheduleRule(rule: UnifiedFeatureScheduleRule) {
-        val rules = loadUnifiedFeatureScheduleRules()
-        val existing = rules.indexOfFirst { it.id == rule.id }
-        if (existing >= 0) {
-            rules[existing] = rule
-        } else {
-            rules.add(rule)
-        }
-        saveUnifiedFeatureScheduleRules(rules)
-    }
-
-    @Synchronized
-    fun removeUnifiedFeatureScheduleRule(ruleId: String) {
-        val rules = loadUnifiedFeatureScheduleRules()
-        rules.removeAll { it.id == ruleId }
-        saveUnifiedFeatureScheduleRules(rules)
-    }
-
-    @Synchronized
-    fun removeUnifiedFeatureScheduleGroup(groupId: String): Int {
-        val rules = loadUnifiedFeatureScheduleRules()
-        val before = rules.size
-        rules.removeAll { it.groupId == groupId }
-        if (rules.size != before) {
-            saveUnifiedFeatureScheduleRules(rules)
-        }
-        return before - rules.size
-    }
 
     private fun getPremiumPrefs(): android.content.SharedPreferences {
         return context.getSharedPreferences("premium_state", Context.MODE_PRIVATE)
@@ -963,52 +872,7 @@ class SavedPreferencesLoader(val context: Context) {
             .apply()
     }
 
-    fun getManualFeatureState(target: com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget): Boolean {
-        return when (target) {
-            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER -> {
-                val prefs = getFeatureTogglesPrefs()
-                if (prefs.contains("app_blocker_enabled_manual")) {
-                    prefs.getBoolean("app_blocker_enabled_manual", true)
-                } else {
-                    prefs.getBoolean("app_blocker_enabled", true)
-                }
-            }
-            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER -> {
-                val prefs = getFeatureTogglesPrefs()
-                if (prefs.contains("keyword_blocker_enabled_manual")) {
-                    prefs.getBoolean("keyword_blocker_enabled_manual", true)
-                } else {
-                    prefs.getBoolean("keyword_blocker_enabled", true)
-                }
-            }
-            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER -> {
-                val prefs = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
-                if (prefs.contains("is_enabled_manual")) {
-                    prefs.getBoolean("is_enabled_manual", true)
-                } else {
-                    prefs.getBoolean("is_enabled", true)
-                }
-            }
-            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.FOCUS_MODE -> {
-                val prefs = getFeatureTogglesPrefs()
-                if (prefs.contains("focus_mode_enabled_manual")) {
-                    prefs.getBoolean("focus_mode_enabled_manual", false)
-                } else {
-                    prefs.getBoolean("focus_mode_enabled", false)
-                }
-            }
-            com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule.FeatureTarget.WEBSITE_BLOCKER -> {
-                val prefs = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
-                val legacyPrefs = context.getSharedPreferences("social_media_blocker", Context.MODE_PRIVATE)
-                val activePrefs = if (prefs.contains("is_enabled_manual") || prefs.contains("is_enabled")) prefs else legacyPrefs
-                if (activePrefs.contains("is_enabled_manual")) {
-                    activePrefs.getBoolean("is_enabled_manual", true)
-                } else {
-                    activePrefs.getBoolean("is_enabled", true)
-                }
-            }
-        }
-    }
+
 
     fun loadBlockedWebsitesApps(): Set<String> {
         val sharedPreferences = context.getSharedPreferences("website_blocker", Context.MODE_PRIVATE)
@@ -1145,12 +1009,10 @@ class SavedPreferencesLoader(val context: Context) {
     }
 
     fun getEnforcementMode(): String {
-        return context.getSharedPreferences("enforcement_prefs", Context.MODE_PRIVATE)
-            .getString("enforcement_mode", "SIMPLE") ?: "SIMPLE"
+        return "ADVANCED"
     }
 
     fun setEnforcementMode(mode: String) {
-        context.getSharedPreferences("enforcement_prefs", Context.MODE_PRIVATE)
-            .edit().putString("enforcement_mode", mode).apply()
+        // Mode setting is deprecated and simple mode is removed.
     }
 }

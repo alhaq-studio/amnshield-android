@@ -30,7 +30,19 @@ data class ScheduleRule(
     val selectedKeywords: List<String> = emptyList(),
     val selectedWebsites: List<String> = emptyList(),
     val selectedPlatforms: List<String> = emptyList(),
-    val selectedBlockers: List<String> = emptyList()
+    val selectedBlockers: List<String> = emptyList(),
+    
+    // Side-by-side consolidated rule modes
+    val isAlwaysBlockEnabled: Boolean = false,
+    val isScheduleEnabled: Boolean = false,
+    val isCheatEnabled: Boolean = false,
+    val cheatStartTime: String = "12:00",
+    val cheatEndTime: String = "13:00",
+    val cheatDays: List<String> = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"),
+    val isUsageLimitEnabled: Boolean = false,
+    val usageLimitHours: Int = 0,
+    val isLaunchLimitEnabled: Boolean = false,
+    val launchLimitCount: Int = 0
 )
 
 data class BlockedApp(
@@ -154,5 +166,5 @@ data class AmnShieldState(
     val profilePin: String = "",
     val isAppLockEnabled: Boolean = false,
     val isBypassPinLockEnabled: Boolean = false,
-    val isAdvancedMode: Boolean = false
+    val isAdvancedMode: Boolean = true
 )

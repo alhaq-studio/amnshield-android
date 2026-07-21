@@ -303,6 +303,22 @@ class AllAppsUsageFragment : Fragment() {
                 binding.totalUsage.text = totalTime
 
                 adapter.updateData(list)
+
+                val targetPkg = activity?.intent?.getStringExtra("target_package_name")
+                if (!targetPkg.isNullOrEmpty()) {
+                    activity?.intent?.removeExtra("target_package_name")
+                    var matchedStat = list.find { it.packageName == targetPkg }
+                    if (matchedStat == null) {
+                        matchedStat = usageStatsHelper.getForegroundStatsByDay(date).find { it.packageName == targetPkg }
+                    }
+                    if (matchedStat != null) {
+                        activity?.supportFragmentManager?.beginTransaction()
+                            ?.setCustomAnimations(R.anim.fade_in, R.anim.fade_out)
+                            ?.replace(R.id.fragment_holder, AppUsageBreakdown(matchedStat))
+                            ?.addToBackStack(null)
+                            ?.commit()
+                    }
+                }
             } catch (e: Exception) {
                 Log.e("AppUsageFragment", "Error updating UI with stats", e)
             }

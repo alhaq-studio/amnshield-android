@@ -23,8 +23,6 @@ import com.alhaq.amnshield.ui.fragments.BlocksManagerFragment
 import com.alhaq.amnshield.ui.dialogs.TweakAppBlockerWarning
 import com.alhaq.amnshield.ui.dialogs.TweakViewBlockerWarning
 import com.alhaq.amnshield.ui.dialogs.TweakUsageTracker
-import com.alhaq.amnshield.data.blockers.UnifiedFeatureScheduleRule
-import com.alhaq.amnshield.utils.ScheduleUtils
 import com.alhaq.amnshield.ui.dialogs.TweakKeywordBlocker
 import com.alhaq.amnshield.ui.dialogs.TweakKeywordPack
 import com.alhaq.amnshield.ui.fragments.usage.AllAppsUsageFragment
@@ -100,45 +98,10 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
             selectAppsLauncher.launch(intent, activityOptions)
         }
 
-        binding.btnCheatHours.setOnClickListener {
-            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
-                putExtra("action", "create")
-                putExtra("prefill_target", "APP_BLOCKER")
-                putExtra("prefill_type", "Cheat Window")
-            }
-            startActivity(intent)
-        }
-
-        binding.btnBlockSchedules.setOnClickListener {
-            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
-                putExtra("action", "create")
-                putExtra("prefill_target", "APP_BLOCKER")
-                putExtra("prefill_type", "Block Schedule")
-            }
-            startActivity(intent)
-        }
-
-        binding.btnLaunchLimits.setOnClickListener {
-            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
-                putExtra("action", "create")
-                putExtra("prefill_target", "APP_BLOCKER")
-                putExtra("prefill_type", "Launch Limit")
-            }
-            startActivity(intent)
-        }
-
-        binding.btnUsageLimits.setOnClickListener {
-            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
-                putExtra("action", "create")
-                putExtra("prefill_target", "APP_BLOCKER")
-                putExtra("prefill_type", "Usage Limit")
-            }
-            startActivity(intent)
-        }
+        ((binding.btnCheatHours.parent as? View)?.parent as? View)?.visibility = View.GONE
+        ((binding.btnBlockSchedules.parent as? View)?.parent as? View)?.visibility = View.GONE
+        ((binding.btnLaunchLimits.parent as? View)?.parent as? View)?.visibility = View.GONE
+        ((binding.btnUsageLimits.parent as? View)?.parent as? View)?.visibility = View.GONE
 
         binding.btnWarningScreen.setOnClickListener {
             TweakAppBlockerWarning(savedPreferencesLoader).show(
@@ -199,50 +162,17 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
     }
     
     private fun setupAppBlockerSwitch() {
-        val isFeatureEnabled = savedPreferencesLoader.isAppBlockerFeatureEnabled() || 
-            savedPreferencesLoader.loadUnifiedFeatureScheduleRules().any { it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER) && it.isEnabled == true }
+        val isFeatureEnabled = savedPreferencesLoader.isAppBlockerFeatureEnabled()
         
         binding.switchAppBlockerEnabled.setOnCheckedChangeListener(null)
         binding.switchAppBlockerEnabled.isChecked = isFeatureEnabled
         setAppBlockerControlsEnabled(isFeatureEnabled)
 
         binding.switchAppBlockerEnabled.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked) {
-                val hasSchedules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules().any { 
-                    it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.APP_BLOCKER) && it.isEnabled == true 
-                }
-                if (!hasSchedules) {
-                    buttonView.setOnCheckedChangeListener(null)
-                    buttonView.isChecked = false
-                    setupAppBlockerSwitch()
-                    
-                    showFeatureScheduleDialog("App Blocker", { start, end, days ->
-                        ScheduleUtils.autoResolveAndSaveFeatureSchedule(
-                            requireContext(),
-                            savedPreferencesLoader,
-                            "App Blocker",
-                            start,
-                            end,
-                            days
-                        )
-                        setupAppBlockerSwitch()
-                        sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
-                        sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
-                    }, {
-                        setupAppBlockerSwitch()
-                    })
-                } else {
-                    savedPreferencesLoader.setAppBlockerFeatureEnabled(true, updateManual = true)
-                    setAppBlockerControlsEnabled(true)
-                    sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
-                    sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
-                }
-            } else {
-                ScheduleUtils.disableFeatureSchedules(savedPreferencesLoader, "App Blocker")
-                setAppBlockerControlsEnabled(false)
-                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
-                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
-            }
+            savedPreferencesLoader.setAppBlockerFeatureEnabled(isChecked, updateManual = true)
+            setAppBlockerControlsEnabled(isChecked)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
         }
     }
 
@@ -252,9 +182,6 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
 
     private fun setAppBlockerControlsEnabled(enabled: Boolean) {
         binding.btnSelectApps.isEnabled = true
-        binding.btnCheatHours.isEnabled = true
-        binding.btnBlockSchedules.isEnabled = true
-        binding.btnLaunchLimits.isEnabled = true
         binding.btnWarningScreen.isEnabled = true
         binding.switchAutoBlock.isEnabled = true
         binding.btnSelectCategories.isEnabled = true
@@ -317,13 +244,7 @@ class ReelBlockerConfigFragment : BaseFeatureFragment() {
         val enabled = savedPreferencesLoader.isReelBlockerEnabled(
             viewBlockerPrefs.getBoolean("is_enabled", false)
         )
-        val mode = savedPreferencesLoader.getReelBlockerMode(ReelBlocker.MODE_BLOCK_ALL)
-        val limit = savedPreferencesLoader.getReelBlockerDailyLimit(200)
-
         setupReelBlockerSwitch()
-        binding.switchCountMode.isChecked = mode == ReelBlocker.MODE_BLOCK_AFTER_DAILY_COUNT
-        binding.inputDailyLimit.setText(limit.toString())
-        binding.inputLimitLayout.isEnabled = binding.switchCountMode.isChecked
 
         // Per-platform / browser toggles. ReelBlocker honors these at detection
         // time; flipping a switch broadcasts a refresh so the running service
@@ -352,28 +273,6 @@ class ReelBlockerConfigFragment : BaseFeatureFragment() {
 
         // Reel Blocker switch listener is managed inside setupReelBlockerSwitch()
 
-        binding.switchCountMode.setOnCheckedChangeListener { _, isChecked ->
-            val selectedMode = if (isChecked) {
-                ReelBlocker.MODE_BLOCK_AFTER_DAILY_COUNT
-            } else {
-                ReelBlocker.MODE_BLOCK_ALL
-            }
-            binding.inputLimitLayout.isEnabled = isChecked
-            savedPreferencesLoader.setReelBlockerMode(selectedMode)
-            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_REEL_BLOCKER)
-        }
-
-        binding.btnSaveMode.setOnClickListener {
-            val parsed = binding.inputDailyLimit.text?.toString()?.trim()?.toIntOrNull()
-            if (parsed == null || parsed < 1) {
-                Toast.makeText(requireContext(), getString(R.string.reel_daily_limit_validation), Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            savedPreferencesLoader.setReelBlockerDailyLimit(parsed)
-            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_REEL_BLOCKER)
-            Toast.makeText(requireContext(), "Saved", Toast.LENGTH_SHORT).show()
-        }
-
         binding.btnWarningScreen.setOnClickListener {
             TweakViewBlockerWarning(savedPreferencesLoader).show(
                 childFragmentManager,
@@ -381,61 +280,21 @@ class ReelBlockerConfigFragment : BaseFeatureFragment() {
             )
         }
 
-        binding.btnCheatHours.setOnClickListener {
-            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
-                putExtra("action", "create")
-                putExtra("prefill_target", "REEL_BLOCKER")
-                putExtra("prefill_type", "Cheat Window")
-            }
-            startActivity(intent)
-        }
+        ((binding.btnCheatHours.parent as? View)?.parent as? View)?.visibility = View.GONE
 
         return binding.root
     }
     
     private fun setupReelBlockerSwitch() {
-        val isFeatureEnabled = savedPreferencesLoader.isReelBlockerEnabled() || 
-            savedPreferencesLoader.loadUnifiedFeatureScheduleRules().any { it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER) && it.isEnabled == true }
+        val isFeatureEnabled = savedPreferencesLoader.isReelBlockerEnabled()
         
         binding.switchReelBlocker.setOnCheckedChangeListener(null)
         binding.switchReelBlocker.isChecked = isFeatureEnabled
 
         binding.switchReelBlocker.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked) {
-                val hasSchedules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules().any { 
-                    it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.REEL_BLOCKER) && it.isEnabled == true 
-                }
-                if (!hasSchedules) {
-                    buttonView.setOnCheckedChangeListener(null)
-                    buttonView.isChecked = false
-                    setupReelBlockerSwitch()
-                    
-                    showFeatureScheduleDialog("Reels Blocker", { start, end, days ->
-                        ScheduleUtils.autoResolveAndSaveFeatureSchedule(
-                            requireContext(),
-                            savedPreferencesLoader,
-                            "Reels Blocker",
-                            start,
-                            end,
-                            days
-                        )
-                        setupReelBlockerSwitch()
-                        sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_REEL_BLOCKER)
-                        sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
-                    }, {
-                        setupReelBlockerSwitch()
-                    })
-                } else {
-                    savedPreferencesLoader.setReelBlockerEnabled(true, updateManual = true)
-                    sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_REEL_BLOCKER)
-                    sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
-                }
-            } else {
-                ScheduleUtils.disableFeatureSchedules(savedPreferencesLoader, "Reels Blocker")
-                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_REEL_BLOCKER)
-                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
-            }
+            savedPreferencesLoader.setReelBlockerEnabled(isChecked, updateManual = true)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_REEL_BLOCKER)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
         }
     }
 
@@ -545,20 +404,6 @@ class KeywordBlockerConfigFragment : BaseFeatureFragment() {
     private var _binding: com.alhaq.amnshield.databinding.FragmentKeywordBlockerConfigBinding? = null
     private val binding get() = _binding!!
     
-    private val selectKeywordsLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
-            val selectedKeywords = result.data?.getStringArrayListExtra("SELECTED_KEYWORDS")
-            selectedKeywords?.let {
-                savedPreferencesLoader.saveBlockedKeywords(it.toSet())
-                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST)
-                updateKeywordCount(it.size)
-                Toast.makeText(requireContext(), "Keywords updated", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -583,17 +428,6 @@ class KeywordBlockerConfigFragment : BaseFeatureFragment() {
 
         setupKeywordBlockerSwitch()
 
-        updateKeywordCount(savedPreferencesLoader.loadBlockedKeywords().size)
-
-        binding.btnManageKeywords.setOnClickListener {
-            val intent = Intent(requireContext(), ManageKeywordsActivity::class.java)
-            intent.putStringArrayListExtra(
-                "PRE_SAVED_KEYWORDS",
-                ArrayList(savedPreferencesLoader.loadBlockedKeywords())
-            )
-            selectKeywordsLauncher.launch(intent, activityOptions)
-        }
-
         binding.btnKeywordConfig.setOnClickListener {
             TweakKeywordBlocker(savedPreferencesLoader).show(
                 childFragmentManager,
@@ -601,25 +435,7 @@ class KeywordBlockerConfigFragment : BaseFeatureFragment() {
             )
         }
 
-        binding.btnScheduleKeyword.setOnClickListener {
-            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
-                putExtra("action", "create")
-                putExtra("prefill_target", "KEYWORD_BLOCKER")
-                putExtra("prefill_type", "Block Schedule")
-            }
-            startActivity(intent)
-        }
-
-        binding.btnCheatHours.setOnClickListener {
-            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
-                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
-                putExtra("action", "create")
-                putExtra("prefill_target", "KEYWORD_BLOCKER")
-                putExtra("prefill_type", "Cheat Window")
-            }
-            startActivity(intent)
-        }
+        binding.cardScheduleKeywordBlocker.visibility = View.GONE
 
         return binding.root
     }
@@ -629,62 +445,23 @@ class KeywordBlockerConfigFragment : BaseFeatureFragment() {
         _binding = null
     }
 
-    private fun updateKeywordCount(count: Int) {
-        binding.txtKeywordCount.text = "$count keywords blocked"
-    }
-
     private fun setupKeywordBlockerSwitch() {
-        val isFeatureEnabled = savedPreferencesLoader.isKeywordBlockerFeatureEnabled() || 
-            savedPreferencesLoader.loadUnifiedFeatureScheduleRules().any { it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER) && it.isEnabled == true }
+        val isFeatureEnabled = savedPreferencesLoader.isKeywordBlockerFeatureEnabled()
         
         binding.switchKeywordBlockerEnabled.setOnCheckedChangeListener(null)
         binding.switchKeywordBlockerEnabled.isChecked = isFeatureEnabled
         setKeywordBlockerControlsEnabled(isFeatureEnabled)
 
         binding.switchKeywordBlockerEnabled.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked) {
-                val hasSchedules = savedPreferencesLoader.loadUnifiedFeatureScheduleRules().any { 
-                    it.targets.contains(UnifiedFeatureScheduleRule.FeatureTarget.KEYWORD_BLOCKER) && it.isEnabled == true 
-                }
-                if (!hasSchedules) {
-                    buttonView.setOnCheckedChangeListener(null)
-                    buttonView.isChecked = false
-                    setupKeywordBlockerSwitch()
-                    
-                    showFeatureScheduleDialog("Keyword Blocker", { start, end, days ->
-                        ScheduleUtils.autoResolveAndSaveFeatureSchedule(
-                            requireContext(),
-                            savedPreferencesLoader,
-                            "Keyword Blocker",
-                            start,
-                            end,
-                            days
-                        )
-                        setupKeywordBlockerSwitch()
-                        sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST)
-                        sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
-                    }, {
-                        setupKeywordBlockerSwitch()
-                    })
-                } else {
-                    savedPreferencesLoader.setKeywordBlockerFeatureEnabled(true, updateManual = true)
-                    setKeywordBlockerControlsEnabled(true)
-                    sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST)
-                    sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
-                }
-            } else {
-                ScheduleUtils.disableFeatureSchedules(savedPreferencesLoader, "Keyword Blocker")
-                setKeywordBlockerControlsEnabled(false)
-                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST)
-                sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
-            }
+            savedPreferencesLoader.setKeywordBlockerFeatureEnabled(isChecked, updateManual = true)
+            setKeywordBlockerControlsEnabled(isChecked)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_BLOCKED_KEYWORD_LIST)
+            sendRefreshRequest(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
         }
     }
 
     private fun setKeywordBlockerControlsEnabled(enabled: Boolean) {
-        binding.btnManageKeywords.isEnabled = true
-        binding.btnKeywordConfig.isEnabled = true
-        binding.btnScheduleKeyword.isEnabled = true
+        binding.btnKeywordConfig.isEnabled = enabled
     }
 
     companion object {

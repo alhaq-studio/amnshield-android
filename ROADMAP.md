@@ -1,6 +1,6 @@
 # AmnShield Roadmap
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 ## Strategic Architectural Decisions (July 2026)
 - **Web Administration Portal Transition:**
@@ -9,6 +9,19 @@ Last updated: 2026-07-17
   - **Client Impact:** The main `AmnShield-Android` app retains its local bound API (`IAmnShieldApi.aidl` and `AmnShieldApiService.kt`) for local extensibility, but will utilize HTTPS REST sync against Supabase for parental remote configuration instead of native inter-app IPC.
 
 ## Recently Completed
+- **Blocker Rules Redesign & Always Block Mode (July 2026)**
+  - Removed implicit 24/7 fallbacks from background services, ensuring Keyword Blocker, Website Blocker, and Reels Blocker only run if there is an explicit database rule configured.
+  - Added mutually exclusive "Always Block (24/7)" and "Block Schedule" options to rule creator screens for App Blocker, Keyword Blocker, Website Blocker, and Reels Blocker.
+  - Migrated Reels count limit configuration (Limit by Reels Scrolled switch and daily limit text field) from the general config screen to the rule creator screen (`CreateReelsBlockerRuleScreen.kt`), updating preferences and broadcasting refresh triggers upon save.
+  - Removed count limit mode configuration options from the general Reels Blocker config screen layout (`fragment_reel_blocker_config.xml`) and controller (`FeatureConfigFragments.kt`).
+- **Unified Feature Scheduling Purge & Decoupling (July 2026)**
+  - Completely deleted the `UnifiedFeatureScheduleRule` database model and periodic switch-flipping scheduling logic.
+  - Segregated Keyword Blocker, Website Blocker, and Reels Blocker to execute 24/7 based on global toggles and manual block lists/configurations, matching CureBox's clean, self-contained architecture.
+  - Cleaned up Blocks Manager tab (`BlocksFragment`, `BlocksManagerFragment`) to load, list, and edit only App Blocker schedule and limit rules.
+  - Deleted the secondary creator screens and cleaned up unused helper methods from `ScheduleUtils.kt`.
+- **Blocker-Specific Rule Creators & Mode Gating Removal (July 2026)**
+  - Completely removed Simple/Advanced mode selection from onboarding and switches in Settings and Profile. The app now runs uniformly with advanced features always available.
+  - Tailored `CreateRuleScreen` to focus purely on App Blocker rules.
 - **Simple vs Advanced Mode Enforcement & Usage Limits (July 2026)**
   - Implemented Simple vs Advanced Mode toggle, synchronized in both Settings and Profile screens.
   - In Simple Mode, the warning screen is a hard blocked overlay with no configuration and no proceed button. All rule configurations are hidden/simplified but enforced in the background.

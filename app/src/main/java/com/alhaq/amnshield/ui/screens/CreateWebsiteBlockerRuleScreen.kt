@@ -1,15 +1,11 @@
 package com.alhaq.amnshield.ui.screens
 
-import android.app.Activity
 import android.content.Intent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -20,45 +16,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.UUID
+import com.alhaq.amnshield.ui.state.AmnShieldState
 import com.alhaq.amnshield.ui.state.ScheduleRule
 import com.alhaq.amnshield.ui.state.SchedulePeriod
+import com.alhaq.amnshield.ui.viewmodel.AmnShieldViewModel
 import com.alhaq.amnshield.utils.SavedPreferencesLoader
-import com.alhaq.amnshield.ui.activity.SelectAppsActivity
-import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun CreateRuleScreen(
-    state: com.alhaq.amnshield.ui.state.AmnShieldState,
-    onSaveRule: (ScheduleRule) -> Unit,
-    onBack: () -> Unit,
+fun CreateWebsiteBlockerRuleScreen(
+    state: AmnShieldState,
+    viewModel: AmnShieldViewModel,
+    initialType: String = "Block Schedule",
     editingRule: ScheduleRule? = null,
-    prefillTarget: String = "APP_BLOCKER"
+    onSaveRule: (ScheduleRule) -> Unit,
+    onBack: () -> Unit
 ) {
     val context = LocalContext.current
 
     val initialName = remember(editingRule) {
-        editingRule?.name ?: "App Blocker Rule"
+        editingRule?.name ?: "Website Blocker Rule"
     }
 
     var ruleName by remember { mutableStateOf(initialName) }
-
-    val selectedApps = remember(editingRule) {
-        mutableStateListOf<String>().apply {
-            if (editingRule != null) {
-                addAll(editingRule.selectedApps)
-            } else {
-                val loader = SavedPreferencesLoader(context)
-                addAll(loader.loadBlockedApps())
-            }
-        }
-    }
 
     // 1. Always Block vs Block Schedule
     var isAlwaysBlockEnabled by remember(editingRule) {
@@ -103,50 +88,22 @@ fun CreateRuleScreen(
         }
     }
 
-    // 3. Usage Limit
-    var isUsageLimitEnabled by remember(editingRule) {
-        mutableStateOf(editingRule?.isUsageLimitEnabled ?: false)
-    }
-    var usageLimitHoursStr by remember(editingRule) {
-        mutableStateOf(editingRule?.usageLimitHours?.toString() ?: "2")
-    }
-
-    // 4. Launch Limit
-    var isLaunchLimitEnabled by remember(editingRule) {
-        mutableStateOf(editingRule?.isLaunchLimitEnabled ?: false)
-    }
-    var launchLimitCountStr by remember(editingRule) {
-        mutableStateOf(editingRule?.launchLimitCount?.toString() ?: "10")
-    }
-
     // Time Pickers Dialog State
     var activeTimePicker by remember { mutableStateOf("") } // "start", "end", "cheat_start", "cheat_end"
     var showTimePicker by remember { mutableStateOf(false) }
-
-    val selectAppsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val selected = result.data?.getStringArrayListExtra("SELECTED_APPS")
-            if (selected != null) {
-                selectedApps.clear()
-                selectedApps.addAll(selected)
-            }
-        }
-    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = if (editingRule != null) "Edit App Blocker Rule" else "Create App Blocker Rule",
+                        text = if (editingRule != null) "Edit Website Rule" else "Create Website Rule",
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("back_button")) {
+                    IconButton(onClick = onBack) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -170,69 +127,7 @@ fun CreateRuleScreen(
                     .padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // Header card
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Shield,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Define Your Boundary",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "Configure block schedules, cheat hours, and limits together on a single rule.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
-                // 1. Rule Name
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        "1. Rule Name",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    OutlinedTextField(
-                        value = ruleName,
-                        onValueChange = { ruleName = it },
-                        placeholder = { Text("e.g. Focus Hours, Work Block") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().testTag("rule_name_input"),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-
-                // 2. Apps Selection
+                // Rule Name
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -240,80 +135,39 @@ fun CreateRuleScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "2. Target Apps",
+                            "1. Rule Name",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            "Configure App Blocker",
+                            "Configure Websites",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             ),
                             modifier = Modifier.clickable {
                                 val intent = Intent(context, com.alhaq.amnshield.ui.activity.FragmentActivity::class.java).apply {
-                                    putExtra("feature_type", "app_blocker")
+                                    putExtra("feature_type", "website_blocker")
                                 }
                                 context.startActivity(intent)
                             }
                         )
                     }
-
-                    Button(
-                        onClick = {
-                            val intent = Intent(context, SelectAppsActivity::class.java).apply {
-                                putStringArrayListExtra("PRE_SELECTED_APPS", ArrayList(selectedApps))
-                            }
-                            selectAppsLauncher.launch(intent)
-                        },
+                    OutlinedTextField(
+                        value = ruleName,
+                        onValueChange = { ruleName = it },
+                        placeholder = { Text("e.g. Study Time Websites") },
+                        singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    ) {
-                        Icon(imageVector = Icons.Outlined.AppShortcut, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (selectedApps.isEmpty()) "Select Apps to Block" else "Edit App Selection (${selectedApps.size} Selected)",
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    if (selectedApps.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState())
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            selectedApps.forEach { pkg ->
-                                val appLabel = remember(pkg) {
-                                    try {
-                                        val appInfo = context.packageManager.getApplicationInfo(pkg, 0)
-                                        context.packageManager.getApplicationLabel(appInfo).toString()
-                                    } catch (e: Exception) {
-                                        pkg.substringAfterLast(".")
-                                    }
-                                }
-                                FilterChip(
-                                    selected = true,
-                                    onClick = { selectedApps.remove(pkg) },
-                                    label = { Text(appLabel, style = MaterialTheme.typography.bodySmall) },
-                                    trailingIcon = { Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(12.dp)) }
-                                )
-                            }
-                        }
-                    }
+                        shape = RoundedCornerShape(12.dp)
+                    )
                 }
 
-                // 3. Consolidated Rule Settings (Block, Cheat, Usage, Launch Limits side-by-side)
+                // Protection Settings (Block Schedule & Cheat Hours side-by-side)
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(
-                        "3. Protection Settings",
+                        "2. Protection Settings",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -335,10 +189,10 @@ fun CreateRuleScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Outlined.Shield, contentDescription = null, tint = Color(0xFFEF4444))
+                                    Icon(Icons.Outlined.Shield, contentDescription = null, tint = Color(0xFF3B82F6))
                                     Column {
                                         Text("Always Block (24/7)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                        Text("Block apps all day, every day", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("Block websites all day, every day", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                                 Switch(
@@ -371,10 +225,10 @@ fun CreateRuleScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(Icons.Outlined.Lock, contentDescription = null, tint = Color(0xFFEF4444))
+                                        Icon(Icons.Outlined.Lock, contentDescription = null, tint = Color(0xFF3B82F6))
                                         Column {
                                             Text("Block Schedule", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                            Text("Block apps during these hours", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("Block websites during these hours", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     }
                                     Switch(
@@ -431,7 +285,7 @@ fun CreateRuleScreen(
                                                     modifier = Modifier
                                                         .size(34.dp)
                                                         .clip(CircleShape)
-                                                        .background(if (isSelected) Color(0xFFEF4444) else MaterialTheme.colorScheme.surfaceVariant)
+                                                        .background(if (isSelected) Color(0xFF3B82F6) else MaterialTheme.colorScheme.surfaceVariant)
                                                         .clickable {
                                                             if (isSelected) scheduleDays.remove(day) else scheduleDays.add(day)
                                                         },
@@ -529,92 +383,104 @@ fun CreateRuleScreen(
                             }
                         }
                     }
+                }
 
-                    // C) Usage Limit
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Outlined.Timer, contentDescription = null, tint = Color(0xFF3B82F6))
-                                    Column {
-                                        Text("Daily Usage Limit", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                        Text("Max usage hours allowed per day", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                // 3. Blocked Websites List
+                val loader = remember { SavedPreferencesLoader(context) }
+                val blockedWebsites = remember {
+                    mutableStateListOf<String>().apply {
+                        addAll(loader.loadBlockedWebsites())
+                    }
+                }
+                var newWebsite by remember { mutableStateOf("") }
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Outlined.Language, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Text("3. Manage Blacklisted Websites", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = newWebsite,
+                                onValueChange = { newWebsite = it },
+                                placeholder = { Text("Add new website (e.g. facebook.com)...") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            IconButton(
+                                onClick = {
+                                    val rawUrl = newWebsite.trim().lowercase()
+                                    if (rawUrl.isNotEmpty()) {
+                                        var cleanUrl = rawUrl
+                                        cleanUrl = cleanUrl.replace("https://", "")
+                                            .replace("http://", "")
+                                            .replace("www.", "")
+                                        if (cleanUrl.isNotEmpty() && !blockedWebsites.contains(cleanUrl)) {
+                                            blockedWebsites.add(cleanUrl)
+                                            loader.saveBlockedWebsites(blockedWebsites.toSet())
+                                            val intent = Intent(com.alhaq.amnshield.services.AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+                                            context.sendBroadcast(intent.setPackage(context.packageName))
+                                            newWebsite = ""
+                                        }
                                     }
-                                }
-                                Switch(checked = isUsageLimitEnabled, onCheckedChange = { isUsageLimitEnabled = it })
-                            }
-
-                            AnimatedVisibility(visible = isUsageLimitEnabled) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("Usage Limit", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                    OutlinedTextField(
-                                        value = usageLimitHoursStr,
-                                        onValueChange = { usageLimitHoursStr = it },
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        suffix = { Text("hours") },
-                                        singleLine = true,
-                                        modifier = Modifier.width(130.dp),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                }
+                                },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+                                colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onPrimary)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = "Add")
                             }
                         }
-                    }
 
-                    // D) Launch Limit
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Row(
+                        if (blockedWebsites.isEmpty()) {
+                            Text(
+                                "No websites blocked yet. Add websites above to apply this rule.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            androidx.compose.foundation.layout.FlowRow(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Outlined.Launch, contentDescription = null, tint = Color(0xFF8B5CF6))
-                                    Column {
-                                        Text("Daily Launch Limit", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                        Text("Max opens allowed per app daily", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                }
-                                Switch(checked = isLaunchLimitEnabled, onCheckedChange = { isLaunchLimitEnabled = it })
-                            }
-
-                            AnimatedVisibility(visible = isLaunchLimitEnabled) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("Launch Limit", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                    OutlinedTextField(
-                                        value = launchLimitCountStr,
-                                        onValueChange = { launchLimitCountStr = it },
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        suffix = { Text("opens") },
-                                        singleLine = true,
-                                        modifier = Modifier.width(130.dp),
+                                blockedWebsites.forEach { website ->
+                                    InputChip(
+                                        selected = false,
+                                        onClick = { /* No-op */ },
+                                        label = { Text(website) },
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Delete",
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .clickable {
+                                                        blockedWebsites.remove(website)
+                                                        loader.saveBlockedWebsites(blockedWebsites.toSet())
+                                                        val intent = Intent(com.alhaq.amnshield.services.AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_APP_BLOCKER)
+                                                        context.sendBroadcast(intent.setPackage(context.packageName))
+                                                    }
+                                            )
+                                        },
                                         shape = RoundedCornerShape(8.dp)
                                     )
                                 }
@@ -647,54 +513,34 @@ fun CreateRuleScreen(
                         Text("Cancel", fontWeight = FontWeight.Bold)
                     }
 
-                    val saveEnabled = ruleName.isNotBlank() && selectedApps.isNotEmpty() && (isAlwaysBlockEnabled || isScheduleEnabled || isCheatEnabled || isUsageLimitEnabled || isLaunchLimitEnabled)
+                    val saveEnabled = ruleName.isNotBlank() && (isAlwaysBlockEnabled || isScheduleEnabled || isCheatEnabled)
                     Button(
                         onClick = {
                             if (saveEnabled) {
-                                val finalApps = selectedApps.toList()
-                                val appOrCategoryDisplay = if (finalApps.size == 1) {
-                                    try {
-                                        context.packageManager.getApplicationLabel(
-                                            context.packageManager.getApplicationInfo(finalApps.first(), 0)
-                                        ).toString()
-                                    } catch (e: Exception) {
-                                        finalApps.first()
-                                    }
-                                } else {
-                                    "${finalApps.size} Apps"
-                                }
-
-                                val usageHours = usageLimitHoursStr.toIntOrNull() ?: 2
-                                val launchCount = launchLimitCountStr.toIntOrNull() ?: 10
-
                                 val newRule = ScheduleRule(
                                     id = editingRule?.id ?: UUID.randomUUID().toString(),
                                     name = ruleName,
-                                    appOrCategory = appOrCategoryDisplay,
-                                    restrictionType = "App Blocker",
+                                    appOrCategory = "Website Blocker",
+                                    restrictionType = "Website Blocker",
                                     startTime = scheduleStartTime,
                                     endTime = scheduleEndTime,
                                     days = scheduleDays.toList(),
-                                    limitValue = if (isUsageLimitEnabled) usageHours else launchCount,
+                                    limitValue = 0,
                                     isActive = true,
                                     periods = emptyList(),
-                                    targetBlockerType = "App Blocker",
-                                    selectedApps = finalApps,
+                                    targetBlockerType = "Website Blocker",
+                                    selectedApps = emptyList(),
                                     selectedKeywords = emptyList(),
                                     selectedWebsites = emptyList(),
                                     selectedPlatforms = emptyList(),
-                                    selectedBlockers = listOf("App Blocker"),
+                                    selectedBlockers = listOf("Website Blocker"),
                                     
                                     isAlwaysBlockEnabled = isAlwaysBlockEnabled,
                                     isScheduleEnabled = isScheduleEnabled,
                                     isCheatEnabled = isCheatEnabled,
                                     cheatStartTime = cheatStartTime,
                                     cheatEndTime = cheatEndTime,
-                                    cheatDays = cheatDays.toList(),
-                                    isUsageLimitEnabled = isUsageLimitEnabled,
-                                    usageLimitHours = usageHours,
-                                    isLaunchLimitEnabled = isLaunchLimitEnabled,
-                                    launchLimitCount = launchCount
+                                    cheatDays = cheatDays.toList()
                                 )
                                 onSaveRule(newRule)
                                 onBack()
@@ -702,8 +548,7 @@ fun CreateRuleScreen(
                         },
                         modifier = Modifier
                             .weight(1.5f)
-                            .height(48.dp)
-                            .testTag("save_rule_button"),
+                            .height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         enabled = saveEnabled,
                         colors = ButtonDefaults.buttonColors(
@@ -752,40 +597,4 @@ fun CreateRuleScreen(
             }
         )
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CreateRuleTimePickerDialog(
-    title: String,
-    initialHour: Int = 9,
-    initialMinute: Int = 0,
-    onDismiss: () -> Unit,
-    onConfirm: (hour: Int, minute: Int) -> Unit
-) {
-    val state = rememberTimePickerState(initialHour = initialHour, initialMinute = initialMinute, is24Hour = true)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = { onConfirm(state.hour, state.minute) }) {
-                Text("Confirm")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        },
-        title = {
-            Text(text = title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        },
-        text = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                TimePicker(state = state)
-            }
-        }
-    )
 }
