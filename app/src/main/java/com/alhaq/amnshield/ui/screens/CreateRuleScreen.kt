@@ -43,8 +43,10 @@ fun CreateRuleScreen(
 ) {
     val context = LocalContext.current
 
+    val isFocusModeTarget = prefillTarget == "FOCUS_MODE" || editingRule?.targetBlockerType == "Focus Mode"
+
     val initialName = remember(editingRule) {
-        editingRule?.name ?: "App Blocker Rule"
+        editingRule?.name ?: if (isFocusModeTarget) "Auto Focus Schedule" else "App Blocker Rule"
     }
 
     var ruleName by remember { mutableStateOf(initialName) }
@@ -53,6 +55,9 @@ fun CreateRuleScreen(
         mutableStateListOf<String>().apply {
             if (editingRule != null) {
                 addAll(editingRule.selectedApps)
+            } else if (isFocusModeTarget) {
+                val loader = SavedPreferencesLoader(context)
+                addAll(loader.getFocusModeSelectedApps())
             } else {
                 val loader = SavedPreferencesLoader(context)
                 addAll(loader.loadBlockedApps())
@@ -139,8 +144,14 @@ fun CreateRuleScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    val screenTitle = when {
+                        editingRule != null && isFocusModeTarget -> "Edit Auto Focus Schedule"
+                        editingRule != null -> "Edit App Blocker Rule"
+                        isFocusModeTarget -> "Create Auto Focus Schedule"
+                        else -> "Create App Blocker Rule"
+                    }
                     Text(
-                        text = if (editingRule != null) "Edit App Blocker Rule" else "Create App Blocker Rule",
+                        text = screenTitle,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge
                     )
@@ -671,19 +682,19 @@ fun CreateRuleScreen(
                                     id = editingRule?.id ?: UUID.randomUUID().toString(),
                                     name = ruleName,
                                     appOrCategory = appOrCategoryDisplay,
-                                    restrictionType = "App Blocker",
+                                    restrictionType = if (isFocusModeTarget) "Focus Mode" else "App Blocker",
                                     startTime = scheduleStartTime,
                                     endTime = scheduleEndTime,
                                     days = scheduleDays.toList(),
                                     limitValue = if (isUsageLimitEnabled) usageHours else launchCount,
                                     isActive = true,
                                     periods = emptyList(),
-                                    targetBlockerType = "App Blocker",
+                                    targetBlockerType = if (isFocusModeTarget) "Focus Mode" else "App Blocker",
                                     selectedApps = finalApps,
                                     selectedKeywords = emptyList(),
                                     selectedWebsites = emptyList(),
                                     selectedPlatforms = emptyList(),
-                                    selectedBlockers = listOf("App Blocker"),
+                                    selectedBlockers = listOf(if (isFocusModeTarget) "Focus Mode" else "App Blocker"),
                                     
                                     isAlwaysBlockEnabled = isAlwaysBlockEnabled,
                                     isScheduleEnabled = isScheduleEnabled,

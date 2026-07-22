@@ -125,7 +125,7 @@ class BlocksManagerFragment : Fragment() {
                                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                             Text("Choose which blocker you want to schedule:")
                                             Spacer(modifier = Modifier.height(8.dp))
-                                            val options = listOf("App Blocker", "Keyword Blocker", "Website Blocker", "Reels Blocker")
+                                            val options = listOf("App Blocker", "Keyword Blocker", "Website Blocker", "Reels Blocker", "Focus Mode")
                                             options.forEach { option ->
                                                 TextButton(
                                                     onClick = {
@@ -135,6 +135,7 @@ class BlocksManagerFragment : Fragment() {
                                                             "Keyword Blocker" -> "create_keyword"
                                                             "Website Blocker" -> "create_website"
                                                             "Reels Blocker" -> "create_reels"
+                                                            "Focus Mode" -> "create_app"
                                                             else -> "create_app"
                                                         }
                                                     },
@@ -670,6 +671,8 @@ class BlocksManagerFragment : Fragment() {
         requireContext().sendBroadcast(intent.setPackage(requireContext().packageName))
         val unifiedIntent = Intent(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_UNIFIED_FEATURE_SCHEDULES)
         requireContext().sendBroadcast(unifiedIntent.setPackage(requireContext().packageName))
+        val focusIntent = Intent(AmnShieldAccessibilityService.INTENT_ACTION_REFRESH_FOCUS_MODE)
+        requireContext().sendBroadcast(focusIntent.setPackage(requireContext().packageName))
     }
 
     private fun timeToMinutes(timeStr: String): Int {

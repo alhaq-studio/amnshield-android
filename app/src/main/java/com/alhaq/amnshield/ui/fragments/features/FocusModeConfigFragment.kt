@@ -94,6 +94,7 @@ class FocusModeConfigFragment : BaseFeatureFragment() {
         binding.btnAutoFocus.setOnClickListener {
             val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
                 putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("filter_type", "Focus Mode")
                 putExtra("prefill_target", "FOCUS_MODE")
             }
             startActivity(intent)
