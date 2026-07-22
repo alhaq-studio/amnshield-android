@@ -334,17 +334,19 @@ class BlocksManagerFragment : Fragment() {
                     associatedApps.any { it.packageName == "keyword_blocker" } -> "Keyword Blocker"
                     associatedApps.any { it.packageName == "website_blocker" } -> "Website Blocker"
                     associatedApps.any { it.packageName == "reel_blocker" } -> "Reels Blocker"
+                    associatedApps.any { it.packageName == "FOCUS_MODE" || it.packageName == "focus_mode" } -> "Focus Mode"
                     else -> "App Blocker"
                 }
 
                 val apps = associatedApps.map { it.packageName }.filter {
-                    it != null && it != "keyword_blocker" && it != "website_blocker" && it != "reel_blocker"
+                    it != null && it != "keyword_blocker" && it != "website_blocker" && it != "reel_blocker" && it != "FOCUS_MODE" && it != "focus_mode"
                 }.distinct()
 
                 val appOrCategory = when (targetBlocker) {
                     "Keyword Blocker" -> "Keywords Blocker"
                     "Website Blocker" -> "Website Blocker"
                     "Reels Blocker" -> "Reels Blocker"
+                    "Focus Mode" -> "Focus Mode Schedules"
                     else -> {
                         if (apps.size == 1) {
                             try {
@@ -505,6 +507,7 @@ class BlocksManagerFragment : Fragment() {
             "Keyword Blocker" -> listOf("keyword_blocker")
             "Website Blocker" -> listOf("website_blocker")
             "Reels Blocker" -> listOf("reel_blocker")
+            "Focus Mode" -> listOf("FOCUS_MODE")
             else -> rule.selectedApps ?: emptyList()
         }
 

@@ -697,7 +697,6 @@ fun CreateRuleScreen(
                                     launchLimitCount = launchCount
                                 )
                                 onSaveRule(newRule)
-                                onBack()
                             }
                         },
                         modifier = Modifier

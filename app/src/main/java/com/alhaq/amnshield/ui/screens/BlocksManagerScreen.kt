@@ -257,8 +257,12 @@ fun RuleItemCard(
                 Spacer(modifier = Modifier.width(14.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
+                    val safeName = (rule.name ?: "").ifBlank { "Unnamed Blocker" }
+                    val safeCategory = (rule.appOrCategory ?: "").ifBlank { "Apps" }
+                    val safeTargetType = (rule.targetBlockerType ?: "").ifBlank { "App Blocker" }
+
                     Text(
-                        text = rule.name,
+                        text = safeName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -268,7 +272,7 @@ fun RuleItemCard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = rule.appOrCategory,
+                            text = safeCategory,
                             style = MaterialTheme.typography.bodySmall,
                             color = blockerColor,
                             fontWeight = FontWeight.SemiBold
@@ -280,7 +284,7 @@ fun RuleItemCard(
                                 .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
                         )
                         Text(
-                            text = rule.targetBlockerType,
+                            text = safeTargetType,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium
@@ -378,8 +382,9 @@ fun RuleItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    val daysList = (if (rule.isScheduleEnabled) rule.days else if (rule.isCheatEnabled) rule.cheatDays else emptyList()) ?: emptyList()
-                    if (daysList.isNotEmpty()) {
+                    val activeDays: List<String>? = if (rule.isScheduleEnabled) rule.days else if (rule.isCheatEnabled) rule.cheatDays else null
+                    val safeDaysList = activeDays?.filterNotNull() ?: emptyList()
+                    if (safeDaysList.isNotEmpty()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -391,7 +396,7 @@ fun RuleItemCard(
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = daysList.joinToString(" • "),
+                                text = safeDaysList.joinToString(" • "),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                 fontWeight = FontWeight.Medium

@@ -63,7 +63,7 @@ class FragmentActivity : AppCompatActivity() {
         val featureType = intent.getStringExtra("feature_type")
         if (featureType != null) {
             fragment = when (featureType) {
-                "focus_mode" -> com.alhaq.amnshield.ui.fragments.features.FocusModeConfigFragment()
+                "focus_mode" -> com.alhaq.amnshield.ui.fragments.FocusFragment()
                 "app_blocker" -> com.alhaq.amnshield.ui.fragments.features.AppBlockerConfigFragment()
                 // "view_blocker" was consolidated into Reel Blocker; route removed to
                 // avoid resurrecting the deprecated config screen via legacy intents.

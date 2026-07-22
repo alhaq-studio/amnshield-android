@@ -21,6 +21,19 @@ class ReelBlocker : BaseBlocker() {
             "com.ss.android.ugc.aweme"
         )
 
+        val REEL_TARGET_PACKAGES = hashSetOf(
+            "com.instagram.android",
+            "com.myinsta.android",
+            "com.google.android.youtube",
+            "app.revanced.android.youtube",
+            "app.morphe.android.youtube",
+            "com.snapchat.android",
+            "com.facebook.katana",
+            "com.ss.android.ugc.trill",
+            "com.zhiliaoapp.musically",
+            "com.ss.android.ugc.aweme"
+        )
+
         // Map of native (non-browser) reel surface view IDs to their platform.
         private val NATIVE_SURFACE_PLATFORM = linkedMapOf(
             "com.instagram.android:id/clips_viewer_view_pager" to PLATFORM_INSTAGRAM,
@@ -102,6 +115,10 @@ class ReelBlocker : BaseBlocker() {
         packageName: String
     ): ReelBlockerResult? {
         if (!isEnabled) {
+            return null
+        }
+
+        if (!REEL_TARGET_PACKAGES.contains(packageName) && !isBrowserPackage(packageName)) {
             return null
         }
 

@@ -141,27 +141,77 @@ class BlocksFragment : BaseFeatureFragment() {
             if (associatedApps.isNotEmpty()) {
                 val firstApp = associatedApps.first()
 
-                val name = firstApp.groupTitle ?: firstApp.title
+                val name = firstApp.groupTitle ?: firstApp.title ?: "Unnamed Blocker"
                 val isEnabled = firstApp.isEnabled ?: true
 
-                val restrictionTypeStr = when {
-                    firstApp.type == AppBlockScheduleRule.RuleType.CHEAT -> "Cheat Window"
-                    firstApp.durationHours > 0 -> "Usage Limit"
-                    else -> "Block Schedule"
+                val targetBlocker = when {
+                    associatedApps.any { it.packageName == "keyword_blocker" } -> "Keyword Blocker"
+                    associatedApps.any { it.packageName == "website_blocker" } -> "Website Blocker"
+                    associatedApps.any { it.packageName == "reel_blocker" } -> "Reels Blocker"
+                    associatedApps.any { it.packageName == "FOCUS_MODE" || it.packageName == "focus_mode" } -> "Focus Mode"
+                    else -> "App Blocker"
                 }
 
-                val apps = associatedApps.map { it.packageName }.distinct()
+                val apps = associatedApps.map { it.packageName }.filter {
+                    it != null && it != "keyword_blocker" && it != "website_blocker" && it != "reel_blocker" && it != "FOCUS_MODE" && it != "focus_mode"
+                }.distinct()
 
-                val appOrCategory = if (apps.size == 1) {
-                    try {
-                        requireContext().packageManager.getApplicationLabel(
-                            requireContext().packageManager.getApplicationInfo(apps.first(), 0)
-                        ).toString()
-                    } catch (e: Exception) {
-                        apps.first()
+                val appOrCategory = when (targetBlocker) {
+                    "Keyword Blocker" -> "Keywords Blocker"
+                    "Website Blocker" -> "Website Blocker"
+                    "Reels Blocker" -> "Reels Blocker"
+                    "Focus Mode" -> "Focus Mode Schedules"
+                    else -> {
+                        if (apps.size == 1) {
+                            try {
+                                requireContext().packageManager.getApplicationLabel(
+                                    requireContext().packageManager.getApplicationInfo(apps.first(), 0)
+                                ).toString()
+                            } catch (e: Exception) {
+                                apps.first()
+                            }
+                        } else {
+                            "${apps.size} Apps"
+                        }
                     }
+                }
+
+                // 1. Standard Schedule & Always Block
+                val blockRules = associatedApps.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK && it.durationHours <= 0 }
+                val isAlwaysBlockEnabled = blockRules.any { it.recurrence == AppBlockScheduleRule.Recurrence.ALWAYS }
+                val isScheduleEnabled = blockRules.isNotEmpty() && !isAlwaysBlockEnabled
+                val firstBlock = blockRules.firstOrNull()
+                val scheduleStartTime = if (firstBlock != null) String.format("%02d:%02d", firstBlock.startMinute / 60, firstBlock.startMinute % 60) else "09:00"
+                val scheduleEndTime = if (firstBlock != null) String.format("%02d:%02d", firstBlock.endMinute / 60, firstBlock.endMinute % 60) else "17:00"
+                val scheduleDays = if (firstBlock?.selectedDays != null && firstBlock.selectedDays.isNotEmpty()) {
+                    firstBlock.selectedDays.map { ScheduleUtils.calendarIntToDay(it) }
                 } else {
-                    "${apps.size} Apps"
+                    listOf("Mon", "Tue", "Wed", "Thu", "Fri")
+                }
+
+                // 2. Cheat Window
+                val cheatRules = associatedApps.filter { it.type == AppBlockScheduleRule.RuleType.CHEAT }
+                val isCheatEnabled = cheatRules.isNotEmpty()
+                val firstCheat = cheatRules.firstOrNull()
+                val cheatStartTime = if (firstCheat != null) String.format("%02d:%02d", firstCheat.startMinute / 60, firstCheat.startMinute % 60) else "12:00"
+                val cheatEndTime = if (firstCheat != null) String.format("%02d:%02d", firstCheat.endMinute / 60, firstCheat.endMinute % 60) else "13:00"
+                val cheatDays = if (firstCheat?.selectedDays != null) {
+                    firstCheat.selectedDays.map { ScheduleUtils.calendarIntToDay(it) }
+                } else {
+                    listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+                }
+
+                // 3. Usage Limit
+                val usageRules = associatedApps.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK && it.durationHours > 0 }
+                val isUsageLimitEnabled = usageRules.isNotEmpty()
+                val usageLimitHours = if (isUsageLimitEnabled) usageRules.first().durationHours else 0
+
+                val restrictionTypeStr = when {
+                    isAlwaysBlockEnabled -> "Always Block (24/7)"
+                    isScheduleEnabled -> "Block Schedule"
+                    isUsageLimitEnabled -> "Usage Limit"
+                    isCheatEnabled -> "Cheat Window"
+                    else -> "Block Schedule"
                 }
 
                 val periods = mutableListOf<com.alhaq.amnshield.ui.state.SchedulePeriod>()
@@ -171,14 +221,7 @@ class BlocksFragment : BaseFeatureFragment() {
                     val daysList = item.selectedDays?.map { ScheduleUtils.calendarIntToDay(it) } ?: emptyList()
                     periods.add(com.alhaq.amnshield.ui.state.SchedulePeriod(start, end, daysList))
                 }
-
                 val distinctPeriods = periods.distinctBy { Triple(it.startTime, it.endTime, it.days.sorted()) }
-                val firstPeriod = distinctPeriods.firstOrNull() ?: com.alhaq.amnshield.ui.state.SchedulePeriod("09:00", "17:00", listOf("Mon", "Tue", "Wed", "Thu", "Fri"))
-
-                val limitVal = when (restrictionTypeStr) {
-                    "Usage Limit" -> firstApp.durationHours
-                    else -> 0
-                }
 
                 rulesList.add(
                     com.alhaq.amnshield.ui.state.ScheduleRule(
@@ -186,15 +229,24 @@ class BlocksFragment : BaseFeatureFragment() {
                         name = name,
                         appOrCategory = appOrCategory,
                         restrictionType = restrictionTypeStr,
-                        startTime = firstPeriod.startTime,
-                        endTime = firstPeriod.endTime,
-                        days = firstPeriod.days,
-                        limitValue = limitVal,
+                        startTime = scheduleStartTime,
+                        endTime = scheduleEndTime,
+                        days = scheduleDays,
+                        limitValue = if (isUsageLimitEnabled) usageLimitHours else 0,
                         isActive = isEnabled,
                         periods = distinctPeriods,
-                        targetBlockerType = "App Blocker",
+                        targetBlockerType = targetBlocker,
                         selectedApps = apps,
-                        selectedBlockers = listOf("App Blocker")
+                        selectedBlockers = listOf(targetBlocker),
+                        
+                        isAlwaysBlockEnabled = isAlwaysBlockEnabled,
+                        isScheduleEnabled = isScheduleEnabled,
+                        isCheatEnabled = isCheatEnabled,
+                        cheatStartTime = cheatStartTime,
+                        cheatEndTime = cheatEndTime,
+                        cheatDays = cheatDays,
+                        isUsageLimitEnabled = isUsageLimitEnabled,
+                        usageLimitHours = usageLimitHours
                     )
                 )
             }

@@ -12,6 +12,32 @@ class AppBlocker : BaseBlocker() {
     // package-name -> end-time-in-millis (grace period / temporary bypass)
     private var cooldownAppsList: MutableMap<String, Long> = mutableMapOf()
 
+    companion object {
+        val ESSENTIAL_SYSTEM_APPS = setOf(
+            "com.android.settings",
+            "com.google.android.settings",
+            "com.sec.android.app.launcher",
+            "com.samsung.android.settings",
+            "com.coloros.settings",
+            "com.android.systemui",
+            "com.google.android.apps.nexuslauncher",
+            "com.android.launcher",
+            "com.android.launcher3",
+            "com.huawei.android.launcher",
+            "com.miui.mihome2",
+            "com.mi.android.globallauncher",
+            "com.android.dialer",
+            "com.android.phone",
+            "com.android.contacts",
+            "com.google.android.dialer",
+            "com.google.android.contacts",
+            "com.samsung.android.dialer",
+            "com.samsung.android.contacts",
+            "com.alhaq.amnshield",
+            "com.alhaq.deenshield",
+        )
+    }
+
     private var scheduleRules: List<AppBlockScheduleRule> = emptyList()
 
     var blockedApps = hashSetOf<String>()
@@ -25,8 +51,9 @@ class AppBlocker : BaseBlocker() {
      */
     fun doesAppNeedToBeBlocked(packageName: String, savedPrefs: SavedPreferencesLoader? = null): AppBlockerResult {
 
-        // 1. Core exclusions (Never block)
-        if (packageName.equals("com.alhaq.amnshield", ignoreCase = true) ||
+        // 1. Core exclusions (Never block essential system apps, launchers, system UI)
+        if (ESSENTIAL_SYSTEM_APPS.contains(packageName) ||
+            packageName.equals("com.alhaq.amnshield", ignoreCase = true) ||
             packageName.equals("com.alhaq.deenshield", ignoreCase = true) ||
             packageName.startsWith("com.alhaq.deenshield.", ignoreCase = true) ||
             packageName.equals("com.android.systemui", ignoreCase = true) ||
@@ -35,17 +62,12 @@ class AppBlocker : BaseBlocker() {
             return AppBlockerResult(isBlocked = false)
         }
 
-        if (scheduleRules.isEmpty()) {
-            return AppBlockerResult(isBlocked = false)
-        }
+        val isManuallyBlocked = blockedApps.contains(packageName)
+        val packageRules = scheduleRules.filter { it.packageName == packageName && it.isRuleEnabled }
+        val hasLaunchLimit = savedPrefs?.getAppLaunchLimitRule(packageName) != null
+        val hasUsageLimit = packageRules.any { it.type == AppBlockScheduleRule.RuleType.BLOCK && it.durationHours > 0 }
 
-        val allPackageRules = scheduleRules.filter { it.packageName == packageName }
-        if (allPackageRules.isEmpty()) {
-            return AppBlockerResult(isBlocked = false)
-        }
-
-        val packageRules = allPackageRules.filter { it.isRuleEnabled }
-        if (packageRules.isEmpty()) {
+        if (!isManuallyBlocked && packageRules.isEmpty() && !hasLaunchLimit && !hasUsageLimit) {
             return AppBlockerResult(isBlocked = false)
         }
 
@@ -57,7 +79,7 @@ class AppBlocker : BaseBlocker() {
             return AppBlockerResult(isBlocked = false, cheatHoursEndTime = activeCheatEnd)
         }
 
-        // 4. Check for Cooldown/Bypass (grace period)
+        // 3. Check for Cooldown/Bypass (grace period after warning screen "Proceed")
         if (cooldownAppsList.containsKey(packageName)) {
             val now = System.currentTimeMillis()
             val bypassEnd = cooldownAppsList[packageName]!!
@@ -65,11 +87,10 @@ class AppBlocker : BaseBlocker() {
                 return AppBlockerResult(isBlocked = false, cooldownEndTime = bypassEnd)
             } else {
                 removeCooldownFrom(packageName)
-                // Period expired, proceed to check if it should be blocked
             }
         }
 
-        // 5. Check if the app is scheduled or manually blocked
+        // 4. Check if the app should be blocked
         var shouldBeBlocked = false
 
         // A) Launch Limit check
@@ -83,7 +104,7 @@ class AppBlocker : BaseBlocker() {
             }
         }
 
-        // A2) Usage Limit check
+        // B) Usage Limit check
         val usageLimitRules = packageRules.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK && it.durationHours > 0 }
         if (usageLimitRules.isNotEmpty() && savedPrefs != null) {
             val dailyUsageMs = getDailyAppUsageMillis(packageName, savedPrefs.context)
@@ -93,16 +114,17 @@ class AppBlocker : BaseBlocker() {
             }
         }
 
-        // B) Block Schedules check (only check standard schedule windows without usage limits)
-        val blockRules = packageRules.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK && it.durationHours <= 0 }
-        if (blockRules.isNotEmpty()) {
-            val activeBlockEnd = getActiveRuleEndTime(blockRules)
+        // C) Block Schedules & Manual Block check
+        val blockScheduleRules = packageRules.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK && it.durationHours <= 0 }
+        if (blockScheduleRules.isNotEmpty()) {
+            val activeBlockEnd = getActiveRuleEndTime(blockScheduleRules)
             if (activeBlockEnd != null) {
                 shouldBeBlocked = true
             }
+        } else if (isManuallyBlocked) {
+            // App is manually toggled as blocked in the list and has no specific schedule restricting hours
+            shouldBeBlocked = true
         }
-
-
 
         return AppBlockerResult(isBlocked = shouldBeBlocked)
     }

@@ -247,10 +247,12 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
 
             val isPremiumUser = premiumManager.isPremium()
 
-            val isFocusModeActive = (savedPreferencesLoader.isFocusModeFeatureEnabled() || focusModeBlocker.focusModeData.isTurnedOn)
-            val activeFocusModeType = if (focusModeBlocker.focusModeData.isTurnedOn) {
+            val isManualFocusActive = focusModeBlocker.focusModeData.isTurnedOn
+            val isAutoFocusScheduleActive = isFeatureCurrentlyActive("FOCUS_MODE") || isFeatureCurrentlyActive("focus_mode")
+            val isFocusModeActive = isManualFocusActive || isAutoFocusScheduleActive
+            val activeFocusModeType = if (isManualFocusActive) {
                 focusModeBlocker.focusModeData.modeType
-            } else if (savedPreferencesLoader.isFocusModeFeatureEnabled()) {
+            } else if (isAutoFocusScheduleActive) {
                 savedPreferencesLoader.getFocusModeData().modeType
             } else {
                 -1
@@ -532,7 +534,9 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         userIgnoredPackages.add("com.samsung.android.sm")
         userIgnoredPackages.add("com.samsung.android.sm_cn")
         userIgnoredPackages.add("com.coloros.safecenter")
-        userIgnoredPackages.add("com.miui.cleanmaster")
+        if (cachedDefaultLauncher != null) {
+            userIgnoredPackages.add(cachedDefaultLauncher!!)
+        }
 
         keywordBlocker.ignoredPackages = userIgnoredPackages
     }
@@ -1111,16 +1115,21 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
     }
 
     private fun isFeatureCurrentlyActive(featureKey: String): Boolean {
+        val isFocusTarget = featureKey.equals("FOCUS_MODE", ignoreCase = true)
+
         val allRules = savedPreferencesLoader.loadAppBlockerScheduleRules()
-            .filter { it.packageName == featureKey }
+            .filter { it.packageName.equals(featureKey, ignoreCase = true) }
 
         if (allRules.isEmpty()) {
-            return true // Fallback: If no custom feature schedule rules are set, feature is ACTIVE 24/7 when enabled
+            // FOCUS_MODE only runs if there is an explicit auto-focus schedule.
+            // Other features run 24/7 when enabled if no custom schedule rules exist.
+            return !isFocusTarget
         }
 
         val enabledRules = allRules.filter { it.isRuleEnabled }
         if (enabledRules.isEmpty()) {
-            return true // Fallback: If all defined feature schedule rules are disabled, fallback to ACTIVE 24/7
+            // If all custom schedule rules for this feature are disabled, revert to default 24/7 behavior
+            return !isFocusTarget
         }
 
         // Check cheat hours (cheat window bypasses blocking)
@@ -1137,7 +1146,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
             return activeBlockEnd != null // Active only inside scheduled block window
         }
 
-        return true // Active 24/7 outside cheat windows
+        return true
     }
 
     private fun getActiveRuleEndTimeLocal(rules: List<AppBlockScheduleRule>): Long? {

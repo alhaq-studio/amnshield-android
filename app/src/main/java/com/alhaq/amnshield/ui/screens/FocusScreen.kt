@@ -294,6 +294,62 @@ fun FocusScreen(
             }
         }
 
+        // Focus Mode Configurations & Settings Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "FOCUS CONFIGURATIONS",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        letterSpacing = 0.08.sp
+                    )
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    ) {
+                        Column {
+                            FocusItemRow(
+                                icon = Icons.Outlined.Apps,
+                                title = "Focus Apps Rules",
+                                summary = "Configure whitelisted allowed apps or blacklisted apps",
+                                statusText = "${preSelectedApps.size} apps",
+                                onChecked = onConfigureApps,
+                                iconColor = MaterialTheme.colorScheme.primary
+                            )
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                            FocusItemRow(
+                                icon = Icons.Outlined.CalendarToday,
+                                title = "AutoFocus Schedules",
+                                summary = "Set automated focus mode schedule windows",
+                                statusText = "SCHEDULES",
+                                onChecked = onConfigureSchedules,
+                                iconColor = Color(0xFF3B82F6)
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
         // Beautiful Mindful Breathing Visualizer Card
         item {

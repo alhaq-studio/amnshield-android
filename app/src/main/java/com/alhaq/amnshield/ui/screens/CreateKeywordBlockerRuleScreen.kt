@@ -537,7 +537,6 @@ fun CreateKeywordBlockerRuleScreen(
                                     cheatDays = cheatDays.toList()
                                 )
                                 onSaveRule(newRule)
-                                onBack()
                             }
                         },
                         modifier = Modifier
