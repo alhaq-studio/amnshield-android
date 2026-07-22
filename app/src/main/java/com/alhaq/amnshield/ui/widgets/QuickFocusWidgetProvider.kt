@@ -49,7 +49,8 @@ class QuickFocusWidgetProvider : AppWidgetProvider() {
         }
 
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        val widgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
+        val componentName = android.content.ComponentName(context, QuickFocusWidgetProvider::class.java)
+        val widgetIds = appWidgetManager.getAppWidgetIds(componentName)
         widgetIds?.forEach { widgetId ->
             updateWidget(context, appWidgetManager, widgetId)
         }
@@ -108,7 +109,7 @@ class QuickFocusWidgetProvider : AppWidgetProvider() {
                 setOnClickPendingIntent(R.id.btn_quick_focus_30, createActionIntent(context, widgetId, ACTION_START_FOCUS_30))
                 setOnClickPendingIntent(R.id.btn_quick_focus_60, createActionIntent(context, widgetId, ACTION_START_FOCUS_60))
 
-                // Tap card background to open Focus Space screen
+                // Tap title/timer display to open Focus Space screen
                 val openIntent = Intent(context, FragmentActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     putExtra("feature_type", "focus_mode")
@@ -119,7 +120,8 @@ class QuickFocusWidgetProvider : AppWidgetProvider() {
                     openIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
-                setOnClickPendingIntent(R.id.widget_bg_quick_focus, pendingOpen)
+                setOnClickPendingIntent(R.id.txt_focus_timer_display, pendingOpen)
+                setOnClickPendingIntent(R.id.txt_focus_status_badge, pendingOpen)
             }
 
             appWidgetManager.updateAppWidget(widgetId, views)

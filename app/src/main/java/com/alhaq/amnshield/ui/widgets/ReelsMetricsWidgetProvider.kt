@@ -82,7 +82,8 @@ class ReelsMetricsWidgetProvider : AppWidgetProvider() {
                     openIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
-                setOnClickPendingIntent(R.id.widget_bg_reels, pendingOpen)
+                setOnClickPendingIntent(R.id.txt_reels_scrolled_count, pendingOpen)
+                setOnClickPendingIntent(R.id.txt_reels_limit_info, pendingOpen)
             }
 
             appWidgetManager.updateAppWidget(widgetId, views)

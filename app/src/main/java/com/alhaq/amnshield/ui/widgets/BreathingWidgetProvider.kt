@@ -59,7 +59,6 @@ class BreathingWidgetProvider : AppWidgetProvider() {
                 )
 
                 setOnClickPendingIntent(R.id.btn_start_breathing, pendingOpen)
-                setOnClickPendingIntent(R.id.widget_bg_breathing, pendingOpen)
             }
 
             appWidgetManager.updateAppWidget(widgetId, views)
