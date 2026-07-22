@@ -62,6 +62,8 @@ class ProfileFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
+                val activeTheme = com.alhaq.amnshield.utils.ThemeUtils.resolveAppTheme(requireContext())
+                viewModel.updateTheme(activeTheme)
                 val state by viewModel.state.collectAsState()
                 
                 // Track Google sign-in status dynamically
@@ -69,7 +71,7 @@ class ProfileFragment : Fragment() {
                     googleSignInHelper.isSignedIn()
                 }
                 
-                AmnShieldTheme(appTheme = state.currentTheme) {
+                AmnShieldTheme(appTheme = activeTheme) {
                     ProfileScreen(
                         state = state,
                         viewModel = viewModel,

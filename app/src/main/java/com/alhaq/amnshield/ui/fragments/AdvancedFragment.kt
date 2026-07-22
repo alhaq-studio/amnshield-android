@@ -44,8 +44,10 @@ class AdvancedFragment : BaseFeatureFragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
+                val activeTheme = com.alhaq.amnshield.utils.ThemeUtils.resolveAppTheme(requireContext())
+                viewModel.updateTheme(activeTheme)
                 val state by viewModel.state.collectAsState()
-                AmnShieldTheme(appTheme = state.currentTheme) {
+                AmnShieldTheme(appTheme = activeTheme) {
                     AdvancedScreen(
                         state = state,
                         onNavigateToAppBlocker = { openFeatureConfig("app_blocker", requiresPremium = false) },

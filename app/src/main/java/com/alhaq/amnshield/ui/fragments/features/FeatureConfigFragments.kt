@@ -86,37 +86,34 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
         binding.configContainer.visibility = View.VISIBLE
 
         setupAppBlockerSwitch()
-        
-        updateSelectedAppsCount(savedPreferencesLoader.loadBlockedApps().size)
+
+        val appRulesCount = savedPreferencesLoader.loadAppBlockerScheduleRules()
+            .filter { it.packageName != "keyword_blocker" && it.packageName != "website_blocker" && it.packageName != "reel_blocker" && it.packageName != "FOCUS_MODE" }
+            .map { it.groupId ?: it.id }
+            .distinct()
+            .size
+        binding.txtSelectedAppsCount.text = "$appRulesCount Active App Rules"
+        binding.btnSelectApps.text = "Manage App Rules"
 
         binding.btnSelectApps.setOnClickListener {
-            val intent = Intent(requireContext(), SelectAppsActivity::class.java)
-            intent.putStringArrayListExtra(
-                "PRE_SELECTED_APPS",
-                ArrayList(savedPreferencesLoader.loadBlockedApps())
-            )
-            selectAppsLauncher.launch(intent, activityOptions)
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("filter_type", "App Blocker")
+            }
+            startActivity(intent, activityOptions.toBundle())
         }
 
         ((binding.btnCheatHours.parent as? View)?.parent as? View)?.visibility = View.GONE
         ((binding.btnBlockSchedules.parent as? View)?.parent as? View)?.visibility = View.GONE
         ((binding.btnLaunchLimits.parent as? View)?.parent as? View)?.visibility = View.GONE
         ((binding.btnUsageLimits.parent as? View)?.parent as? View)?.visibility = View.GONE
+        ((binding.switchAutoBlock.parent as? View)?.parent as? View)?.visibility = View.GONE
 
         binding.btnWarningScreen.setOnClickListener {
             TweakAppBlockerWarning(savedPreferencesLoader).show(
                 childFragmentManager,
                 "tweak_app_blocker_warning"
             )
-        }
-        
-        binding.switchAutoBlock.isChecked = savedPreferencesLoader.isAutoBlockEnabled()
-        binding.switchAutoBlock.setOnCheckedChangeListener { _, isChecked ->
-            savedPreferencesLoader.setAutoBlockEnabled(isChecked)
-        }
-        
-        binding.btnSelectCategories.setOnClickListener {
-            showCategorySelectionDialog()
         }
 
         return binding.root

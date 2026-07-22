@@ -82,7 +82,7 @@ data class AmnShieldState(
     val permissionNotificationsDone: Boolean = false,
 
     // Active theme
-    val currentTheme: AppTheme = AppTheme.SUNSET_GLOW,
+    val currentTheme: AppTheme = AppTheme.EMERALD_CALM,
 
     // System Status
     val isMainServiceEnabled: Boolean = false,

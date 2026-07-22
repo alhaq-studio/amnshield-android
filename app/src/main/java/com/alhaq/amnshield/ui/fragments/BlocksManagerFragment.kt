@@ -60,7 +60,6 @@ class BlocksManagerFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                val state by viewModel.state.collectAsState()
                 val action = remember { arguments?.getString("action") }
                 val prefillTarget = remember { arguments?.getString("prefill_target") }
                 val prefillType = remember { arguments?.getString("prefill_type") }
@@ -78,12 +77,16 @@ class BlocksManagerFragment : Fragment() {
                     }
                 }
 
+                val activeTheme = com.alhaq.amnshield.utils.ThemeUtils.resolveAppTheme(requireContext())
+                viewModel.updateTheme(activeTheme)
+                val state by viewModel.state.collectAsState()
+
                 var currentScreen by remember(defaultScreen) { mutableStateOf(defaultScreen) } // "manage", "create_app", "create_keyword", "create_website", "create_reels"
                 var initialType by remember { mutableStateOf(prefillType ?: "Block Schedule") }
                 var editingRule by remember { mutableStateOf<com.alhaq.amnshield.ui.state.ScheduleRule?>(null) }
                 var showSelectBlockerDialog by remember { mutableStateOf(false) }
 
-                AmnShieldTheme(appTheme = state.currentTheme) {
+                AmnShieldTheme(appTheme = activeTheme) {
                     when (currentScreen) {
                         "manage" -> {
                             BlocksManagerScreen(

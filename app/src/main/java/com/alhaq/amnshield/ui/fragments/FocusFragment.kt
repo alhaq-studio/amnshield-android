@@ -101,8 +101,10 @@ class FocusFragment : BaseFeatureFragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
+                val activeTheme = com.alhaq.amnshield.utils.ThemeUtils.resolveAppTheme(requireContext())
+                viewModel.updateTheme(activeTheme)
                 val state by viewModel.state.collectAsState()
-                AmnShieldTheme(appTheme = state.currentTheme) {
+                AmnShieldTheme(appTheme = activeTheme) {
                     FocusScreen(
                         isServiceEnabled = isServiceEnabled.value,
                         isFocusModeActive = isFocusModeActive.value,

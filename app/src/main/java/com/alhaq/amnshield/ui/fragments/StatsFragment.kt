@@ -60,8 +60,10 @@ class StatsFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
+                val activeTheme = com.alhaq.amnshield.utils.ThemeUtils.resolveAppTheme(requireContext())
+                viewModel.updateTheme(activeTheme)
                 val state by viewModel.state.collectAsState()
-                AmnShieldTheme(appTheme = state.currentTheme) {
+                AmnShieldTheme(appTheme = activeTheme) {
                     StatsScreen(
                         totalScreenTime = totalScreenTimeState.value,
                         distractionsBlocked = distractionsBlockedState.value,
