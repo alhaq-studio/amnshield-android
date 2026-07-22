@@ -122,15 +122,19 @@ class ScreentimeWidgetProvider : AppWidgetProvider() {
     }
 
     fun setAppUsageText(remoteViews: RemoteViews,index: Int, list: List<AllAppsUsageFragment.Stat>, textViewId: Int, context: Context) {
-        val item = list.getOrNull(index) // Safely get the item
+        val item = list.getOrNull(index)
         if (item != null) {
-            val usage =  (TimeTools.formatTimeForWidget(item.totalTime))
-            val appName = context.packageManager.getApplicationLabel(
-                context.packageManager.getApplicationInfo(item.packageName, 0)
-            )
-            remoteViews.setTextViewText(textViewId, "$usage : $appName")
+            val usage = TimeTools.formatTimeForWidget(item.totalTime)
+            val appName = try {
+                context.packageManager.getApplicationLabel(
+                    context.packageManager.getApplicationInfo(item.packageName, 0)
+                ).toString()
+            } catch (e: Exception) {
+                item.packageName
+            }
+            remoteViews.setTextViewText(textViewId, "• $usage : $appName")
         } else {
-            remoteViews.setTextViewText(textViewId, "") // Handle missing items
+            remoteViews.setTextViewText(textViewId, "")
         }
     }
 
