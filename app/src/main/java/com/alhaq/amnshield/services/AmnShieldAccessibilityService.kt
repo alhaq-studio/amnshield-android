@@ -1142,8 +1142,23 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
         // Check block schedules
         val blockRules = enabledRules.filter { it.type == AppBlockScheduleRule.RuleType.BLOCK }
         if (blockRules.isNotEmpty()) {
-            val activeBlockEnd = getActiveRuleEndTimeLocal(blockRules)
-            return activeBlockEnd != null // Active only inside scheduled block window
+            val timedRules = blockRules.filter { it.durationHours <= 0 }
+            val lengthRules = blockRules.filter { it.durationHours > 0 }
+
+            if (timedRules.isNotEmpty()) {
+                val activeBlockEnd = getActiveRuleEndTimeLocal(timedRules)
+                if (activeBlockEnd != null) return true
+            }
+
+            if (lengthRules.isNotEmpty()) {
+                val targetHours = lengthRules.first().durationHours
+                val currentHourOfDay = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                if (currentHourOfDay < targetHours) {
+                    return true
+                }
+            }
+
+            return false // Active only inside scheduled block window or focus length hours
         }
 
         return true

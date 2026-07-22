@@ -26,6 +26,7 @@ import com.alhaq.amnshield.ui.screens.CreateRuleScreen
 import com.alhaq.amnshield.ui.screens.CreateKeywordBlockerRuleScreen
 import com.alhaq.amnshield.ui.screens.CreateWebsiteBlockerRuleScreen
 import com.alhaq.amnshield.ui.screens.CreateReelsBlockerRuleScreen
+import com.alhaq.amnshield.ui.screens.CreateFocusModeRuleScreen
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -105,6 +106,7 @@ class BlocksManagerFragment : Fragment() {
                                         "Keyword Blocker" -> "create_keyword"
                                         "Website Blocker" -> "create_website"
                                         "Reels Blocker" -> "create_reels"
+                                        "Focus Mode" -> "create_focus"
                                         else -> "create_app"
                                     }
                                 },
@@ -135,7 +137,7 @@ class BlocksManagerFragment : Fragment() {
                                                             "Keyword Blocker" -> "create_keyword"
                                                             "Website Blocker" -> "create_website"
                                                             "Reels Blocker" -> "create_reels"
-                                                            "Focus Mode" -> "create_app"
+                                                            "Focus Mode" -> "create_focus"
                                                             else -> "create_app"
                                                         }
                                                     },
@@ -254,6 +256,36 @@ class BlocksManagerFragment : Fragment() {
                                 state = state,
                                 viewModel = viewModel,
                                 initialType = initialType,
+                                editingRule = editingRule,
+                                onSaveRule = { rule ->
+                                    if (editingRule != null) {
+                                        deleteScheduleRule(editingRule!!.id)
+                                    }
+                                    saveScheduleRule(rule)
+                                    editingRule = null
+                                    if (action == "create") {
+                                        if (!parentFragmentManager.popBackStackImmediate()) {
+                                            requireActivity().finish()
+                                        }
+                                    } else {
+                                        currentScreen = "manage"
+                                    }
+                                },
+                                onBack = {
+                                    editingRule = null
+                                    if (action == "create") {
+                                        if (!parentFragmentManager.popBackStackImmediate()) {
+                                            requireActivity().finish()
+                                        }
+                                    } else {
+                                        currentScreen = "manage"
+                                    }
+                                }
+                            )
+                        }
+                        "create_focus" -> {
+                            CreateFocusModeRuleScreen(
+                                state = state,
                                 editingRule = editingRule,
                                 onSaveRule = { rule ->
                                     if (editingRule != null) {
@@ -401,8 +433,13 @@ class BlocksManagerFragment : Fragment() {
                 val isLaunchLimitEnabled = associatedLaunchLimit != null
                 val launchLimitCount = associatedLaunchLimit?.maxLaunches ?: 0
 
+                val isFocusLengthEnabled = targetBlocker == "Focus Mode" && isUsageLimitEnabled
+                val focusProtectionMode = if (targetBlocker == "Focus Mode") savedPreferencesLoader.getFocusModeData().modeType else com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED
+
                 // Determine display type/badge
                 val restrictionTypeStr = when {
+                    targetBlocker == "Focus Mode" && isFocusLengthEnabled -> "Focus Length (${usageLimitHours}h/day)"
+                    targetBlocker == "Focus Mode" -> "Auto Focus Schedule"
                     isAlwaysBlockEnabled -> "Always Block (24/7)"
                     isScheduleEnabled -> "Block Schedule"
                     isUsageLimitEnabled -> "Usage Limit"
@@ -430,7 +467,7 @@ class BlocksManagerFragment : Fragment() {
                         startTime = scheduleStartTime,
                         endTime = scheduleEndTime,
                         days = scheduleDays,
-                        limitValue = if (isUsageLimitEnabled) usageLimitHours else launchLimitCount,
+                        limitValue = if (isFocusLengthEnabled) usageLimitHours else if (isUsageLimitEnabled) usageLimitHours else launchLimitCount,
                         isActive = isEnabled,
                         periods = distinctPeriods,
                         targetBlockerType = targetBlocker,
@@ -446,7 +483,11 @@ class BlocksManagerFragment : Fragment() {
                         isUsageLimitEnabled = isUsageLimitEnabled,
                         usageLimitHours = usageLimitHours,
                         isLaunchLimitEnabled = isLaunchLimitEnabled,
-                        launchLimitCount = launchLimitCount
+                        launchLimitCount = launchLimitCount,
+
+                        focusProtectionMode = focusProtectionMode,
+                        isFocusLengthEnabled = isFocusLengthEnabled,
+                        focusLengthHours = usageLimitHours
                     )
                 )
             }
@@ -590,6 +631,36 @@ class BlocksManagerFragment : Fragment() {
                     endMinute = 0,
                     selectedDays = emptySet(),
                     durationHours = rule.usageLimitHours,
+                    createdAt = System.currentTimeMillis(),
+                    groupId = groupId,
+                    groupTitle = groupTitle,
+                    isEnabled = rule.isActive
+                )
+                savedPreferencesLoader.upsertAppBlockerScheduleRule(appRule)
+            }
+        }
+
+        // 3b. Focus Mode Specific Saving
+        if (rule.targetBlockerType == "Focus Mode") {
+            savedPreferencesLoader.saveFocusModeSelectedApps(rule.selectedApps ?: emptyList())
+            val currentData = savedPreferencesLoader.getFocusModeData()
+            val updatedData = currentData.copy(
+                modeType = rule.focusProtectionMode,
+                selectedApps = HashSet(rule.selectedApps ?: emptyList())
+            )
+            savedPreferencesLoader.saveFocusModeData(updatedData)
+
+            if (rule.isFocusLengthEnabled) {
+                val appRule = AppBlockScheduleRule(
+                    id = UUID.randomUUID().toString(),
+                    title = "Focus Length • $groupTitle • ${rule.focusLengthHours}h/day",
+                    packageName = "FOCUS_MODE",
+                    type = AppBlockScheduleRule.RuleType.BLOCK,
+                    recurrence = AppBlockScheduleRule.Recurrence.DAILY,
+                    startMinute = 0,
+                    endMinute = 0,
+                    selectedDays = emptySet(),
+                    durationHours = rule.focusLengthHours,
                     createdAt = System.currentTimeMillis(),
                     groupId = groupId,
                     groupTitle = groupTitle,

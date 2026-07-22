@@ -42,7 +42,12 @@ data class ScheduleRule(
     val isUsageLimitEnabled: Boolean = false,
     val usageLimitHours: Int = 0,
     val isLaunchLimitEnabled: Boolean = false,
-    val launchLimitCount: Int = 0
+    val launchLimitCount: Int = 0,
+    
+    // Focus Mode specific protection and trigger fields
+    val focusProtectionMode: Int = 0, // Constants.FOCUS_MODE_BLOCK_SELECTED (0) or Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED (1)
+    val isFocusLengthEnabled: Boolean = false,
+    val focusLengthHours: Int = 1
 )
 
 data class BlockedApp(

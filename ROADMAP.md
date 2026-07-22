@@ -9,6 +9,19 @@ Last updated: 2026-07-22
   - **Client Impact:** The main `AmnShield-Android` app retains its local bound API (`IAmnShieldApi.aidl` and `AmnShieldApiService.kt`) for local extensibility, but will utilize HTTPS REST sync against Supabase for parental remote configuration instead of native inter-app IPC.
 
 ## Recently Completed
+- **Full Blocker Schedule Enforcement & Multi-Feature Integration (July 2026)**
+  - Extended `UnifiedFeatureScheduleRule` to include `selectedWebsites`, `selectedKeywords`, and `selectedPlatforms`, allowing multi-feature schedule rules to dynamically enforce specific items during scheduled windows.
+  - Refactored `AmnShieldAccessibilityService` to evaluate active schedule rules for Website Blocker, Keyword Blocker, and Reels Blocker in real-time, preventing false 24/7 blocking when schedules are inactive.
+  - Defaulted `loadBlockedWebsitesApps` fallback list to empty, preventing Samsung Internet and Instagram from being falsely blocked on first launch.
+- **Dynamic Self-Package Name Exclusions & Anti-Uninstall Security (July 2026)**
+  - Updated `AmnShieldAccessibilityService`, `AppBlocker`, `FocusModeBlocker`, `KeywordBlocker`, and `AppInstallReceiver` to dynamically check `context.packageName` rather than hardcoded strings, supporting flavor variants (`com.alhaq.deenshield`, `com.alhaq.amnshield`) cleanly.
+  - Configured dynamic `app_package_id` resource strings in `build.gradle.kts` and updated `shortcuts.xml` for launcher shortcuts.
+- **License Verification & Dual-Query Billing Restore (July 2026)**
+  - Updated `LicenseValidator` payload signature checks to decode Base64 strings directly matching Deno Edge Function key issuance.
+  - Refactored `BillingClientWrapper` in both Playstore and Universal source sets to run concurrent queries for `INAPP` and `SUBS` types, restoring subscriptions and in-app purchases seamlessly.
+- **App Picker Launcher & 24/7 Always Block Fallback (July 2026)**
+  - Replaced text fields and basic checkboxes in `CreateRuleScreen` with an interactive app picker launcher connected to `SelectAppsActivity`, rendering selected apps in scrollable filter chips.
+  - Implemented 24/7 full-block fallback (`00:00 - 23:59`, all 7 days) when rules are saved without specific time ranges.
 - **Focus Space Architecture Unification & Auto Focus Schedules (July 2026)**
   - Unified Focus Space into two clean modes: **Quick Focus Sessions** (Mode A - instant timer) and **Auto Focus Schedules** (Mode B - time window schedules & active days).
   - Added `"Focus Mode"` to schedule target options in `BlocksManagerFragment`.
