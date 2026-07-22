@@ -126,17 +126,7 @@
 
 
 
-        <receiver android:name=".ui.widgets.ScreentimeWidgetProvider"
-            android:label="ScreenTime Stats"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="com.alhaq.amnshield.screentime.WIDGET_REFRESH" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_screentime_metadata" />
-        </receiver>
+
 
         <!-- BroadcastReceiver for daily report notifications -->
         <receiver
@@ -175,6 +165,61 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <!-- Home Screen Widgets -->
+        <receiver
+            android:name=".ui.widgets.ScreentimeWidgetProvider"
+            android:exported="true"
+            android:label="Screen Time &amp; App Usage">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name=".amnshield.screentime.WIDGET_REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_screentime_metadata" />
+        </receiver>
+
+        <receiver
+            android:name=".ui.widgets.ReelsMetricsWidgetProvider"
+            android:exported="true"
+            android:label="Reels &amp; Shorts Metrics">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.alhaq.amnshield.reels.WIDGET_REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_reels_metrics_metadata" />
+        </receiver>
+
+        <receiver
+            android:name=".ui.widgets.QuickFocusWidgetProvider"
+            android:exported="true"
+            android:label="Quick Focus Space">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.alhaq.amnshield.focus.START_15" />
+                <action android:name="com.alhaq.amnshield.focus.START_30" />
+                <action android:name="com.alhaq.amnshield.focus.START_60" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_focus_metadata" />
+        </receiver>
+
+        <receiver
+            android:name=".ui.widgets.BreathingWidgetProvider"
+            android:exported="true"
+            android:label="Mindful Breathing Space">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.alhaq.amnshield.breathing.START" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_breathing_metadata" />
+        </receiver>
 
     </application>
 

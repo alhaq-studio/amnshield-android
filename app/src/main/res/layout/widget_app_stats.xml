@@ -1,96 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_bg_app_stats"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:theme="@style/Theme.Material3.DynamicColors.DayNight">
+    android:background="@drawable/widget_card_background"
+    android:orientation="vertical"
+    android:padding="16dp">
 
+    <!-- Header Row -->
     <LinearLayout
-        android:id="@android:id/background"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/widget_background"
-        android:elevation="4dp"
-        android:orientation="vertical"
-        android:padding="@dimen/widget_padding"
-        android:weightSum="7">
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Screen time"
-                style="@style/TextAppearance.Material3.TitleMedium"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textStyle="bold" />
-
-            <ImageView
-                android:id="@+id/refresh_stats_screentime"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:contentDescription="Refresh stats"
-                android:src="@drawable/baseline_refresh_24"
-                android:tint="?android:attr/colorAccent" />
-        </LinearLayout>
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/baseline_shield_24"
+            android:tint="#10B981" />
 
         <TextView
-            android:id="@+id/screentime_widget"
-            style="@style/TextAppearance.Material3.DisplayMedium"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/spacing_small"
-            android:layout_marginBottom="@dimen/spacing_medium"
-            android:layout_weight="3"
-            android:gravity="center_vertical"
-            android:singleLine="true"
-            android:text="0h 0m"
-            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="SCREEN TIME"
+            android:textColor="#9CA3AF"
+            android:textSize="11sp"
             android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/refresh_stats_screentime"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:contentDescription="Refresh"
+            android:src="@drawable/baseline_refresh_24"
+            android:tint="#10B981" />
+    </LinearLayout>
+
+    <!-- Total Screen Time Big Text -->
+    <TextView
+        android:id="@+id/screentime_widget"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="0h 0m"
+        android:textColor="#FFFFFF"
+        android:textSize="26sp"
+        android:textStyle="bold" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="#24382E" />
+
+    <!-- Top Apps List -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/app_1_sm"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="@dimen/widget_margin"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:singleLine="true"
-            android:text="1h App"
-            android:textColor="?android:attr/textColorPrimary" />
-
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="• Loading..."
+            android:textColor="#D1D5DB"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/app_2_sm"
-            style="@style/TextAppearance.Material3.BodyLarge"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="@dimen/widget_margin"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:singleLine="true"
-            android:text="1h App"
-            android:textColor="?android:attr/textColorPrimary" />
-
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text=""
+            android:textColor="#D1D5DB"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/app_3_sm"
-            style="@style/TextAppearance.Material3.BodyLarge"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="@dimen/widget_margin"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:singleLine="true"
-            android:text="1h App"
-            android:textColor="?android:attr/textColorPrimary" />
-
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text=""
+            android:textColor="#D1D5DB"
+            android:textSize="12sp" />
     </LinearLayout>
-</FrameLayout>
+</LinearLayout>

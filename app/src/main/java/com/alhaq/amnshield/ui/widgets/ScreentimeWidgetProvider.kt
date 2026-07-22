@@ -86,38 +86,33 @@ class ScreentimeWidgetProvider : AppWidgetProvider() {
         val totalScreentime = list.sumOf { it.totalTime }
         try{
             val views = RemoteViews(context.packageName, R.layout.widget_app_stats).apply {
-                setTextViewText(R.id.screentime_widget, formatTime(totalScreentime))
-                // Loop to handle the first 3 items dynamically
-                for (i in 0..2) {
-                    val item =
-                        list.getOrNull(i) // Safely get the item, returns null if index is out of bounds
-                    if (item != null) {
-                        setAppUsageText(this, 0, list, R.id.app_1_sm, context)
-                        setAppUsageText(this, 1, list, R.id.app_2_sm, context)
-                        setAppUsageText(this, 2, list, R.id.app_3_sm, context)
-                    }
+                setTextViewText(R.id.screentime_widget, if (totalScreentime > 0) formatTime(totalScreentime) else "0m")
 
-                    // Set up refresh button
-                    val refreshIntent = createRefreshIntent(context, widgetId)
-                    val pendingIntent = PendingIntent.getBroadcast(
-                        context,
-                        widgetId,
-                        refreshIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                    setOnClickPendingIntent(R.id.refresh_stats_screentime, pendingIntent)
+                setAppUsageText(this, 0, list, R.id.app_1_sm, context)
+                setAppUsageText(this, 1, list, R.id.app_2_sm, context)
+                setAppUsageText(this, 2, list, R.id.app_3_sm, context)
 
-                    val intent = Intent(context, FragmentActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    intent.putExtra("fragment", AllAppsUsageFragment.FRAGMENT_ID)
-                    val openIntent = PendingIntent.getActivity(
-                        context,
-                        0,
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                    setOnClickPendingIntent(R.id.widget_bg_app_stats, openIntent)
+                // Set up refresh button
+                val refreshIntent = createRefreshIntent(context, widgetId)
+                val pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    widgetId,
+                    refreshIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                setOnClickPendingIntent(R.id.refresh_stats_screentime, pendingIntent)
+
+                val intent = Intent(context, FragmentActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    putExtra("fragment", AllAppsUsageFragment.FRAGMENT_ID)
                 }
+                val openIntent = PendingIntent.getActivity(
+                    context,
+                    0,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                setOnClickPendingIntent(R.id.widget_bg_app_stats, openIntent)
             }
 
             appWidgetManager.updateAppWidget(widgetId, views)

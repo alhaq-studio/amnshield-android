@@ -364,22 +364,37 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         WidgetPinRow(
-                            icon = "🛡️",
-                            title = "Today's Overview Widget",
-                            description = "Keep track of active shield status and distraction interventions in real-time.",
-                            onPin = {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    val appWidgetManager = AppWidgetManager.getInstance(context)
-                                    val provider = ComponentName(context, "com.alhaq.amnshield.ui.widgets.ScreentimeWidgetProvider")
-                                    if (appWidgetManager.isRequestPinAppWidgetSupported) {
-                                        appWidgetManager.requestPinAppWidget(provider, null, null)
-                                    } else {
-                                        Toast.makeText(context, "Launcher does not support widget pinning", Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    Toast.makeText(context, "Feature requires Android 8.0+", Toast.LENGTH_SHORT).show()
-                                }
-                            }
+                            icon = "📊",
+                            title = "Screen Time & Usage Widget",
+                            description = "Track total screen time and top 3 used apps in real-time.",
+                            onPin = { pinWidgetToHomeScreen(context, "com.alhaq.amnshield.ui.widgets.ScreentimeWidgetProvider") }
+                        )
+
+                        Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                        WidgetPinRow(
+                            icon = "🎬",
+                            title = "Reels & Shorts Metrics Widget",
+                            description = "Monitor daily Reels scrolled count, usage limit progress, and blocker status.",
+                            onPin = { pinWidgetToHomeScreen(context, "com.alhaq.amnshield.ui.widgets.ReelsMetricsWidgetProvider") }
+                        )
+
+                        Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                        WidgetPinRow(
+                            icon = "⏱️",
+                            title = "Quick Focus Space Widget",
+                            description = "Start instant 15m, 30m, or 60m Focus sessions directly from your Home screen.",
+                            onPin = { pinWidgetToHomeScreen(context, "com.alhaq.amnshield.ui.widgets.QuickFocusWidgetProvider") }
+                        )
+
+                        Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                        WidgetPinRow(
+                            icon = "🍃",
+                            title = "Mindful Breathing Space Widget",
+                            description = "Take quick mindful breathing breaks to clear your mind and restore focus.",
+                            onPin = { pinWidgetToHomeScreen(context, "com.alhaq.amnshield.ui.widgets.BreathingWidgetProvider") }
                         )
                     }
                 }
@@ -594,17 +609,28 @@ fun WidgetPinRow(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = onPin,
-                modifier = Modifier.height(36.dp),
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Add to Home Screen", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
         }
+
+        IconButton(onClick = onPin) {
+            Icon(
+                imageVector = Icons.Default.AddCircleOutline,
+                contentDescription = "Pin Widget",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+private fun pinWidgetToHomeScreen(context: Context, providerClassName: String) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val provider = ComponentName(context, providerClassName)
+        if (appWidgetManager.isRequestPinAppWidgetSupported) {
+            appWidgetManager.requestPinAppWidget(provider, null, null)
+        } else {
+            Toast.makeText(context, "Launcher does not support widget pinning", Toast.LENGTH_SHORT).show()
+        }
+    } else {
+        Toast.makeText(context, "Feature requires Android 8.0+", Toast.LENGTH_SHORT).show()
     }
 }
