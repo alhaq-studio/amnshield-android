@@ -138,8 +138,10 @@ fun CreateRuleScreen(
     val saveEnabled = ruleName.isNotBlank() && selectedApps.isNotEmpty()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
                         if (editingRule != null) "Edit App Blocker Rule" else "Create App Blocker Rule",

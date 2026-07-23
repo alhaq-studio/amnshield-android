@@ -101,8 +101,10 @@ fun CreateFocusModeRuleScreen(
     val saveEnabled = ruleName.isNotBlank() && scheduleDays.isNotEmpty()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
                         if (editingRule != null) "Edit Auto Focus Schedule" else "Create Auto Focus Schedule",

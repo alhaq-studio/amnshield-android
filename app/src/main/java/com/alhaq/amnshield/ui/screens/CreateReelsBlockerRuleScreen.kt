@@ -103,8 +103,10 @@ fun CreateReelsBlockerRuleScreen(
     var showTimePicker by remember { mutableStateOf(false) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
                 title = {
                     Text(
                         text = if (editingRule != null) "Edit Reels Rule" else "Create Reels Rule",
