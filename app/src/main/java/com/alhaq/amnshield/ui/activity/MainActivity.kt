@@ -224,7 +224,8 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, FragmentActivity::class.java)
             intent.putExtra("fragment", WelcomeFragment.FRAGMENT_ID)
             startActivity(intent, options.toBundle())
-            // Onboarding and permissions are handled by FragmentActivity / PermissionsFragment.
+            finish()
+            return
         }
         showDonationDialog()
     }
