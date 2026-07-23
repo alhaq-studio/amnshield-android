@@ -64,6 +64,7 @@ class BlocksManagerFragment : Fragment() {
                 val action = remember { arguments?.getString("action") }
                 val prefillTarget = remember { arguments?.getString("prefill_target") }
                 val prefillType = remember { arguments?.getString("prefill_type") }
+                val prefillApp = remember { arguments?.getString("prefill_app") }
 
                 val defaultScreen = remember(action, prefillTarget) {
                     if (action == "create") {
@@ -160,6 +161,7 @@ class BlocksManagerFragment : Fragment() {
                             CreateRuleScreen(
                                 state = state,
                                 prefillTarget = prefillTarget ?: "APP_BLOCKER",
+                                prefillApp = prefillApp,
                                 editingRule = editingRule,
                                 onSaveRule = { rule ->
                                     if (editingRule != null) {

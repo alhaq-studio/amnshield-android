@@ -39,20 +39,36 @@ fun CreateRuleScreen(
     onSaveRule: (ScheduleRule) -> Unit,
     onBack: () -> Unit,
     editingRule: ScheduleRule? = null,
-    prefillTarget: String = "APP_BLOCKER"
+    prefillTarget: String = "APP_BLOCKER",
+    prefillApp: String? = null
 ) {
     val context = LocalContext.current
 
-    val initialName = remember(editingRule) {
-        editingRule?.name ?: "App Blocker Rule"
+    val initialName = remember(editingRule, prefillApp) {
+        if (editingRule != null) {
+            editingRule.name
+        } else if (!prefillApp.isNullOrEmpty()) {
+            val appLabel = try {
+                context.packageManager.getApplicationLabel(
+                    context.packageManager.getApplicationInfo(prefillApp, 0)
+                ).toString()
+            } catch (_: Exception) {
+                prefillApp
+            }
+            "Block: $appLabel"
+        } else {
+            "App Blocker Rule"
+        }
     }
 
     var ruleName by remember { mutableStateOf(initialName) }
 
-    val selectedApps = remember(editingRule) {
+    val selectedApps = remember(editingRule, prefillApp) {
         mutableStateListOf<String>().apply {
             if (editingRule != null) {
                 addAll(editingRule.selectedApps)
+            } else if (!prefillApp.isNullOrEmpty()) {
+                add(prefillApp)
             } else {
                 val loader = SavedPreferencesLoader(context)
                 addAll(loader.loadBlockedApps())
