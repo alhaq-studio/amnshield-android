@@ -64,7 +64,8 @@ class FragmentActivity : AppCompatActivity() {
         if (featureType != null) {
             fragment = when (featureType) {
                 "focus_mode" -> com.alhaq.amnshield.ui.fragments.FocusFragment()
-                "app_blocker" -> com.alhaq.amnshield.ui.fragments.BlocksManagerFragment().apply {
+                "app_blocker" -> com.alhaq.amnshield.ui.fragments.features.AppBlockerConfigFragment()
+                "app_blocker_schedules" -> com.alhaq.amnshield.ui.fragments.BlocksManagerFragment().apply {
                     arguments = Bundle().apply {
                         putString("filter_type", "App Blocker")
                     }
@@ -96,6 +97,9 @@ class FragmentActivity : AppCompatActivity() {
                 }
                 com.alhaq.amnshield.ui.fragments.usage.ReelsMetricsFragment.FRAGMENT_ID -> {
                     fragment = com.alhaq.amnshield.ui.fragments.usage.ReelsMetricsFragment()
+                }
+                com.alhaq.amnshield.ui.fragments.features.AppBlockerConfigFragment.FRAGMENT_ID -> {
+                    fragment = com.alhaq.amnshield.ui.fragments.features.AppBlockerConfigFragment()
                 }
                 BlocksManagerFragment.FRAGMENT_ID -> {
                     fragment = BlocksManagerFragment()

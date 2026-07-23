@@ -103,11 +103,27 @@ class AppBlockerConfigFragment : BaseFeatureFragment() {
             startActivity(intent, activityOptions.toBundle())
         }
 
-        ((binding.btnCheatHours.parent as? View)?.parent as? View)?.visibility = View.GONE
-        ((binding.btnBlockSchedules.parent as? View)?.parent as? View)?.visibility = View.GONE
-        ((binding.btnLaunchLimits.parent as? View)?.parent as? View)?.visibility = View.GONE
-        ((binding.btnUsageLimits.parent as? View)?.parent as? View)?.visibility = View.GONE
-        ((binding.switchAutoBlock.parent as? View)?.parent as? View)?.visibility = View.GONE
+        binding.btnBlockSchedules.setOnClickListener {
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", BlocksManagerFragment.FRAGMENT_ID)
+                putExtra("filter_type", "App Blocker")
+            }
+            startActivity(intent, activityOptions.toBundle())
+        }
+
+        binding.btnLaunchLimits.setOnClickListener {
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("fragment", com.alhaq.amnshield.ui.fragments.ManageLaunchLimitsFragment.FRAGMENT_ID)
+            }
+            startActivity(intent, activityOptions.toBundle())
+        }
+
+        binding.btnUsageLimits.setOnClickListener {
+            val intent = Intent(requireContext(), FragmentActivity::class.java).apply {
+                putExtra("feature_type", "usage_tracker")
+            }
+            startActivity(intent, activityOptions.toBundle())
+        }
 
         binding.btnWarningScreen.setOnClickListener {
             TweakAppBlockerWarning(savedPreferencesLoader).show(
