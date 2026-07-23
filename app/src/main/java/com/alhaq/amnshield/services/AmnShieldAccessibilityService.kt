@@ -219,7 +219,7 @@ class AmnShieldAccessibilityService : BaseBlockingService() {
                         val surfaceId = reelBlocker.detectReelSurfaceId(root, activePackage)
                         if (surfaceId != null) {
                             lastReelScrollTime = now
-                            savedPreferencesLoader.incrementReelsScrolled()
+                            savedPreferencesLoader.incrementReelsScrolled(activePackage)
                             reelBlocker.reelsScrolledToday = savedPreferencesLoader.getReelsScrolledToday()
                         }
                         root.recycle()

@@ -71,10 +71,10 @@ class ReelsMetricsWidgetProvider : AppWidgetProvider() {
                 )
                 setOnClickPendingIntent(R.id.refresh_reels_stats, refreshPending)
 
-                // Open Reels Blocker Config on card tap
+                // Open Detailed Reels Metrics Page on card tap
                 val openIntent = Intent(context, FragmentActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    putExtra("feature_type", "reel_blocker")
+                    putExtra("feature_type", "reels_metrics")
                 }
                 val pendingOpen = PendingIntent.getActivity(
                     context,

@@ -597,31 +597,25 @@ fun StartFocusSessionDialog(
 ) {
     var durationMinutes by remember { mutableStateOf(45) }
     var selectedMode by remember { mutableStateOf(defaultMode) }
-    val selectedApps = remember { mutableStateOf(preSelectedApps.toMutableSet()) }
-    var searchQuery by remember { mutableStateOf("") }
-
-    val filteredApps = remember(searchQuery, installedApps) {
-        if (searchQuery.isBlank()) installedApps
-        else installedApps.filter { it.label.contains(searchQuery, ignoreCase = true) || it.packageName.contains(searchQuery, ignoreCase = true) }
-    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
         modifier = Modifier
-            .fillMaxWidth(0.95f)
-            .fillMaxHeight(0.85f),
+            .fillMaxWidth(0.92f)
+            .wrapContentHeight(),
         content = {
             Surface(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(28.dp),
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 6.dp
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp)
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Header
                     Text(
@@ -630,292 +624,175 @@ fun StartFocusSessionDialog(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // LazyColumn for the scrollable configuration content
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // 1. Duration Picker
-                        item {
-                            Column {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Duration",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "${durationMinutes}m",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Slider(
-                                    value = durationMinutes.toFloat(),
-                                    onValueChange = { durationMinutes = it.toInt() },
-                                    valueRange = 5f..180f,
-                                    steps = 34 // 5-minute increments
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                // Quick choice chips
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    listOf(15, 25, 45, 60, 90).forEach { mins ->
-                                        val isSelected = durationMinutes == mins
-                                        FilterChip(
-                                            selected = isSelected,
-                                            onClick = { durationMinutes = mins },
-                                            label = { Text("${mins}m") }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // 2. Focus Mode Option cards
-                        item {
-                            Column {
-                                Text(
-                                    text = "Focus Mode Type",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    // Option 1: Whitelist
-                                    Card(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .bounceClick { selectedMode = com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED },
-                                        border = BorderStroke(
-                                            width = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) 2.dp else 1.dp,
-                                            color = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-                                        ),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
-                                        )
-                                    ) {
-                                        Column(modifier = Modifier.padding(12.dp)) {
-                                            Icon(
-                                                imageVector = Icons.Default.Shield,
-                                                contentDescription = null,
-                                                tint = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Text(
-                                                text = "Block All Except Allowed",
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                text = "Allows only whitelisted apps",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-
-                                    // Option 2: Blacklist
-                                    Card(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .bounceClick { selectedMode = com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED },
-                                        border = BorderStroke(
-                                            width = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) 2.dp else 1.dp,
-                                            color = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-                                        ),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
-                                        )
-                                    ) {
-                                        Column(modifier = Modifier.padding(12.dp)) {
-                                            Icon(
-                                                imageVector = Icons.Default.Block,
-                                                contentDescription = null,
-                                                tint = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Text(
-                                                text = "Block Selected Only",
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                text = "Blocks specific blacklisted apps",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                    // 2.5 Focus Settings configuration redirects
-                    item {
-                        Column {
+                    // 1. Duration Picker
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = "Focus Settings",
+                                text = "Duration",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                                ),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                            ) {
-                                Column {
-                                    FocusItemRow(
-                                        icon = Icons.Outlined.CalendarToday,
-                                        title = "AutoFocus Schedules",
-                                        summary = "Focus block automation rules",
-                                        statusText = "SETUP",
-                                        onChecked = onConfigureSchedules,
-                                        iconColor = Color(0xFF3B82F6)
-                                    )
-                                }
-                            }
+                            Text(
+                                text = "${durationMinutes}m",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
-                    }
-
-                        // 3. Search and App Picker Header
-                        item {
-                            Column {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) "Allowed Apps" else "Blocked Apps",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "${selectedApps.value.size} selected",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                OutlinedTextField(
-                                    value = searchQuery,
-                                    onValueChange = { searchQuery = it },
-                                    placeholder = { Text("Search apps...") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    singleLine = true
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Slider(
+                            value = durationMinutes.toFloat(),
+                            onValueChange = { durationMinutes = it.toInt() },
+                            valueRange = 5f..180f,
+                            steps = 34 // 5-minute increments
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        // Quick choice chips
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf(15, 25, 45, 60, 90).forEach { mins ->
+                                val isSelected = durationMinutes == mins
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { durationMinutes = mins },
+                                    label = { Text("${mins}m") }
                                 )
                             }
                         }
+                    }
 
-                        // 4. App Picker List Container
-                        item {
+                    // 2. Focus Mode Option cards
+                    Column {
+                        Text(
+                            text = "Focus Mode Type",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Option 1: Whitelist
                             Card(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(240.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                    .weight(1f)
+                                    .bounceClick { selectedMode = com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED },
+                                border = BorderStroke(
+                                    width = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) 2.dp else 1.dp,
+                                    color = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                ),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
+                                )
                             ) {
-                                if (filteredApps.isEmpty()) {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = "No apps found",
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                    }
-                                } else {
-                                    androidx.compose.foundation.lazy.LazyColumn(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentPadding = PaddingValues(8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        items(filteredApps) { app ->
-                                            val isChecked = selectedApps.value.contains(app.packageName)
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .bounceClick {
-                                                        val newSet = HashSet(selectedApps.value)
-                                                        if (isChecked) newSet.remove(app.packageName)
-                                                        else newSet.add(app.packageName)
-                                                        selectedApps.value = newSet
-                                                    }
-                                                    .padding(vertical = 6.dp, horizontal = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                if (app.icon != null) {
-                                                    Image(
-                                                        bitmap = app.icon.asImageBitmap(),
-                                                        contentDescription = null,
-                                                        modifier = Modifier
-                                                            .size(36.dp)
-                                                            .clip(RoundedCornerShape(8.dp))
-                                                    )
-                                                } else {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(36.dp)
-                                                            .clip(RoundedCornerShape(8.dp))
-                                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Shield,
-                                                            contentDescription = null,
-                                                            tint = MaterialTheme.colorScheme.primary,
-                                                            modifier = Modifier.size(18.dp)
-                                                        )
-                                                    }
-                                                }
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Text(
-                                                    text = app.label,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    modifier = Modifier.weight(1f),
-                                                    color = MaterialTheme.colorScheme.onSurface
-                                                )
-                                                Checkbox(
-                                                    checked = isChecked,
-                                                    onCheckedChange = { checked ->
-                                                        val newSet = HashSet(selectedApps.value)
-                                                        if (checked) newSet.add(app.packageName)
-                                                        else newSet.remove(app.packageName)
-                                                        selectedApps.value = newSet
-                                                    }
-                                                )
-                                            }
-                                        }
-                                    }
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Icon(
+                                        imageVector = Icons.Default.Shield,
+                                        contentDescription = null,
+                                        tint = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_ALL_EX_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Block All Except Allowed",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Allows only whitelisted apps",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            // Option 2: Blacklist
+                            Card(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .bounceClick { selectedMode = com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED },
+                                border = BorderStroke(
+                                    width = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) 2.dp else 1.dp,
+                                    color = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                                ),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surface
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Icon(
+                                        imageVector = Icons.Default.Block,
+                                        contentDescription = null,
+                                        tint = if (selectedMode == com.alhaq.amnshield.Constants.FOCUS_MODE_BLOCK_SELECTED) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Block Selected Only",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Blocks specific blacklisted apps",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    // 3. Focus Settings configuration redirects
+                    Column {
+                        Text(
+                            text = "Focus Settings",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                        ) {
+                            Column {
+                                FocusItemRow(
+                                    icon = Icons.Outlined.Apps,
+                                    title = "Configure Focus Apps",
+                                    summary = "${preSelectedApps.size} apps selected",
+                                    statusText = "EDIT",
+                                    onChecked = {
+                                        onDismiss()
+                                        onConfigureApps()
+                                    },
+                                    iconColor = MaterialTheme.colorScheme.primary
+                                )
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                                FocusItemRow(
+                                    icon = Icons.Outlined.CalendarToday,
+                                    title = "AutoFocus Schedules",
+                                    summary = "Focus block automation rules",
+                                    statusText = "SETUP",
+                                    onChecked = {
+                                        onDismiss()
+                                        onConfigureSchedules()
+                                    },
+                                    iconColor = Color(0xFF3B82F6)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     // Actions Row
                     Row(
@@ -930,7 +807,7 @@ fun StartFocusSessionDialog(
                             Text("Cancel")
                         }
                         Button(
-                            onClick = { onStart(durationMinutes, selectedMode, selectedApps.value) },
+                            onClick = { onStart(durationMinutes, selectedMode, preSelectedApps) },
                             modifier = Modifier.weight(1.5f),
                             shape = RoundedCornerShape(14.dp)
                         ) {

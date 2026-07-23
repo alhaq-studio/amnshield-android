@@ -961,30 +961,20 @@ class SavedPreferencesLoader(val context: Context) {
     }
 
     fun getReelsScrolledToday(): Int {
-        val sharedPreferences = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
-        checkAndResetReelsStatsDaily(sharedPreferences)
-        return sharedPreferences.getInt("reels_scrolled_today", 0)
+        return ReelsStatsManager.getInstance(context).loadDailyRecord(TimeTools.getCurrentDate()).totalScrolled
     }
 
-    fun incrementReelsScrolled() {
-        val sharedPreferences = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
-        checkAndResetReelsStatsDaily(sharedPreferences)
-        val current = sharedPreferences.getInt("reels_scrolled_today", 0)
-        sharedPreferences.edit().putInt("reels_scrolled_today", current + 1).apply()
+    fun incrementReelsScrolled(packageName: String? = null) {
+        ReelsStatsManager.getInstance(context).recordReelScroll(packageName)
     }
 
     fun getReelsWatchTimeSeconds(): Long {
-        val sharedPreferences = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
-        checkAndResetReelsStatsDaily(sharedPreferences)
-        return sharedPreferences.getLong("reels_watch_time_seconds_today", 0L)
+        return ReelsStatsManager.getInstance(context).loadDailyRecord(TimeTools.getCurrentDate()).totalWatchTimeSeconds
     }
 
-    fun addReelsWatchTime(seconds: Long) {
+    fun addReelsWatchTime(seconds: Long, packageName: String? = null) {
         if (seconds <= 0) return
-        val sharedPreferences = context.getSharedPreferences("reel_blocker", Context.MODE_PRIVATE)
-        checkAndResetReelsStatsDaily(sharedPreferences)
-        val current = sharedPreferences.getLong("reels_watch_time_seconds_today", 0L)
-        sharedPreferences.edit().putLong("reels_watch_time_seconds_today", current + seconds).apply()
+        ReelsStatsManager.getInstance(context).recordReelWatchTime(packageName, seconds)
     }
 
     // ==================== PIN Security & App Lock ====================

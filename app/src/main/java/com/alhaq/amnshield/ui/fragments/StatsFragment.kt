@@ -83,7 +83,14 @@ class StatsFragment : Fragment() {
                             startActivity(intent, options.toBundle())
                         },
                         onViewReelsMetrics = {
-                            (activity as? MainActivity)?.selectTab(R.id.navigation_blocks)
+                            val intent = Intent(requireContext(), FragmentActivity::class.java)
+                            intent.putExtra("feature_type", "reels_metrics")
+                            val options = ActivityOptionsCompat.makeCustomAnimation(
+                                requireContext(),
+                                R.anim.fade_in,
+                                R.anim.fade_out
+                            )
+                            startActivity(intent, options.toBundle())
                         },
                         onAppClick = { packageName ->
                             val intent = Intent(requireContext(), FragmentActivity::class.java)
